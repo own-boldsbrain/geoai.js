@@ -12,7 +12,7 @@ importers:
         specifier: ^21.1.7
         version: 21.1.7
       '@types/node':
-        specifier: ^22.0.0
+        specifier: ^22.10.5
         version: 22.10.5
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.18.0
@@ -21,7 +21,7 @@ importers:
         specifier: ^7.18.0
         version: 7.18.0(eslint@8.57.1)(typescript@5.7.2)
       '@vitest/coverage-v8':
-        specifier: ^2.0.4
+        specifier: ^2.1.8
         version: 2.1.8(vitest@2.1.8(@types/node@22.10.5))
       copyfiles:
         specifier: ^2.4.1
@@ -30,7 +30,7 @@ importers:
         specifier: ^9.5.1
         version: 9.5.1
       eslint:
-        specifier: ^8.57.0
+        specifier: ^8.57.1
         version: 8.57.1
       eslint-config-prettier:
         specifier: ^9.1.0
@@ -39,31 +39,31 @@ importers:
         specifier: ^5.2.1
         version: 5.2.1(eslint-config-prettier@9.1.0(eslint@8.57.1))(eslint@8.57.1)(prettier@3.4.2)
       husky:
-        specifier: ^9.1.4
+        specifier: ^9.1.7
         version: 9.1.7
       lint-staged:
-        specifier: ^15.2.7
+        specifier: ^15.3.0
         version: 15.3.0
       postcss:
-        specifier: ^8.4.40
+        specifier: ^8.4.49
         version: 8.4.49
       postcss-scss:
         specifier: ^4.0.9
         version: 4.0.9(postcss@8.4.49)
       prettier:
-        specifier: ^3.3.3
+        specifier: ^3.4.2
         version: 3.4.2
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
       stylelint:
-        specifier: ^16.8.1
+        specifier: ^16.12.0
         version: 16.12.0(typescript@5.7.2)
       stylelint-config-recommended:
         specifier: ^14.0.1
         version: 14.0.1(stylelint@16.12.0(typescript@5.7.2))
       stylelint-config-sass-guidelines:
-        specifier: ^12.0.0
+        specifier: ^12.1.0
         version: 12.1.0(postcss@8.4.49)(stylelint@16.12.0(typescript@5.7.2))
       stylelint-order:
         specifier: ^6.0.4
@@ -75,13 +75,13 @@ importers:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@22.10.5)(typescript@5.7.2)
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.7.2
         version: 5.7.2
       vite:
-        specifier: ^5.3.5
+        specifier: ^5.4.11
         version: 5.4.11(@types/node@22.10.5)
       vitest:
-        specifier: ^2.0.4
+        specifier: ^2.1.8
         version: 2.1.8(@types/node@22.10.5)
 
 packages:
