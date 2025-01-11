@@ -44,5 +44,13 @@ describe("geobaseAi.pipeline", () => {
       ],
     };
     expect(result.segment(polygon)).toBeInstanceOf(Promise);
+    // has attribute embeddings
+    expect(result.embeddings).toBeInstanceOf(Array);
+    // embeddings should have a length of 1
+    expect(result.embeddings.length).toBe(1);
+    // has attribute masks
+    expect(result.masks).toBeInstanceOf(Array);
+    // masks should have a length of 1
+    expect(result.masks.length).toBe(1);
   });
 });
