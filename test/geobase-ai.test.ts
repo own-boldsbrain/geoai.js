@@ -69,8 +69,23 @@ describe("geobaseAi.pipeline", () => {
 
     const result = await instance.segment(polygon);
 
-    expect(result).toHaveProperty("best_fitting_tile_uri");
-    expect(result).toHaveProperty("embeddings");
-    expect(result).toHaveProperty("masks");
+    // Check basic properties
+    ["best_fitting_tile_uri", "embeddings", "masks"].forEach(prop => {
+      expect(result).toHaveProperty(prop);
+    });
+
+    // Check embedding types
+    ["image_embeddings", "image_positional_embeddings"].forEach(
+      embeddingType => {
+        const tensor = result.embeddings[embeddingType].ort_tensor;
+        expect(tensor).toMatchObject({
+          dataLocation: "cpu",
+          type: "float32",
+        });
+        expect(tensor.cpuData).toBeInstanceOf(Float32Array);
+        expect(tensor).toHaveProperty("dims");
+        expect(tensor).toHaveProperty("size");
+      }
+    );
   });
 });
