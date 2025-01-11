@@ -1,3 +1,21 @@
+# Geobase AI JavaScript Library
+
+Provide user with a seamless experience of using Geo AI models in their frontend applications.
+
+## Features
+
+Inputs:
+
+- Task: ... more geo-specific tasks than what HF provides (e.g. damage assessment, vegetation classification, etc.)
+- Polygon
+- Imagery Source/Provider
+
+Outputs:
+
+- Mask
+- Points
+- Classifications
+
 # vite-vanilla-ts-lib-starter
 
 The starter is built on top of Vite 5.x and prepared for writing libraries in TypeScript. It generates a package with support for ESM modules and IIFE.

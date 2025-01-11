@@ -6,6 +6,10 @@ settings:
 
 importers:
   .:
+    dependencies:
+      global-mercator:
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       "@types/jsdom":
         specifier: ^21.1.7
@@ -1616,6 +1620,12 @@ packages:
         integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==,
       }
     deprecated: Glob versions prior to v9 are no longer supported
+
+  global-mercator@3.1.0:
+    resolution:
+      {
+        integrity: sha512-Ws/8nyCHDFzpDQjfr6fcbWY+yU/Oh6rk7+WXNr/pZl7O1WCktAnMZy+9wpJ2stNCqM2SWwvZoqWbIzTiFN++2A==,
+      }
 
   global-modules@2.0.0:
     resolution:
@@ -3981,6 +3991,8 @@ snapshots:
       minimatch: 3.1.2
       once: 1.4.0
       path-is-absolute: 1.0.1
+
+  global-mercator@3.1.0: {}
 
   global-modules@2.0.0:
     dependencies:
