@@ -4,18 +4,19 @@
 
 import { GenericSegmentation } from "./models/generic_segmentation";
 
-// Look at https://huggingface.co/Xenova/mobilebert-uncased-mnli to see if we can help the developer pick the right model based on a short description of what they are trying to do. For example they say "Hi Everyone, I've been trying to find a method to extract points from a WMS server the background is transparent and the only thing on server is the points in raster the WFS server is returning nothing but errors if there are tools or pre existing scripts where i can achieve this please let me know it would be greatly appreciated." (Source: https://discord.com/channels/769917190182404127/1326839223331852319/1326839223331852319) and given we have the tags or labels for the models, we can help the developer pick the right model based on the description.
+type MapboxParams = {
+  provider: "mapbox";
+  apiKey: string;
+  style: string;
+};
 
-// const classifier = await pipeline('zero-shot-classification', 'Xenova/mobilebert-uncased-mnli');
-// const text = "Hi Everyone, I've been trying to find a method to extract points from a WMS server the background is transparent and the only thing on server is the points in raster the WFS server is returning nothing but errors if there are tools or pre existing scripts where i can achieve this please let me know it would be greatly appreciated."
+type SentinelParams = {
+  provider: "sentinel";
+  apiKey: string;
+};
 
-// const labels = [ 'zero-shot-object-detection', 'zero-shot-image-classification' ];
-// const output = await classifier(text, labels);
-// {
-//   sequence: 'Hi Everyone, I've been trying to find a method to extract points from a WMS server the background is transparent and the only thing on server is the points in raster the WFS server is returning nothing but errors if there are tools or pre existing scripts where i can achieve this please let me know it would be greatly appreciated.',
-//   labels: [ 'zero-shot-object-detection', 'zero-shot-image-classification' ],
-//   scores: [ 0.5562091040482018, 0.1843621307860853 ]
-// }
+// Union type of all possible provider params
+type ProviderParams = MapboxParams | SentinelParams;
 
 type HuggingFaceModelTasks =
   | "mask-generation"
@@ -35,7 +36,9 @@ type GeobaseAiModelMetadata = {
   library: string;
   model: string;
   description: string;
-  geobase_ai_pipeline: (params: any) => Promise<any>;
+  geobase_ai_pipeline: (
+    params: ProviderParams
+  ) => Promise<{ instance: GenericSegmentation }>;
 };
 
 const model_metadata: GeobaseAiModelMetadata[] = [
@@ -44,21 +47,20 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     library: "transformers.js",
     model: "onnx-community/grounding-dino-tiny-ONNX",
     description: "Zero-shot object detection model.",
-    geobase_ai_pipeline: (params: any) => ({}),
+    geobase_ai_pipeline: async () => {
+      throw new Error("Not implemented");
+    },
   },
   {
     task: "mask-generation",
     library: "transformers.js",
     model: "Xenova/slimsam-77-uniform",
     description: "Mask generation model.",
-    geobase_ai_pipeline: (params: any) => {
+    geobase_ai_pipeline: (params: ProviderParams) => {
       return GenericSegmentation.getInstance(
         "Xenova/slimsam-77-uniform",
-        "mapbox",
-        {
-          apiKey: params.apiKey,
-          style: params.style,
-        }
+        params.provider,
+        params
       );
     },
   },
@@ -69,17 +71,16 @@ const models = () => {
 };
 
 const tasks = () => {
-  return "tasks";
+  return model_metadata.map(model => model.task);
 };
 
 const domains = () => {
-  return "domains";
+  return ["geospatial", "computer-vision", "remote-sensing"];
 };
 
 const pipeline = async (
   task: HuggingFaceModelTasks | GeobaseAiModelTasks,
-  imagerySource: string,
-  params: any
+  params: ProviderParams
 ) => {
   const model = model_metadata.find(model => model.task === task);
 
@@ -87,7 +88,7 @@ const pipeline = async (
     throw new Error(`Model for task ${task} not found`);
   }
 
-  return await model.geobase_ai_pipeline(params);
+  return model.geobase_ai_pipeline(params);
 };
 
 const geobaseAi = {
@@ -97,4 +98,9 @@ const geobaseAi = {
   pipeline,
 };
 
-export { geobaseAi };
+export {
+  geobaseAi,
+  type ProviderParams,
+  type MapboxParams,
+  type SentinelParams,
+};

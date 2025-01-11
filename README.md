@@ -16,6 +16,36 @@ Outputs:
 - Points
 - Classifications
 
+
+## Future Ideas
+
+### Model Selection Assistant
+We can use [MobileBERT](https://huggingface.co/Xenova/mobilebert-uncased-mnli) to help developers select the appropriate model based on their description. 
+
+Example implementation:
+```javascript
+const classifier = await pipeline('zero-shot-classification', 'Xenova/mobilebert-uncased-mnli');
+
+const text = `Hi Everyone, I've been trying to find a method to extract points from a WMS server the background is transparent and the only thing on server is the points in raster the WFS server is returning nothing but errors if there are tools or pre existing scripts where i can achieve this please let me know it would be greatly appreciated.`;
+
+const labels = [
+    'zero-shot-object-detection',
+    'zero-shot-image-classification'
+];
+
+const output = await classifier(text, labels);
+/* Output:
+{
+    sequence: '...',
+    labels: ['zero-shot-object-detection', 'zero-shot-image-classification'],
+    scores: [0.5562091040482018, 0.1843621307860853]
+}
+*/
+```
+
+Source: [Discord Discussion](https://discord.com/channels/769917190182404127/1326839223331852319/1326839223331852319)
+
+
 # vite-vanilla-ts-lib-starter
 
 The starter is built on top of Vite 5.x and prepared for writing libraries in TypeScript. It generates a package with support for ESM modules and IIFE.

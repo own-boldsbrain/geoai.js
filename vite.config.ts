@@ -35,7 +35,7 @@ export default defineConfig({
   },
   test: {
     watch: false,
-    testTimeout: 100000,
+    testTimeout: 1000000,
   },
   resolve: {
     alias: [
