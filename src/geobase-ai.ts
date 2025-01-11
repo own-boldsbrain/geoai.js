@@ -35,7 +35,7 @@ type GeobaseAiModelMetadata = {
   library: string;
   model: string;
   description: string;
-  geobase_ai_pipeline: (params: any) => any;
+  geobase_ai_pipeline: (params: any) => Promise<any>;
 };
 
 const model_metadata: GeobaseAiModelMetadata[] = [
@@ -52,10 +52,14 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     model: "Xenova/slimsam-77-uniform",
     description: "Mask generation model.",
     geobase_ai_pipeline: (params: any) => {
-      return new GenericSegmentation("Xenova/slimsam-77-uniform", "mapbox", {
-        apiKey: params.apiKey,
-        style: params.style,
-      });
+      return GenericSegmentation.getInstance(
+        "Xenova/slimsam-77-uniform",
+        "mapbox",
+        {
+          apiKey: params.apiKey,
+          style: params.style,
+        }
+      );
     },
   },
 ];
@@ -72,7 +76,7 @@ const domains = () => {
   return "domains";
 };
 
-const pipeline = (
+const pipeline = async (
   task: HuggingFaceModelTasks | GeobaseAiModelTasks,
   imagerySource: string,
   params: any
@@ -83,7 +87,7 @@ const pipeline = (
     throw new Error(`Model for task ${task} not found`);
   }
 
-  return model.geobase_ai_pipeline(params);
+  return await model.geobase_ai_pipeline(params);
 };
 
 const geobaseAi = {

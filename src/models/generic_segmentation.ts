@@ -124,13 +124,17 @@ export class GenericSegmentation {
   private provider: string;
   private providerParams: any;
   private dataProvider: any;
-  private model_name: string;
+  private model_id: string;
   private model: any;
   private processor: any;
   private image_inputs: any;
   private image_embeddings: any;
-  constructor(model_name: string, provider: string, providerParams: any) {
-    this.model_name = model_name;
+  static async getInstance(
+    model_id: string,
+    provider: string,
+    providerParams: any
+  ) {
+    this.model_id = model_id;
     this.provider = provider;
     this.providerParams = providerParams;
     if (provider === "mapbox") {
@@ -139,14 +143,18 @@ export class GenericSegmentation {
         providerParams.style
       );
     }
-    this.model = SamModel.from_pretrained(this.model_name);
-    this.processor = AutoProcessor.from_pretrained(this.model_name);
+    this.model = await SamModel.from_pretrained(this.model_id, {
+      quantized: true,
+    });
+    if (!this.processor) {
+      this.processor = await AutoProcessor.from_pretrained(this.model_id);
+    }
   }
 
-  segment(polygon: any) {
+  async segment(polygon: any) {
     const best_fitting_tile_uri = this.polygon_to_image_uri(polygon);
     // next calculate the embeddings
-    const embeddings = this.create_embeddings_from_image_uri(
+    const embeddings = await this.create_embeddings_from_image_uri(
       best_fitting_tile_uri
     );
     return Promise.resolve({

@@ -54,7 +54,7 @@ describe("geobaseAi.pipeline", () => {
     const resolvedPromise = await result.segment(polygon);
     // it should have best_fitting_tile_uri
     expect(resolvedPromise).toHaveProperty("best_fitting_tile_uri");
-    // expect(resolvedPromise.embeddings).toBeInstanceOf(Array);
+    expect(resolvedPromise.embeddings).toBeInstanceOf(Array);
     // // embeddings should have a length of 1
     // expect(resolvedPromise.embeddings.length).toBe(1);
     // // has attribute masks
