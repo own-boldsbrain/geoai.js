@@ -52,7 +52,10 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     model: "Xenova/slimsam-77-uniform",
     description: "Mask generation model.",
     geobase_ai_pipeline: (params: any) => {
-      return new GenericSegmentation(params);
+      return new GenericSegmentation("Xenova/slimsam-77-uniform", "mapbox", {
+        apiKey: params.apiKey,
+        style: params.style,
+      });
     },
   },
 ];

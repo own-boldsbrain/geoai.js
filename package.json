@@ -54,6 +54,10 @@
     "vitest": "^2.1.8"
   },
   "dependencies": {
+    "@huggingface/transformers": "link:../test-groundingdino-quantized-js/transformers.js",
+    "@turf/bbox": "^7.2.0",
+    "@turf/bbox-polygon": "^7.2.0",
+    "@turf/center": "^7.2.0",
     "global-mercator": "^3.1.0"
   }
 }

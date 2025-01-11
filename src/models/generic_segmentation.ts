@@ -8,6 +8,9 @@
 // } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.2";
 // // } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
 
+import { Mapbox } from "@/data_providers/mapbox";
+import { RawImage } from "@huggingface/transformers";
+import { SamModel, AutoProcessor } from "@huggingface/transformers";
 // env.allowLocalModels = false;
 
 // // We adopt the singleton pattern to enable lazy-loading of the model and processor.
@@ -118,11 +121,51 @@
 // }
 
 export class GenericSegmentation {
-  constructor(params: any) {
-    this.params = params;
+  private provider: string;
+  private providerParams: any;
+  private dataProvider: any;
+  private model_name: string;
+  private model: any;
+  private processor: any;
+  private image_inputs: any;
+  private image_embeddings: any;
+  constructor(model_name: string, provider: string, providerParams: any) {
+    this.model_name = model_name;
+    this.provider = provider;
+    this.providerParams = providerParams;
+    if (provider === "mapbox") {
+      this.dataProvider = new Mapbox(
+        providerParams.apiKey,
+        providerParams.style
+      );
+    }
+    this.model = SamModel.from_pretrained(this.model_name);
+    this.processor = AutoProcessor.from_pretrained(this.model_name);
   }
 
   segment(polygon: any) {
-    return Promise.resolve(polygon);
+    const best_fitting_tile_uri = this.polygon_to_image_uri(polygon);
+    // next calculate the embeddings
+    const embeddings = this.create_embeddings_from_image_uri(
+      best_fitting_tile_uri
+    );
+    return Promise.resolve({
+      embeddings,
+      masks: polygon,
+      best_fitting_tile_uri,
+    });
+  }
+
+  polygon_to_image_uri(polygon: any) {
+    return this.dataProvider.get_image_uri(polygon);
+  }
+
+  async create_embeddings_from_image_uri(image_uri: string) {
+    const image = await RawImage.read(image_uri);
+    this.image_inputs = await this.processor(image);
+    this.image_embeddings = await this.model.get_image_embeddings(
+      this.image_inputs
+    );
+    return this.image_embeddings;
   }
 }
