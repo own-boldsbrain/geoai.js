@@ -48,8 +48,6 @@ describe("geobaseAi.pipeline", () => {
       mapboxParams
     );
 
-    await new Promise(resolve => setTimeout(resolve, 100));
-
     const polygon = {
       type: "Feature",
       properties: {},
@@ -85,6 +83,11 @@ describe("geobaseAi.pipeline", () => {
         expect(tensor.cpuData).toBeInstanceOf(Float32Array);
         expect(tensor).toHaveProperty("dims");
         expect(tensor).toHaveProperty("size");
+        expect(tensor.size).toBe(1048576);
+        expect(tensor.dims).toEqual([1, 256, 64, 64]);
+        expect(tensor.cpuData).toBeInstanceOf(Float32Array);
+        expect(tensor.cpuData.length).toBe(1048576);
+        expect(tensor.type).toBe("float32");
       }
     );
   });
