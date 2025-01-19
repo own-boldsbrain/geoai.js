@@ -152,7 +152,7 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
       },
     } as GeoJSON.Feature;
 
-    const text = ["tree. building. car."];
+    const text = "tree. building. car.";
 
     const results: ObjectDetectionResults = await instance.detection(
       polygon,
