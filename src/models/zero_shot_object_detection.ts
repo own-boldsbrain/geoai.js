@@ -1,120 +1,130 @@
 import { Mapbox } from "@/data_providers/mapbox";
-import { AutoModelForZeroShotObjectDetection, AutoProcessor, load_image } from "@huggingface/transformers";
+import {
+  AutoModelForZeroShotObjectDetection,
+  AutoProcessor,
+  load_image,
+} from "@huggingface/transformers";
 
 interface ProviderParams {
-    apiKey: string;
-    style: string;
+  apiKey: string;
+  style: string;
 }
 
 export interface ObjectDetectionResults {
-    scores: number[];
-    boxes: number[][];
-    labels: string[];
+  scores: number[];
+  boxes: number[][];
+  labels: string[];
 }
 
 export class ZeroShotObjectDetection {
-    private static instance: ZeroShotObjectDetection | null = null;
-    private provider: string;
-    private providerParams: ProviderParams;
-    private dataProvider: Mapbox;
-    private model_id: string;
-    private model: typeof AutoModelForZeroShotObjectDetection;
-    private processor: typeof AutoProcessor;
+  private static instance: ZeroShotObjectDetection | null = null;
+  private provider: string;
+  private providerParams: ProviderParams;
+  private dataProvider: Mapbox;
+  private model_id: string;
+  private model: typeof AutoModelForZeroShotObjectDetection;
+  private processor: typeof AutoProcessor;
 
-    private initialized: boolean = false;
+  private initialized: boolean = false;
 
-    private constructor(
-        model_id: string,
-        provider: string,
-        providerParams: ProviderParams
-    ) {
-        this.model_id = model_id;
-        this.provider = provider;
-        this.providerParams = providerParams;
+  private constructor(
+    model_id: string,
+    provider: string,
+    providerParams: ProviderParams
+  ) {
+    this.model_id = model_id;
+    this.provider = provider;
+    this.providerParams = providerParams;
+  }
+
+  static async getInstance(
+    model_id: string,
+    provider: string,
+    providerParams: ProviderParams
+  ): Promise<{ instance: ZeroShotObjectDetection }> {
+    if (!ZeroShotObjectDetection.instance) {
+      ZeroShotObjectDetection.instance = new ZeroShotObjectDetection(
+        model_id,
+        provider,
+        providerParams
+      );
+      await ZeroShotObjectDetection.instance.initialize();
     }
+    return { instance: ZeroShotObjectDetection.instance };
+  }
 
-    static async getInstance(
-        model_id: string,
-        provider: string,
-        providerParams: ProviderParams
-    ): Promise<{ instance: ZeroShotObjectDetection }> {
-        if (!ZeroShotObjectDetection.instance) {
-            ZeroShotObjectDetection.instance = new ZeroShotObjectDetection(
-                model_id,
-                provider,
-                providerParams
-            );
-            await ZeroShotObjectDetection.instance.initialize();
-        }
-        return { instance: ZeroShotObjectDetection.instance };
-    }
+  private async initialize(): Promise<void> {
+    if (this.initialized) return;
 
-    private async initialize(): Promise<void> {
-        if (this.initialized) return;
-
-        // Initialize data provider first
-        switch (this.providerParams.provider) {
-            case "mapbox":
-                this.dataProvider = new Mapbox(
-                    this.providerParams.apiKey,
-                    this.providerParams.style
-                );
-                break;
-            case "sentinel":
-                throw new Error("Sentinel provider not implemented yet");
-            default:
-                throw new Error(
-                    `Unknown provider: ${(this.providerParams as any).provider}`
-                );
-        }
-
-        // Verify data provider was initialized
-        if (!this.dataProvider) {
-            throw new Error("Failed to initialize data provider");
-        }
-
-        // Then initialize model componentsconst model = ;
-        this.model = await AutoModelForZeroShotObjectDetection.from_pretrained(this.model_id, { dtype: "fp32" });
-
-        this.processor = await AutoProcessor.from_pretrained(this.model_id);
-
-        this.initialized = true;
-    }
-
-    private polygon_to_image_uri(polygon: GeoJSON.Feature): string {
-        return this.dataProvider.get_image_uri(polygon);
-    }
-
-    async detection(polygon: GeoJSON.Feature, text: string): Promise<ObjectDetectionResults> {
-        // Ensure initialization is complete
-        if (!this.initialized) {
-            await this.initialize();
-        }
-
-        // Double-check data provider after initialization
-        if (!this.dataProvider) {
-            throw new Error("Data provider not initialized properly");
-        }
-
-        const best_fitting_tile_uri = this.polygon_to_image_uri(polygon);
-        const image = await load_image(best_fitting_tile_uri);
-
-        const inputs = await this.processor(image, text);
-
-        const outputs = await this.model(inputs);
-
-        const results = this.processor.post_process_grounded_object_detection(
-            outputs,
-            inputs.input_ids,
-            {
-                box_threshold: 0.3,
-                text_threshold: 0.3,
-                target_sizes: [image.size.reverse()],
-            },
+    // Initialize data provider first
+    switch (this.providerParams.provider) {
+      case "mapbox":
+        this.dataProvider = new Mapbox(
+          this.providerParams.apiKey,
+          this.providerParams.style
         );
-
-        return {
-            ...results,
-        }
+        break;
+      case "sentinel":
+        throw new Error("Sentinel provider not implemented yet");
+      default:
+        throw new Error(
+          `Unknown provider: ${(this.providerParams as any).provider}`
+        );
     }
+
+    // Verify data provider was initialized
+    if (!this.dataProvider) {
+      throw new Error("Failed to initialize data provider");
+    }
+
+    // Then initialize model componentsconst model = ;
+    this.model = await AutoModelForZeroShotObjectDetection.from_pretrained(
+      this.model_id,
+      { dtype: "fp32" }
+    );
+
+    this.processor = await AutoProcessor.from_pretrained(this.model_id);
+
+    this.initialized = true;
+  }
+
+  private polygon_to_image_uri(polygon: GeoJSON.Feature): string {
+    return this.dataProvider.get_image_uri(polygon);
+  }
+
+  async detection(
+    polygon: GeoJSON.Feature,
+    text: string
+  ): Promise<ObjectDetectionResults> {
+    // Ensure initialization is complete
+    if (!this.initialized) {
+      await this.initialize();
+    }
+
+    // Double-check data provider after initialization
+    if (!this.dataProvider) {
+      throw new Error("Data provider not initialized properly");
+    }
+
+    const best_fitting_tile_uri = this.polygon_to_image_uri(polygon);
+    const image = await load_image(best_fitting_tile_uri);
+
+    const inputs = await this.processor(image, text);
+
+    const outputs = await this.model(inputs);
+
+    const results = this.processor.post_process_grounded_object_detection(
+      outputs,
+      inputs.input_ids,
+      {
+        box_threshold: 0.3,
+        text_threshold: 0.3,
+        target_sizes: [image.size.reverse()],
+      }
+    );
+
+    return {
+      ...results,
+    };
+  }
 }
