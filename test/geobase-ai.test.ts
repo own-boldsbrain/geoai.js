@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { geobaseAi } from "../src/geobase-ai";
 import { GenericSegmentation } from "../src/models/generic_segmentation";
-import { ObjectDetectionResults, ZeroShotObjectDetection } from "../src/models/zero_shot_object_detection";
+import {
+  ObjectDetectionResults,
+  ZeroShotObjectDetection,
+} from "../src/models/zero_shot_object_detection";
 import type { MapboxParams } from "../src/geobase-ai";
-
+import type { Feature } from "geojson";
 describe("geobase-ai", () => {
   it("should be an object", () => {
     expect(geobaseAi).toBeInstanceOf(Object);
@@ -55,11 +58,13 @@ describe("geobaseAi.pipeline", () => {
       geometry: {
         coordinates: [
           [
-            [12.464671438808836, 41.89626288034978],
-            [12.464671438808836, 41.87734089295918],
-            [12.492452680977294, 41.87734089295918],
-            [12.492452680977294, 41.89626288034978],
-            [12.464671438808836, 41.89626288034978],
+            [12.482674103984635, 41.89168264631496],
+            [12.473676416077922, 41.887620991153625],
+            [12.473676416077922, 41.88168243404695],
+            [12.48206787678484, 41.87925934420451],
+            [12.486343373875314, 41.88382037819275],
+            [12.487587734969281, 41.89158763978702],
+            [12.482674103984635, 41.89168264631496],
           ],
         ],
         type: "Polygon",
@@ -103,14 +108,23 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
   };
 
   it("should initialize a zero-shot object detection pipeline", async () => {
-    const result = await geobaseAi.pipeline("zero-shot-object-detection", mapboxParams);
+    const result = await geobaseAi.pipeline(
+      "zero-shot-object-detection",
+      mapboxParams
+    );
 
     expect(result.instance).toBeInstanceOf(ZeroShotObjectDetection);
   });
 
   it("should reuse the same instance for the same model", async () => {
-    const result1 = await geobaseAi.pipeline("zero-shot-object-detection", mapboxParams);
-    const result2 = await geobaseAi.pipeline("zero-shot-object-detection", mapboxParams);
+    const result1 = await geobaseAi.pipeline(
+      "zero-shot-object-detection",
+      mapboxParams
+    );
+    const result2 = await geobaseAi.pipeline(
+      "zero-shot-object-detection",
+      mapboxParams
+    );
 
     expect(result1.instance).toBe(result2.instance);
   });
@@ -136,37 +150,41 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
         ],
         type: "Polygon",
       },
-    };
+    } as GeoJSON.Feature;
 
-    const text = "tree";
+    const text = ["tree. building. car."];
 
-    const results: ObjectDetectionResults = await instance.detection(polygon, text);
+    const results: ObjectDetectionResults = await instance.detection(
+      polygon,
+      text
+    );
 
-    console.log(results);
+    // loop over the results and check if the boxes are within the polygon
+    const result = results[0];
 
     // Check basic properties
-    expect(results).toHaveProperty("scores");
-    expect(results).toHaveProperty("boxes");
-    expect(results).toHaveProperty("labels");
+    expect(result).toHaveProperty("scores");
+    expect(result).toHaveProperty("boxes");
+    expect(result).toHaveProperty("labels");
 
     // Check result types
-    expect(results.scores).toBeInstanceOf(Array);
-    expect(results.boxes).toBeInstanceOf(Array);
-    expect(results.labels).toBeInstanceOf(Array);
+    expect(result.scores).toBeInstanceOf(Array);
+    expect(result.boxes).toBeInstanceOf(Array);
+    expect(result.labels).toBeInstanceOf(Array);
 
     // Check detection properties
-    results.scores.forEach(score => {
+    result.scores.forEach(score => {
       expect(typeof score).toBe("number");
     });
 
-    results.boxes.forEach(box => {
+    result.boxes.forEach(box => {
       expect(box).toBeInstanceOf(Array);
       box.forEach(coordinate => {
         expect(typeof coordinate).toBe("number");
       });
     });
 
-    results.labels.forEach(label => {
+    result.labels.forEach(label => {
       expect(typeof label).toBe("string");
     });
   });

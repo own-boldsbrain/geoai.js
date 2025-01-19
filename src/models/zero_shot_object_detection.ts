@@ -3,6 +3,7 @@ import {
   AutoModelForZeroShotObjectDetection,
   AutoProcessor,
   load_image,
+  pipeline,
 } from "@huggingface/transformers";
 
 interface ProviderParams {
@@ -109,9 +110,21 @@ export class ZeroShotObjectDetection {
     const best_fitting_tile_uri = this.polygon_to_image_uri(polygon);
     const image = await load_image(best_fitting_tile_uri);
 
-    const inputs = await this.processor(image, text);
+    let inputs;
+    try {
+      inputs = await this.processor(image, text);
+    } catch (error) {
+      console.debug("error", error);
+      throw error;
+    }
 
-    const outputs = await this.model(inputs);
+    let outputs;
+    try {
+      outputs = await this.model(inputs);
+    } catch (error) {
+      console.debug("error", error);
+      throw error;
+    }
 
     const results = this.processor.post_process_grounded_object_detection(
       outputs,
@@ -123,8 +136,6 @@ export class ZeroShotObjectDetection {
       }
     );
 
-    return {
-      ...results,
-    };
+    return results;
   }
 }
