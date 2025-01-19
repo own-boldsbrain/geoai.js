@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { geobaseAi } from "../src/geobase-ai";
 import { GenericSegmentation } from "../src/models/generic_segmentation";
+import { ObjectDetectionResults, ZeroShotObjectDetection } from "../src/models/zero_shot_object_detection";
 import type { MapboxParams } from "../src/geobase-ai";
 
 describe("geobase-ai", () => {
@@ -90,5 +91,83 @@ describe("geobaseAi.pipeline", () => {
         expect(tensor.type).toBe("float32");
       }
     );
+  });
+});
+
+describe("geobaseAi.zeroShotObjectDetection", () => {
+  const mapboxParams: MapboxParams = {
+    provider: "mapbox",
+    apiKey:
+      "pk.eyJ1Ijoic2FiIiwiYSI6ImNsNDE3bGR3bzB2MmczaXF5dmxpaTloNmcifQ.NQ-B8jBPtOd53tNYt42Gqw",
+    style: "mapbox://styles/mapbox/satellite-v9",
+  };
+
+  it("should initialize a zero-shot object detection pipeline", async () => {
+    const result = await geobaseAi.pipeline("zero-shot-object-detection", mapboxParams);
+
+    expect(result.instance).toBeInstanceOf(ZeroShotObjectDetection);
+  });
+
+  it("should reuse the same instance for the same model", async () => {
+    const result1 = await geobaseAi.pipeline("zero-shot-object-detection", mapboxParams);
+    const result2 = await geobaseAi.pipeline("zero-shot-object-detection", mapboxParams);
+
+    expect(result1.instance).toBe(result2.instance);
+  });
+
+  it("should process a polygon for object detection", async () => {
+    const { instance } = await geobaseAi.pipeline(
+      "zero-shot-object-detection",
+      mapboxParams
+    );
+
+    const polygon = {
+      type: "Feature",
+      properties: {},
+      geometry: {
+        coordinates: [
+          [
+            [12.464671438808836, 41.89626288034978],
+            [12.464671438808836, 41.87734089295918],
+            [12.492452680977294, 41.87734089295918],
+            [12.492452680977294, 41.89626288034978],
+            [12.464671438808836, 41.89626288034978],
+          ],
+        ],
+        type: "Polygon",
+      },
+    };
+
+    const text = "tree";
+
+    const results: ObjectDetectionResults = await instance.detection(polygon, text);
+
+    console.log(results);
+
+    // Check basic properties
+    expect(results).toHaveProperty("scores");
+    expect(results).toHaveProperty("boxes");
+    expect(results).toHaveProperty("labels");
+
+    // Check result types
+    expect(results.scores).toBeInstanceOf(Array);
+    expect(results.boxes).toBeInstanceOf(Array);
+    expect(results.labels).toBeInstanceOf(Array);
+
+    // Check detection properties
+    results.scores.forEach(score => {
+      expect(typeof score).toBe("number");
+    });
+
+    results.boxes.forEach(box => {
+      expect(box).toBeInstanceOf(Array);
+      box.forEach(coordinate => {
+        expect(typeof coordinate).toBe("number");
+      });
+    });
+
+    results.labels.forEach(label => {
+      expect(typeof label).toBe("string");
+    });
   });
 });

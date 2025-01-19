@@ -3,6 +3,7 @@
 // https://huggingface.co/models?pipeline_tag=zero-shot-image-classification&library=transformers.js
 
 import { GenericSegmentation } from "./models/generic_segmentation";
+import { ZeroShotObjectDetection } from "./models/zero_shot_object_detection";
 
 type MapboxParams = {
   provider: "mapbox";
@@ -38,7 +39,7 @@ type GeobaseAiModelMetadata = {
   description: string;
   geobase_ai_pipeline: (
     params: ProviderParams
-  ) => Promise<{ instance: GenericSegmentation }>;
+  ) => Promise<{ instance: GenericSegmentation | ZeroShotObjectDetection }>;
 };
 
 const model_metadata: GeobaseAiModelMetadata[] = [
@@ -47,8 +48,12 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     library: "transformers.js",
     model: "onnx-community/grounding-dino-tiny-ONNX",
     description: "Zero-shot object detection model.",
-    geobase_ai_pipeline: async () => {
-      throw new Error("Not implemented");
+    geobase_ai_pipeline: (params: ProviderParams) => {
+      return ZeroShotObjectDetection.getInstance(
+        "onnx-community/grounding-dino-tiny-ONNX",
+        params.provider,
+        params
+      );
     },
   },
   {
