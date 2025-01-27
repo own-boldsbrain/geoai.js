@@ -4,6 +4,20 @@ import { bboxPolygon as turfBboxPolygon } from "@turf/bbox-polygon";
 import { booleanWithin as turfBooleanWithin } from "@turf/boolean-within";
 import { area as turfArea } from "@turf/area";
 import { pointToTile, tileToBBox } from "global-mercator/index";
+const addChain = receiver =>
+  Object.defineProperty(receiver.prototype, "chain", {
+    value: function (intercept) {
+      let val = this.valueOf ? this.valueOf() : this;
+      return intercept(val);
+    },
+    enumerable: false,
+    configurable: true,
+    writable: true,
+  });
+
+[Object, String, Number, Boolean].map(receiver => {
+  addChain(receiver);
+});
 
 const getTileBbox = (lon: number, lat: number, z: number) => {
   z = Math.floor(z);
@@ -97,28 +111,48 @@ const calculateTilesForBbox = (bbox: any, zoom: number) => {
       tile: pointToTile([bbox[0], bbox[1]], zoom),
       tileGeoJson: turfBboxPolygon(
         tileToBBox(pointToTile([bbox[0], bbox[1]], zoom))
-      ),
+      ).chain(feature => {
+        feature.properties = {
+          tileCoords: pointToTile([bbox[0], bbox[1]], zoom),
+        };
+        return feature;
+      }),
     },
     bottomright: {
       coords: [bbox[2], bbox[1]],
       tile: pointToTile([bbox[2], bbox[1]], zoom),
       tileGeoJson: turfBboxPolygon(
         tileToBBox(pointToTile([bbox[2], bbox[1]], zoom))
-      ),
+      ).chain(feature => {
+        feature.properties = {
+          tileCoords: pointToTile([bbox[2], bbox[1]], zoom),
+        };
+        return feature;
+      }),
     },
     topleft: {
       coords: [bbox[0], bbox[3]],
       tile: pointToTile([bbox[0], bbox[3]], zoom),
       tileGeoJson: turfBboxPolygon(
         tileToBBox(pointToTile([bbox[0], bbox[3]], zoom))
-      ),
+      ).chain(feature => {
+        feature.properties = {
+          tileCoords: pointToTile([bbox[0], bbox[3]], zoom),
+        };
+        return feature;
+      }),
     },
     topright: {
       coords: [bbox[2], bbox[3]],
       tile: pointToTile([bbox[2], bbox[3]], zoom),
       tileGeoJson: turfBboxPolygon(
         tileToBBox(pointToTile([bbox[2], bbox[3]], zoom))
-      ),
+      ).chain(feature => {
+        feature.properties = {
+          tileCoords: pointToTile([bbox[2], bbox[3]], zoom),
+        };
+        return feature;
+      }),
     },
   };
 };
