@@ -1,9 +1,9 @@
-import { pointToTile } from "global-mercator";
 import { bbox as turfBbox } from "@turf/bbox";
 import { center as turfCenter } from "@turf/center";
 import { bboxPolygon as turfBboxPolygon } from "@turf/bbox-polygon";
-
-import { pointToTile, tileToBBox } from "global-mercator";
+import { booleanWithin as turfBooleanWithin } from "@turf/boolean-within";
+import { area as turfArea } from "@turf/area";
+import { pointToTile, tileToBBox } from "global-mercator/index";
 
 const getTileBbox = (lon: number, lat: number, z: number) => {
   z = Math.floor(z);
@@ -39,12 +39,86 @@ export class Mapbox {
 
   get_image_uri(polygon: any) {
     const bbox = turfBbox(polygon);
-    const bboxGeoJSON = turfBboxPolygon(bbox);
-    const center = turfCenter(bboxGeoJSON);
-    const zoom = 14;
-    const tile = pointToTile(center.geometry.coordinates, zoom);
-    //TODO: the style isn't being explicity used here figure out the relation between the style and the tile uri
-    const url = `https://api.mapbox.com/v4/mapbox.satellite/${tile[2]}/${tile[0]}/${tile[1]}.png?access_token=${this.apiKey}`;
-    return url;
+    console.log(bbox);
+    let zoom = 20;
+    // get tile for each of the 4 corners of the bbox
+
+    let tiles = calculateTilesForBbox(bbox, zoom);
+
+    // get number of tiles by each edge of the bbox
+    let xTileNum =
+      Math.abs(tiles.bottomleft.tile[0] - tiles.bottomright.tile[0]) + 1;
+    let yTileNum =
+      Math.abs(tiles.bottomleft.tile[1] - tiles.topleft.tile[1]) + 1;
+    console.log(xTileNum, yTileNum);
+    // while xTileNum < 2 || yTileNum < 2
+
+    let featureCollection: any = {
+      type: "FeatureCollection",
+      features: new Set(),
+    };
+
+    while (xTileNum > 1 || yTileNum > 1) {
+      zoom--;
+      tiles = calculateTilesForBbox(bbox, zoom);
+      xTileNum =
+        Math.abs(tiles.bottomleft.tile[0] - tiles.bottomright.tile[0]) + 1;
+      yTileNum = Math.abs(tiles.bottomleft.tile[1] - tiles.topleft.tile[1]) + 1;
+      console.log(zoom, xTileNum, yTileNum);
+      featureCollection.features.add(
+        JSON.stringify(tiles.bottomleft.tileGeoJson)
+      );
+      featureCollection.features.add(
+        JSON.stringify(tiles.bottomright.tileGeoJson)
+      );
+      featureCollection.features.add(JSON.stringify(tiles.topleft.tileGeoJson));
+      featureCollection.features.add(
+        JSON.stringify(tiles.topright.tileGeoJson)
+      );
+    }
+    console.log(xTileNum, yTileNum);
+    // convert the features back to json
+    let features = Array.from(featureCollection.features).map(feature =>
+      JSON.parse(feature)
+    );
+    console.log(
+      JSON.stringify({
+        type: "FeatureCollection",
+        features: features.reverse(),
+      })
+    );
   }
 }
+
+const calculateTilesForBbox = (bbox: any, zoom: number) => {
+  return {
+    bottomleft: {
+      coords: [bbox[0], bbox[1]],
+      tile: pointToTile([bbox[0], bbox[1]], zoom),
+      tileGeoJson: turfBboxPolygon(
+        tileToBBox(pointToTile([bbox[0], bbox[1]], zoom))
+      ),
+    },
+    bottomright: {
+      coords: [bbox[2], bbox[1]],
+      tile: pointToTile([bbox[2], bbox[1]], zoom),
+      tileGeoJson: turfBboxPolygon(
+        tileToBBox(pointToTile([bbox[2], bbox[1]], zoom))
+      ),
+    },
+    topleft: {
+      coords: [bbox[0], bbox[3]],
+      tile: pointToTile([bbox[0], bbox[3]], zoom),
+      tileGeoJson: turfBboxPolygon(
+        tileToBBox(pointToTile([bbox[0], bbox[3]], zoom))
+      ),
+    },
+    topright: {
+      coords: [bbox[2], bbox[3]],
+      tile: pointToTile([bbox[2], bbox[3]], zoom),
+      tileGeoJson: turfBboxPolygon(
+        tileToBBox(pointToTile([bbox[2], bbox[3]], zoom))
+      ),
+    },
+  };
+};

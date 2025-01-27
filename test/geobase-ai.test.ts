@@ -71,6 +71,8 @@ describe("geobaseAi.pipeline", () => {
       },
     };
 
+    console.log("=========== POLYGON ===========");
+    console.log(JSON.stringify(polygon, null, 2));
     const result = await instance.segment(polygon);
 
     // Check basic properties
