@@ -42,6 +42,11 @@ const getTileUrl = (
   return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${accessToken}`;
 };
 
+const getTileUrlFromTileCoords = (tileCoords: any, accessToken: string) => {
+  const [x, y, z] = tileCoords;
+  return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${accessToken}`;
+};
+
 export class Mapbox {
   apiKey: string;
   style: string;
@@ -57,7 +62,7 @@ export class Mapbox {
     let zoom = 20;
     // get tile for each of the 4 corners of the bbox
 
-    let tiles = calculateTilesForBbox(bbox, zoom);
+    let tiles = this.calculateTilesForBbox(bbox, zoom);
 
     // get number of tiles by each edge of the bbox
     let xTileNum =
@@ -74,7 +79,7 @@ export class Mapbox {
 
     while (xTileNum > 1 || yTileNum > 1) {
       zoom--;
-      tiles = calculateTilesForBbox(bbox, zoom);
+      tiles = this.calculateTilesForBbox(bbox, zoom);
       xTileNum =
         Math.abs(tiles.bottomleft.tile[0] - tiles.bottomright.tile[0]) + 1;
       yTileNum = Math.abs(tiles.bottomleft.tile[1] - tiles.topleft.tile[1]) + 1;
@@ -102,57 +107,68 @@ export class Mapbox {
       })
     );
   }
-}
-
-const calculateTilesForBbox = (bbox: any, zoom: number) => {
-  return {
-    bottomleft: {
-      coords: [bbox[0], bbox[1]],
-      tile: pointToTile([bbox[0], bbox[1]], zoom),
-      tileGeoJson: turfBboxPolygon(
-        tileToBBox(pointToTile([bbox[0], bbox[1]], zoom))
-      ).chain(feature => {
-        feature.properties = {
-          tileCoords: pointToTile([bbox[0], bbox[1]], zoom),
-        };
-        return feature;
-      }),
-    },
-    bottomright: {
-      coords: [bbox[2], bbox[1]],
-      tile: pointToTile([bbox[2], bbox[1]], zoom),
-      tileGeoJson: turfBboxPolygon(
-        tileToBBox(pointToTile([bbox[2], bbox[1]], zoom))
-      ).chain(feature => {
-        feature.properties = {
-          tileCoords: pointToTile([bbox[2], bbox[1]], zoom),
-        };
-        return feature;
-      }),
-    },
-    topleft: {
-      coords: [bbox[0], bbox[3]],
-      tile: pointToTile([bbox[0], bbox[3]], zoom),
-      tileGeoJson: turfBboxPolygon(
-        tileToBBox(pointToTile([bbox[0], bbox[3]], zoom))
-      ).chain(feature => {
-        feature.properties = {
-          tileCoords: pointToTile([bbox[0], bbox[3]], zoom),
-        };
-        return feature;
-      }),
-    },
-    topright: {
-      coords: [bbox[2], bbox[3]],
-      tile: pointToTile([bbox[2], bbox[3]], zoom),
-      tileGeoJson: turfBboxPolygon(
-        tileToBBox(pointToTile([bbox[2], bbox[3]], zoom))
-      ).chain(feature => {
-        feature.properties = {
-          tileCoords: pointToTile([bbox[2], bbox[3]], zoom),
-        };
-        return feature;
-      }),
-    },
+  calculateTilesForBbox = (bbox: any, zoom: number) => {
+    return {
+      bottomleft: {
+        coords: [bbox[0], bbox[1]],
+        tile: pointToTile([bbox[0], bbox[1]], zoom),
+        tileGeoJson: turfBboxPolygon(
+          tileToBBox(pointToTile([bbox[0], bbox[1]], zoom))
+        ).chain(feature => {
+          feature.properties = {
+            tileCoords: pointToTile([bbox[0], bbox[1]], zoom),
+            tileUrl: getTileUrlFromTileCoords(
+              pointToTile([bbox[0], bbox[1]], zoom),
+              this.apiKey
+            ),
+          };
+          return feature;
+        }),
+      },
+      bottomright: {
+        coords: [bbox[2], bbox[1]],
+        tile: pointToTile([bbox[2], bbox[1]], zoom),
+        tileGeoJson: turfBboxPolygon(
+          tileToBBox(pointToTile([bbox[2], bbox[1]], zoom))
+        ).chain(feature => {
+          feature.properties = {
+            tileCoords: pointToTile([bbox[2], bbox[1]], zoom),
+            tileUrl: getTileUrlFromTileCoords(
+              pointToTile([bbox[2], bbox[1]], zoom),
+              this.apiKey
+            ),
+          };
+          return feature;
+        }),
+      },
+      topleft: {
+        coords: [bbox[0], bbox[3]],
+        tile: pointToTile([bbox[0], bbox[3]], zoom),
+        tileGeoJson: turfBboxPolygon(
+          tileToBBox(pointToTile([bbox[0], bbox[3]], zoom))
+        ).chain(feature => {
+          feature.properties = {
+            tileCoords: pointToTile([bbox[0], bbox[3]], zoom),
+          };
+          return feature;
+        }),
+      },
+      topright: {
+        coords: [bbox[2], bbox[3]],
+        tile: pointToTile([bbox[2], bbox[3]], zoom),
+        tileGeoJson: turfBboxPolygon(
+          tileToBBox(pointToTile([bbox[2], bbox[3]], zoom))
+        ).chain(feature => {
+          feature.properties = {
+            tileCoords: pointToTile([bbox[2], bbox[3]], zoom),
+            tileUrl: getTileUrlFromTileCoords(
+              pointToTile([bbox[2], bbox[3]], zoom),
+              this.apiKey
+            ),
+          };
+          return feature;
+        }),
+      },
+    };
   };
-};
+}
