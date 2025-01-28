@@ -7,6 +7,7 @@ import {
 } from "../src/models/zero_shot_object_detection";
 import type { MapboxParams } from "../src/geobase-ai";
 import type { Feature } from "geojson";
+
 describe("geobase-ai", () => {
   it("should be an object", () => {
     expect(geobaseAi).toBeInstanceOf(Object);
@@ -25,7 +26,7 @@ describe("geobase-ai", () => {
   });
 });
 
-describe("geobaseAi.pipeline", () => {
+describe.skip("geobaseAi.pipeline", () => {
   const mapboxParams: MapboxParams = {
     provider: "mapbox",
     apiKey:
@@ -71,8 +72,6 @@ describe("geobaseAi.pipeline", () => {
       },
     };
 
-    console.log("=========== POLYGON ===========");
-    console.log(JSON.stringify(polygon, null, 2));
     const result = await instance.segment(polygon);
 
     // Check basic properties

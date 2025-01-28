@@ -1,5 +1,5 @@
 import { Mapbox } from "@/data_providers/mapbox";
-import { RawImage } from "@huggingface/transformers";
+import { load_image, RawImage } from "@huggingface/transformers";
 import { SamModel, AutoProcessor } from "@huggingface/transformers";
 
 interface ProviderParams {
@@ -95,20 +95,36 @@ export class GenericSegmentation {
       throw new Error("Data provider not initialized properly");
     }
 
-    const best_fitting_tile_uri = this.polygon_to_image_uri(polygon);
-    const embeddings = await this.create_embeddings_from_image_uri(
-      best_fitting_tile_uri
-    );
+    // const best_fitting_tile_uri = this.polygon_to_image_uri(polygon);
+    // const embeddings = await this.create_embeddings_from_image_uri(
+    //   best_fitting_tile_uri
+    // );
 
+    // return {
+    //   embeddings,
+    //   masks: polygon,
+    //   best_fitting_tile_uri,
+    // };
+
+    const rawImage = await this.polygon_to_image(polygon);
+    console.log(rawImage);
+    // const image = await load_image(rawImage)
+    const inputs = await this.processor(rawImage);
+    const outputs = await this.model(inputs);
     return {
-      embeddings,
+      embeddings: outputs.image_embeddings,
       masks: polygon,
-      best_fitting_tile_uri,
+      rawImage,
     };
   }
 
-  private polygon_to_image_uri(polygon: GeoJSON.Feature): string {
-    return this.dataProvider.get_image_uri(polygon);
+  // private polygon_to_image_uri(polygon: GeoJSON.Feature): string {
+  //   return this.dataProvider.get_image_uri(polygon);
+  // }
+
+  private async polygon_to_image(polygon: GeoJSON.Feature): Promise<RawImage> {
+    const image = this.dataProvider.get_image(polygon);
+    return image;
   }
 
   private async create_embeddings_from_image_uri(image_uri: string) {

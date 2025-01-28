@@ -4,6 +4,7 @@ import {
   AutoProcessor,
   load_image,
   pipeline,
+  RawImage,
 } from "@huggingface/transformers";
 
 interface ProviderParams {
@@ -89,8 +90,13 @@ export class ZeroShotObjectDetection {
     this.initialized = true;
   }
 
-  private polygon_to_image_uri(polygon: GeoJSON.Feature): string {
-    return this.dataProvider.get_image_uri(polygon);
+  // private polygon_to_image_uri(polygon: GeoJSON.Feature): string {
+  //   return this.dataProvider.get_image_uri(polygon);
+  // }
+
+  private async polygon_to_image(polygon: GeoJSON.Feature): Promise<RawImage> {
+    const image = this.dataProvider.get_image(polygon);
+    return image;
   }
 
   async detection(
@@ -107,9 +113,10 @@ export class ZeroShotObjectDetection {
       throw new Error("Data provider not initialized properly");
     }
 
-    const best_fitting_tile_uri = this.polygon_to_image_uri(polygon);
-    const image = await load_image(best_fitting_tile_uri);
+    const image = await this.polygon_to_image(polygon);
+    // const image = await load_image(best_fitting_tile_uri);
 
+    console.log(image);
     let inputs;
     try {
       inputs = await this.processor(image, text);
