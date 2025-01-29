@@ -5,6 +5,7 @@ import { booleanWithin as turfBooleanWithin } from "@turf/boolean-within";
 import { area as turfArea } from "@turf/area";
 import { pointToTile, tileToBBox } from "global-mercator/index";
 import { load_image, RawImage } from "@huggingface/transformers";
+
 const addChain = receiver =>
   Object.defineProperty(receiver.prototype, "chain", {
     value: function (intercept) {
@@ -217,6 +218,14 @@ export class Mapbox {
     copyTileToFinalImage(rawImages[3].data, finalData, 0, 0); // Top-left
 
     // Return the merged image as a new RawImage
-    return new RawImage(finalData, finalWidth, finalHeight, channels);
+    const mergedImage = new RawImage(
+      finalData,
+      finalWidth,
+      finalHeight,
+      channels
+    );
+    // save to file
+    mergedImage.save("merged.png");
+    return mergedImage;
   }
 }
