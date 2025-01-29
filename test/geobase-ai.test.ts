@@ -7,7 +7,7 @@ import {
 } from "../src/models/zero_shot_object_detection";
 import type { MapboxParams } from "../src/geobase-ai";
 import type { Feature } from "geojson";
-
+import { pipeline } from "@huggingface/transformers";
 describe("geobase-ai", () => {
   it("should be an object", () => {
     expect(geobaseAi).toBeInstanceOf(Object);
@@ -188,5 +188,23 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
     });
 
     console.log(result);
+  });
+});
+
+describe("geobaseAi.zeroShotObjectDetection with waldo model", () => {
+  const mapboxParams: MapboxParams = {
+    provider: "mapbox",
+    apiKey:
+      "pk.eyJ1Ijoic2FiIiwiYSI6ImNsNDE3bGR3bzB2MmczaXF5dmxpaTloNmcifQ.NQ-B8jBPtOd53tNYt42Gqw",
+    style: "mapbox://styles/mapbox/satellite-v9",
+  };
+
+  it("should initialize a zero-shot object detection pipeline", async () => {
+    const detector = await pipeline("object-detection", "StephanST/WALDO30");
+
+    const image =
+      "https://content.satimagingcorp.com/static/galleryimages/high-resolution-satellite-photo-reliant.jpg";
+    const output = await detector(image, { threshold: 0.9 });
+    console.log(output);
   });
 });

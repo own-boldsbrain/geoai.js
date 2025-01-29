@@ -79,7 +79,6 @@ export class ZeroShotObjectDetection {
       throw new Error("Failed to initialize data provider");
     }
 
-    // Then initialize model componentsconst model = ;
     this.model = await AutoModelForZeroShotObjectDetection.from_pretrained(
       this.model_id,
       { dtype: "fp32" }
