@@ -3,6 +3,7 @@
 // https://huggingface.co/models?pipeline_tag=zero-shot-image-classification&library=transformers.js
 
 import { GenericSegmentation } from "./models/generic_segmentation";
+import { ObjectDetection } from "./models/object_detection";
 import { ZeroShotObjectDetection } from "./models/zero_shot_object_detection";
 
 type MapboxParams = {
@@ -22,7 +23,8 @@ type ProviderParams = MapboxParams | SentinelParams;
 type HuggingFaceModelTasks =
   | "mask-generation"
   | "zero-shot-object-detection"
-  | "zero-shot-image-classification";
+  | "zero-shot-image-classification"
+  | "object-detection";
 
 type GeobaseAiModelTasks =
   | "damage-assessment"
@@ -64,6 +66,19 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     geobase_ai_pipeline: (params: ProviderParams) => {
       return GenericSegmentation.getInstance(
         "Xenova/slimsam-77-uniform",
+        params.provider,
+        params
+      );
+    },
+  },
+  {
+    task: "object-detection",
+    library: "transformers.js",
+    model: "mhassanch/WALDO30_yolov8m_640x640",
+    description: "Object Detection model.",
+    geobase_ai_pipeline: (params: ProviderParams) => {
+      return ObjectDetection.getInstance(
+        "mhassanch/WALDO30_yolov8m_640x640",
         params.provider,
         params
       );

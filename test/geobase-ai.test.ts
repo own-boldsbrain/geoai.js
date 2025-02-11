@@ -5,6 +5,7 @@ import {
   ObjectDetectionResults,
   ZeroShotObjectDetection,
 } from "../src/models/zero_shot_object_detection";
+import { ObjectDetection } from "../src/models/object_detection";
 import type { MapboxParams } from "../src/geobase-ai";
 import type { Feature } from "geojson";
 import { pipeline } from "@huggingface/transformers";
@@ -191,7 +192,7 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
   });
 });
 
-describe("geobaseAi.zeroShotObjectDetection with waldo model", () => {
+describe("geobaseAi.objectDetection", () => {
   const mapboxParams: MapboxParams = {
     provider: "mapbox",
     apiKey:
@@ -199,12 +200,70 @@ describe("geobaseAi.zeroShotObjectDetection with waldo model", () => {
     style: "mapbox://styles/mapbox/satellite-v9",
   };
 
-  it("should initialize a zero-shot object detection pipeline", async () => {
-    const detector = await pipeline("object-detection", "StephanST/WALDO30");
+  it("should initialize a object detection pipeline", async () => {
+    const result = await geobaseAi.pipeline("object-detection", mapboxParams);
 
-    const image =
-      "https://content.satimagingcorp.com/static/galleryimages/high-resolution-satellite-photo-reliant.jpg";
-    const output = await detector(image, { threshold: 0.9 });
-    console.log(output);
+    expect(result.instance).toBeInstanceOf(ObjectDetection);
+  });
+
+  it("should reuse the same instance for the same model", async () => {
+    const result1 = await geobaseAi.pipeline("object-detection", mapboxParams);
+    const result2 = await geobaseAi.pipeline("object-detection", mapboxParams);
+
+    expect(result1.instance).toBe(result2.instance);
+  });
+
+  it("should process a polygon for object detection", async () => {
+    const { instance } = await geobaseAi.pipeline(
+      "object-detection",
+      mapboxParams
+    );
+
+    const polygon = {
+      type: "Feature",
+      properties: {},
+      geometry: {
+        coordinates: [
+          [
+            [12.482802629103247, 41.885379230564524],
+            [12.481392196198271, 41.885379230564524],
+            [12.481392196198271, 41.884332326712524],
+            [12.482802629103247, 41.884332326712524],
+            [12.482802629103247, 41.885379230564524],
+          ],
+        ],
+        type: "Polygon",
+      },
+    } as GeoJSON.Feature;
+
+    const results: ObjectDetectionResults = await instance.detection(polygon);
+
+    // Check basic properties
+    expect(results).toHaveProperty("scores");
+    expect(results).toHaveProperty("boxes");
+    expect(results).toHaveProperty("labels");
+
+    // Check result types
+    expect(results.scores).toBeInstanceOf(Array);
+    expect(results.boxes).toBeInstanceOf(Array);
+    expect(results.labels).toBeInstanceOf(Array);
+
+    // Check detection properties
+    results.scores.forEach(score => {
+      expect(typeof score).toBe("number");
+    });
+
+    results.boxes.forEach(box => {
+      expect(box).toBeInstanceOf(Array);
+      box.forEach(coordinate => {
+        expect(typeof coordinate).toBe("number");
+      });
+    });
+
+    results.labels.forEach(label => {
+      expect(typeof label).toBe("string");
+    });
+
+    console.log(results);
   });
 });
