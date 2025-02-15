@@ -303,8 +303,8 @@ export class Mapbox {
 
     // Calculate combined bounds
     const bounds = {
-      north: Math.max(...tiles.map(t => t.bbox[3])),
-      south: Math.min(...tiles.map(t => t.bbox[1])),
+      north: Math.max(...tiles.map(t => t.bbox[1])),
+      south: Math.min(...tiles.map(t => t.bbox[3])),
       east: Math.max(...tiles.map(t => t.bbox[2])),
       west: Math.min(...tiles.map(t => t.bbox[0])),
     };

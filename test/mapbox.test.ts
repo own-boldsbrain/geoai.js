@@ -43,8 +43,8 @@ describe("Mapbox", () => {
 
     // calucated from the combined tiles in the mapbox.ts file
     const expectedBounds = {
-      north: 41.884899,
-      south: 41.884899,
+      north: 41.885921,
+      south: 41.883876,
       east: 12.483216,
       west: 12.480469,
     };
