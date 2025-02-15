@@ -1,14 +1,12 @@
 import { bbox as turfBbox } from "@turf/bbox";
-import { center as turfCenter } from "@turf/center";
 import { bboxPolygon as turfBboxPolygon } from "@turf/bbox-polygon";
-import { booleanWithin as turfBooleanWithin } from "@turf/boolean-within";
-import { area as turfArea } from "@turf/area";
 import { pointToTile, tileToBBox } from "global-mercator/index";
 import { load_image, RawImage } from "@huggingface/transformers";
+import { GeoRawImage } from "../types/images/GeoRawImage";
 
-const addChain = receiver =>
+const addChain = (receiver: any) =>
   Object.defineProperty(receiver.prototype, "chain", {
-    value: function (intercept) {
+    value: function (intercept: any) {
       let val = this.valueOf ? this.valueOf() : this;
       return intercept(val);
     },
@@ -49,6 +47,21 @@ const getTileUrlFromTileCoords = (tileCoords: any, accessToken: string) => {
   return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${accessToken}`;
 };
 
+interface TileMetadata {
+  image: RawImage;
+  bbox: [number, number, number, number]; // [west, south, east, north]
+}
+
+interface MergedResult {
+  image: RawImage;
+  bounds: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  };
+}
+
 export class Mapbox {
   apiKey: string;
   style: string;
@@ -76,12 +89,13 @@ export class Mapbox {
       features: new Set(),
     };
 
-    while (xTileNum > 2 || yTileNum > 2) {
+    while (xTileNum > 2 && yTileNum > 2) {
       zoom--;
       tiles = this.calculateTilesForBbox(bbox, zoom);
       xTileNum =
         Math.abs(tiles.bottomleft.tile[0] - tiles.bottomright.tile[0]) + 1;
       yTileNum = Math.abs(tiles.bottomleft.tile[1] - tiles.topleft.tile[1]) + 1;
+
       featureCollection.features.add(
         JSON.stringify(tiles.bottomleft.tileGeoJson)
       );
@@ -94,7 +108,7 @@ export class Mapbox {
       );
     }
     // convert the features back to json
-    let features = Array.from(featureCollection.features).map(feature =>
+    let features = Array.from(featureCollection.features).map((feature: any) =>
       JSON.parse(feature)
     );
     const tileUrls = [
@@ -104,15 +118,82 @@ export class Mapbox {
       tiles.topleft.tileGeoJson.properties.tileUrl,
     ];
 
-    // load the images from the tile urls and merge them in the correct order
-    const images = await Promise.all(
-      tileUrls.map(tileUrl => load_image(tileUrl))
+    // Add before creating tilesWithMetadata
+    console.log("Tile bboxes:");
+    console.log("bottomleft:", tiles.bottomleft.tileGeoJson.bbox);
+    console.log("bottomright:", tiles.bottomright.tileGeoJson.bbox);
+    console.log("topright:", tiles.topright.tileGeoJson.bbox);
+    console.log("topleft:", tiles.topleft.tileGeoJson.bbox);
+
+    // Load images and create metadata objects
+    const tilesWithMetadata: TileMetadata[] = [
+      {
+        image: await load_image(tileUrls[0]),
+        bbox: tiles.bottomleft.tileGeoJson.bbox,
+      },
+      {
+        image: await load_image(tileUrls[1]),
+        bbox: tiles.bottomright.tileGeoJson.bbox,
+      },
+      {
+        image: await load_image(tileUrls[2]),
+        bbox: tiles.topright.tileGeoJson.bbox,
+      },
+      {
+        image: await load_image(tileUrls[3]),
+        bbox: tiles.topleft.tileGeoJson.bbox,
+      },
+    ];
+
+    const { image: mergedImage, bounds } =
+      this.mergeRawImages(tilesWithMetadata);
+
+    console.log("bounds", bounds);
+
+    // Add after bounds calculation
+    console.log("Individual north values:", [
+      tiles.bottomleft.tileGeoJson.bbox[3],
+      tiles.bottomright.tileGeoJson.bbox[3],
+      tiles.topright.tileGeoJson.bbox[3],
+      tiles.topleft.tileGeoJson.bbox[3],
+    ]);
+    console.log("Individual south values:", [
+      tiles.bottomleft.tileGeoJson.bbox[1],
+      tiles.bottomright.tileGeoJson.bbox[1],
+      tiles.topright.tileGeoJson.bbox[1],
+      tiles.topleft.tileGeoJson.bbox[1],
+    ]);
+
+    // Calculate transform matrix
+    const transform = {
+      a: (bounds.east - bounds.west) / mergedImage.width,
+      b: 0,
+      c: bounds.west,
+      d: 0,
+      e: -(bounds.north - bounds.south) / mergedImage.height,
+      f: bounds.north,
+    };
+
+    return GeoRawImage.fromRawImage(
+      mergedImage,
+      bounds,
+      transform,
+      "EPSG:4326"
     );
-    const mergedImage = await this.mergeRawImages(images);
-    return mergedImage;
   }
 
   calculateTilesForBbox = (bbox: any, zoom: number) => {
+    console.log("Input bbox for tile calculation:", bbox);
+    console.log("Zoom level:", zoom);
+    console.log("bbox", bbox);
+    let _bbox1 = tileToBBox(pointToTile([bbox[0], bbox[1]], zoom));
+    console.log("_bbox1", _bbox1);
+    let _bbox2 = tileToBBox(pointToTile([bbox[2], bbox[1]], zoom));
+    console.log("_bbox2", _bbox2);
+    let _bbox3 = tileToBBox(pointToTile([bbox[0], bbox[3]], zoom));
+    console.log("_bbox3", _bbox3);
+    let _bbox4 = tileToBBox(pointToTile([bbox[2], bbox[3]], zoom));
+    console.log("_bbox4", _bbox4);
     return {
       bottomleft: {
         coords: [bbox[0], bbox[1]],
@@ -181,29 +262,32 @@ export class Mapbox {
     };
   };
 
-  // Function to merge images into one large image
-  mergeRawImages(rawImages: RawImage[]) {
+  mergeRawImages(tiles: TileMetadata[]): MergedResult {
     // Each image has the same dimensions and number of channels
-    const tileWidth = rawImages[0].width;
-    const tileHeight = rawImages[0].height;
-    const channels = rawImages[0].channels;
+    const tileWidth = tiles[0].image.width;
+    const tileHeight = tiles[0].image.height;
+    const channels = tiles[0].image.channels;
 
     // Final image dimensions (2x2 grid)
-    const finalWidth = tileWidth * 2; // 2 tiles wide
-    const finalHeight = tileHeight * 2; // 2 tiles tall
+    const finalWidth = tileWidth * 2;
+    const finalHeight = tileHeight * 2;
     const finalData = new Uint8ClampedArray(
       finalWidth * finalHeight * channels
     );
 
     // Helper function to copy a single tile into the final image
-    function copyTileToFinalImage(source, dest, offsetX, offsetY) {
+    function copyTileToFinalImage(
+      source: Uint8ClampedArray | Uint8Array,
+      dest: Uint8ClampedArray,
+      offsetX: number,
+      offsetY: number
+    ) {
       for (let y = 0; y < tileHeight; y++) {
         for (let x = 0; x < tileWidth; x++) {
           const sourceIndex = (y * tileWidth + x) * channels;
           const destIndex =
             ((offsetY + y) * finalWidth + (offsetX + x)) * channels;
 
-          // Copy each channel (R, G, B) from source to destination
           for (let c = 0; c < channels; c++) {
             dest[destIndex + c] = source[sourceIndex + c];
           }
@@ -212,20 +296,22 @@ export class Mapbox {
     }
 
     // Place each tile in the 2x2 grid
-    copyTileToFinalImage(rawImages[0].data, finalData, 0, tileHeight); // Bottom-left
-    copyTileToFinalImage(rawImages[1].data, finalData, tileWidth, tileHeight); // Bottom-right
-    copyTileToFinalImage(rawImages[2].data, finalData, tileWidth, 0); // Top-right
-    copyTileToFinalImage(rawImages[3].data, finalData, 0, 0); // Top-left
+    copyTileToFinalImage(tiles[0].image.data, finalData, 0, tileHeight); // Bottom-left
+    copyTileToFinalImage(tiles[1].image.data, finalData, tileWidth, tileHeight); // Bottom-right
+    copyTileToFinalImage(tiles[2].image.data, finalData, tileWidth, 0); // Top-right
+    copyTileToFinalImage(tiles[3].image.data, finalData, 0, 0); // Top-left
 
-    // Return the merged image as a new RawImage
-    const mergedImage = new RawImage(
-      finalData,
-      finalWidth,
-      finalHeight,
-      channels
-    );
-    // save to file
-    mergedImage.save("merged.png");
-    return mergedImage;
+    // Calculate combined bounds
+    const bounds = {
+      north: Math.max(...tiles.map(t => t.bbox[3])),
+      south: Math.min(...tiles.map(t => t.bbox[1])),
+      east: Math.max(...tiles.map(t => t.bbox[2])),
+      west: Math.min(...tiles.map(t => t.bbox[0])),
+    };
+
+    return {
+      image: new RawImage(finalData, finalWidth, finalHeight, channels),
+      bounds,
+    };
   }
 }
