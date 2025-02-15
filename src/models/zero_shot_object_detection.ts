@@ -1,12 +1,6 @@
 import { Mapbox } from "@/data_providers/mapbox";
-import {
-  AutoModelForZeroShotObjectDetection,
-  AutoProcessor,
-  load_image,
-  pipeline,
-  RawImage,
-} from "@huggingface/transformers";
-
+import { pipeline, RawImage } from "@huggingface/transformers";
+import { parametersChanged } from "@/utils/utils";
 interface ProviderParams {
   apiKey: string;
   style: string;
@@ -24,8 +18,7 @@ export class ZeroShotObjectDetection {
   private providerParams: ProviderParams;
   private dataProvider: Mapbox;
   private model_id: string;
-  private model: typeof AutoModelForZeroShotObjectDetection;
-  private processor: typeof AutoProcessor;
+  private detector: any;
 
   private initialized: boolean = false;
 
@@ -44,7 +37,15 @@ export class ZeroShotObjectDetection {
     provider: string,
     providerParams: ProviderParams
   ): Promise<{ instance: ZeroShotObjectDetection }> {
-    if (!ZeroShotObjectDetection.instance) {
+    if (
+      !ZeroShotObjectDetection.instance ||
+      parametersChanged(
+        ZeroShotObjectDetection.instance,
+        model_id,
+        provider,
+        providerParams
+      )
+    ) {
       ZeroShotObjectDetection.instance = new ZeroShotObjectDetection(
         model_id,
         provider,
@@ -79,19 +80,10 @@ export class ZeroShotObjectDetection {
       throw new Error("Failed to initialize data provider");
     }
 
-    this.model = await AutoModelForZeroShotObjectDetection.from_pretrained(
-      this.model_id,
-      { dtype: "fp32" }
-    );
-
-    this.processor = await AutoProcessor.from_pretrained(this.model_id);
+    this.detector = await pipeline("zero-shot-object-detection", this.model_id);
 
     this.initialized = true;
   }
-
-  // private polygon_to_image_uri(polygon: GeoJSON.Feature): string {
-  //   return this.dataProvider.get_image_uri(polygon);
-  // }
 
   private async polygon_to_image(polygon: GeoJSON.Feature): Promise<RawImage> {
     const image = this.dataProvider.get_image(polygon);
@@ -100,7 +92,7 @@ export class ZeroShotObjectDetection {
 
   async detection(
     polygon: GeoJSON.Feature,
-    text: string
+    text: string | string[]
   ): Promise<ObjectDetectionResults> {
     // Ensure initialization is complete
     if (!this.initialized) {
@@ -113,35 +105,35 @@ export class ZeroShotObjectDetection {
     }
 
     const image = await this.polygon_to_image(polygon);
-    // const image = await load_image(best_fitting_tile_uri);
-
-    console.log(image);
-    let inputs;
-    try {
-      inputs = await this.processor(image, text);
-    } catch (error) {
-      console.debug("error", error);
-      throw error;
-    }
 
     let outputs;
     try {
-      outputs = await this.model(inputs);
+      const candidate_labels = Array.isArray(text) ? text : [text];
+      outputs = await this.detector(image, candidate_labels, {
+        topk: 4,
+        threshold: 0.2,
+      });
     } catch (error) {
       console.debug("error", error);
       throw error;
     }
 
-    const results = this.processor.post_process_grounded_object_detection(
-      outputs,
-      inputs.input_ids,
-      {
-        box_threshold: 0.3,
-        text_threshold: 0.3,
-        target_sizes: [image.size.reverse()],
-      }
-    );
+    const model_output = {
+      scores: [],
+      boxes: [],
+      labels: [],
+    };
 
-    return results;
+    outputs.forEach((item: any) => {
+      model_output.scores.push(item.score);
+      model_output.boxes.push([
+        item.box.xmin,
+        item.box.ymin,
+        item.box.xmax,
+        item.box.ymax,
+      ]);
+      model_output.labels.push(item.label);
+    });
+    return model_output;
   }
 }

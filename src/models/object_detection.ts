@@ -1,5 +1,6 @@
 import { Mapbox } from "@/data_providers/mapbox";
 import { AutoModel, AutoProcessor, RawImage } from "@huggingface/transformers";
+import { parametersChanged } from "@/utils/utils";
 
 import { ObjectDetectionResults } from "../models/zero_shot_object_detection";
 import { postProcessYoloOutput } from "@/utils/utils";
@@ -35,7 +36,15 @@ export class ObjectDetection {
     provider: string,
     providerParams: ProviderParams
   ): Promise<{ instance: ObjectDetection }> {
-    if (!ObjectDetection.instance) {
+    if (
+      !ObjectDetection.instance ||
+      parametersChanged(
+        ObjectDetection.instance,
+        model_id,
+        provider,
+        providerParams
+      )
+    ) {
       ObjectDetection.instance = new ObjectDetection(
         model_id,
         provider,
@@ -97,13 +106,15 @@ export class ObjectDetection {
 
     const image = await this.polygon_to_image(polygon);
     image.save("test_mapbox_image.png");
-    // const image = await load_image(best_fitting_tile_uri);
 
     let outputs;
     let inputs;
     try {
       inputs = await this.processor(image);
-      outputs = await this.model({ images: inputs.pixel_values });
+      outputs = await this.model({
+        images: inputs.pixel_values,
+        confidence: 0.9,
+      });
     } catch (error) {
       console.debug("error", error);
       throw error;

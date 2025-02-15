@@ -1,6 +1,7 @@
 import { Mapbox } from "@/data_providers/mapbox";
-import { load_image, RawImage } from "@huggingface/transformers";
+import { RawImage } from "@huggingface/transformers";
 import { SamModel, AutoProcessor } from "@huggingface/transformers";
+import { parametersChanged } from "@/utils/utils";
 
 interface ProviderParams {
   apiKey: string;
@@ -10,7 +11,7 @@ interface ProviderParams {
 interface SegmentationResult {
   embeddings: any;
   masks: any;
-  best_fitting_tile_uri: string;
+  rawImage: RawImage;
 }
 
 export class GenericSegmentation {
@@ -40,7 +41,15 @@ export class GenericSegmentation {
     provider: string,
     providerParams: ProviderParams
   ): Promise<{ instance: GenericSegmentation }> {
-    if (!GenericSegmentation.instance) {
+    if (
+      !GenericSegmentation.instance ||
+      parametersChanged(
+        GenericSegmentation.instance,
+        model_id,
+        provider,
+        providerParams
+      )
+    ) {
       GenericSegmentation.instance = new GenericSegmentation(
         model_id,
         provider,
@@ -84,7 +93,10 @@ export class GenericSegmentation {
     this.initialized = true;
   }
 
-  async segment(polygon: GeoJSON.Feature): Promise<SegmentationResult> {
+  async segment(
+    polygon: GeoJSON.Feature,
+    input_points: number[][]
+  ): Promise<SegmentationResult> {
     // Ensure initialization is complete
     if (!this.initialized) {
       await this.initialize();
@@ -95,44 +107,23 @@ export class GenericSegmentation {
       throw new Error("Data provider not initialized properly");
     }
 
-    // const best_fitting_tile_uri = this.polygon_to_image_uri(polygon);
-    // const embeddings = await this.create_embeddings_from_image_uri(
-    //   best_fitting_tile_uri
-    // );
-
-    // return {
-    //   embeddings,
-    //   masks: polygon,
-    //   best_fitting_tile_uri,
-    // };
-
     const rawImage = await this.polygon_to_image(polygon);
-    console.log(rawImage);
-    // const image = await load_image(rawImage)
-    const inputs = await this.processor(rawImage);
+    const inputs = await this.processor(rawImage, { input_points });
     const outputs = await this.model(inputs);
+    const masks = await this.processor.post_process_masks(
+      outputs.pred_masks,
+      inputs.original_sizes,
+      inputs.reshaped_input_sizes
+    );
+
     return {
-      embeddings: outputs.image_embeddings,
-      masks: polygon,
+      masks,
       rawImage,
     };
   }
 
-  // private polygon_to_image_uri(polygon: GeoJSON.Feature): string {
-  //   return this.dataProvider.get_image_uri(polygon);
-  // }
-
   private async polygon_to_image(polygon: GeoJSON.Feature): Promise<RawImage> {
     const image = this.dataProvider.get_image(polygon);
     return image;
-  }
-
-  private async create_embeddings_from_image_uri(image_uri: string) {
-    const image = await RawImage.read(image_uri);
-    this.image_inputs = await this.processor(image);
-    this.image_embeddings = await this.model.get_image_embeddings(
-      this.image_inputs
-    );
-    return this.image_embeddings;
   }
 }

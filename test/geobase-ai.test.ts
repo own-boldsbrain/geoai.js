@@ -8,7 +8,32 @@ import {
 import { ObjectDetection } from "../src/models/object_detection";
 import type { MapboxParams } from "../src/geobase-ai";
 import type { Feature } from "geojson";
-import { pipeline } from "@huggingface/transformers";
+
+// before all tests set the polygon
+const polygon = {
+  type: "Feature",
+  properties: {},
+  geometry: {
+    coordinates: [
+      [
+        [12.482802629103247, 41.885379230564524],
+        [12.481392196198271, 41.885379230564524],
+        [12.481392196198271, 41.884332326712524],
+        [12.482802629103247, 41.884332326712524],
+        [12.482802629103247, 41.885379230564524],
+      ],
+    ],
+    type: "Polygon",
+  },
+} as GeoJSON.Feature;
+
+const mapboxParams: MapboxParams = {
+  provider: "mapbox",
+  apiKey:
+    "pk.eyJ1Ijoic2FiIiwiYSI6ImNsNDE3bGR3bzB2MmczaXF5dmxpaTloNmcifQ.NQ-B8jBPtOd53tNYt42Gqw",
+  style: "mapbox://styles/mapbox/satellite-v9",
+};
+
 describe("geobase-ai", () => {
   it("should be an object", () => {
     expect(geobaseAi).toBeInstanceOf(Object);
@@ -27,14 +52,7 @@ describe("geobase-ai", () => {
   });
 });
 
-describe.skip("geobaseAi.pipeline", () => {
-  const mapboxParams: MapboxParams = {
-    provider: "mapbox",
-    apiKey:
-      "pk.eyJ1Ijoic2FiIiwiYSI6ImNsNDE3bGR3bzB2MmczaXF5dmxpaTloNmcifQ.NQ-B8jBPtOd53tNYt42Gqw",
-    style: "mapbox://styles/mapbox/satellite-v9",
-  };
-
+describe("geobaseAi.pipeline", () => {
   it("should initialize a segmentation pipeline", async () => {
     const result = await geobaseAi.pipeline("mask-generation", mapboxParams);
 
@@ -54,63 +72,23 @@ describe.skip("geobaseAi.pipeline", () => {
       mapboxParams
     );
 
-    const polygon = {
-      type: "Feature",
-      properties: {},
-      geometry: {
-        coordinates: [
-          [
-            [12.482802629103247, 41.885379230564524],
-            [12.481392196198271, 41.885379230564524],
-            [12.481392196198271, 41.884332326712524],
-            [12.482802629103247, 41.884332326712524],
-            [12.482802629103247, 41.885379230564524],
-          ],
-        ],
-        type: "Polygon",
-      },
-    };
+    const input_points = [[[200, 200]]];
 
-    const result = await instance.segment(polygon);
+    const result = await instance.segment(polygon, input_points);
 
     // Check basic properties
-    ["best_fitting_tile_uri", "embeddings", "masks"].forEach(prop => {
+    ["rawImage", "masks"].forEach(prop => {
       expect(result).toHaveProperty(prop);
     });
-
-    // Check embedding types
-    ["image_embeddings", "image_positional_embeddings"].forEach(
-      embeddingType => {
-        const tensor = result.embeddings[embeddingType].ort_tensor;
-        expect(tensor).toMatchObject({
-          dataLocation: "cpu",
-          type: "float32",
-        });
-        expect(tensor.cpuData).toBeInstanceOf(Float32Array);
-        expect(tensor).toHaveProperty("dims");
-        expect(tensor).toHaveProperty("size");
-        expect(tensor.size).toBe(1048576);
-        expect(tensor.dims).toEqual([1, 256, 64, 64]);
-        expect(tensor.cpuData).toBeInstanceOf(Float32Array);
-        expect(tensor.cpuData.length).toBe(1048576);
-        expect(tensor.type).toBe("float32");
-      }
-    );
   });
 });
 
 describe("geobaseAi.zeroShotObjectDetection", () => {
-  const mapboxParams: MapboxParams = {
-    provider: "mapbox",
-    apiKey:
-      "pk.eyJ1Ijoic2FiIiwiYSI6ImNsNDE3bGR3bzB2MmczaXF5dmxpaTloNmcifQ.NQ-B8jBPtOd53tNYt42Gqw",
-    style: "mapbox://styles/mapbox/satellite-v9",
-  };
-
   it("should initialize a zero-shot object detection pipeline", async () => {
     const result = await geobaseAi.pipeline(
       "zero-shot-object-detection",
-      mapboxParams
+      mapboxParams,
+      "Xenova/owlvit-base-patch32"
     );
 
     expect(result.instance).toBeInstanceOf(ZeroShotObjectDetection);
@@ -119,48 +97,37 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
   it("should reuse the same instance for the same model", async () => {
     const result1 = await geobaseAi.pipeline(
       "zero-shot-object-detection",
-      mapboxParams
+      mapboxParams,
+      "Xenova/owlvit-base-patch32"
     );
     const result2 = await geobaseAi.pipeline(
       "zero-shot-object-detection",
-      mapboxParams
+      mapboxParams,
+      "Xenova/owlvit-base-patch32"
     );
 
     expect(result1.instance).toBe(result2.instance);
   });
 
-  it("should process a polygon for object detection", async () => {
+  it("should process a polygon for object detection using onnx-community/grounding-dino-tiny-ONNX", async () => {
     const { instance } = await geobaseAi.pipeline(
       "zero-shot-object-detection",
-      mapboxParams
+      mapboxParams,
+      "onnx-community/grounding-dino-tiny-ONNX",
+      { model_file_name: "model_quantized", cache_dir: "./cache" }
     );
 
-    const polygon = {
-      type: "Feature",
-      properties: {},
-      geometry: {
-        coordinates: [
-          [
-            [12.482802629103247, 41.885379230564524],
-            [12.481392196198271, 41.885379230564524],
-            [12.481392196198271, 41.884332326712524],
-            [12.482802629103247, 41.884332326712524],
-            [12.482802629103247, 41.885379230564524],
-          ],
-        ],
-        type: "Polygon",
-      },
-    } as GeoJSON.Feature;
-
-    const text = "tree.";
+    const text = ["tree."];
 
     const results: ObjectDetectionResults = await instance.detection(
       polygon,
       text
     );
 
-    // loop over the results and check if the boxes are within the polygon
-    const result = results[0];
+    let result = results;
+
+    // model can potentially return an array if multiple images are processed
+    if (Array.isArray(results)) result = results[0];
 
     // Check basic properties
     expect(result).toHaveProperty("scores");
@@ -171,6 +138,11 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
     expect(result.scores).toBeInstanceOf(Array);
     expect(result.boxes).toBeInstanceOf(Array);
     expect(result.labels).toBeInstanceOf(Array);
+
+    // check size of arrays to be greater than 0
+    expect(result.scores.length).toBeGreaterThan(0);
+    expect(result.boxes.length).toBeGreaterThan(0);
+    expect(result.labels.length).toBeGreaterThan(0);
 
     // Check detection properties
     result.scores.forEach(score => {
@@ -187,28 +159,46 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
     result.labels.forEach(label => {
       expect(typeof label).toBe("string");
     });
+  });
 
-    console.log(result);
+  it("should process a polygon for object detection using Xennova/owlvit-base-patch32", async () => {
+    const { instance } = await geobaseAi.pipeline(
+      "zero-shot-object-detection",
+      mapboxParams,
+      "Xenova/owlvit-base-patch32"
+    );
+
+    const text = ["tree", "car", "vehicle", "building", "road", "person"];
+
+    const results: ObjectDetectionResults = await instance.detection(
+      polygon,
+      text
+    );
   });
 });
 
 describe("geobaseAi.objectDetection", () => {
-  const mapboxParams: MapboxParams = {
-    provider: "mapbox",
-    apiKey:
-      "pk.eyJ1Ijoic2FiIiwiYSI6ImNsNDE3bGR3bzB2MmczaXF5dmxpaTloNmcifQ.NQ-B8jBPtOd53tNYt42Gqw",
-    style: "mapbox://styles/mapbox/satellite-v9",
-  };
-
   it("should initialize a object detection pipeline", async () => {
-    const result = await geobaseAi.pipeline("object-detection", mapboxParams);
+    const result = await geobaseAi.pipeline(
+      "object-detection",
+      mapboxParams,
+      "mhassanch/WALDO30_yolov8m_640x640"
+    );
 
     expect(result.instance).toBeInstanceOf(ObjectDetection);
   });
 
   it("should reuse the same instance for the same model", async () => {
-    const result1 = await geobaseAi.pipeline("object-detection", mapboxParams);
-    const result2 = await geobaseAi.pipeline("object-detection", mapboxParams);
+    const result1 = await geobaseAi.pipeline(
+      "object-detection",
+      mapboxParams,
+      "mhassanch/WALDO30_yolov8m_640x640"
+    );
+    const result2 = await geobaseAi.pipeline(
+      "object-detection",
+      mapboxParams,
+      "mhassanch/WALDO30_yolov8m_640x640"
+    );
 
     expect(result1.instance).toBe(result2.instance);
   });
@@ -218,23 +208,6 @@ describe("geobaseAi.objectDetection", () => {
       "object-detection",
       mapboxParams
     );
-
-    const polygon = {
-      type: "Feature",
-      properties: {},
-      geometry: {
-        coordinates: [
-          [
-            [12.482802629103247, 41.885379230564524],
-            [12.481392196198271, 41.885379230564524],
-            [12.481392196198271, 41.884332326712524],
-            [12.482802629103247, 41.884332326712524],
-            [12.482802629103247, 41.885379230564524],
-          ],
-        ],
-        type: "Polygon",
-      },
-    } as GeoJSON.Feature;
 
     const results: ObjectDetectionResults = await instance.detection(polygon);
 
@@ -263,7 +236,5 @@ describe("geobaseAi.objectDetection", () => {
     results.labels.forEach(label => {
       expect(typeof label).toBe("string");
     });
-
-    console.log(results);
   });
 });

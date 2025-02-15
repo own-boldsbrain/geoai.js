@@ -92,3 +92,16 @@ export const postProcessYoloOutput = (
 
   return model_output;
 };
+
+export const parametersChanged = (
+  instance: any,
+  model_id: string,
+  provider: string,
+  providerParams: any
+): boolean => {
+  return (
+    instance.model_id !== model_id ||
+    instance.provider !== provider ||
+    JSON.stringify(instance.providerParams) !== JSON.stringify(providerParams)
+  );
+};

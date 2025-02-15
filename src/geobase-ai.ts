@@ -40,7 +40,8 @@ type GeobaseAiModelMetadata = {
   model: string;
   description: string;
   geobase_ai_pipeline: (
-    params: ProviderParams
+    params: ProviderParams,
+    modelId?: string
   ) => Promise<{ instance: GenericSegmentation | ZeroShotObjectDetection }>;
 };
 
@@ -50,9 +51,12 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     library: "transformers.js",
     model: "onnx-community/grounding-dino-tiny-ONNX",
     description: "Zero-shot object detection model.",
-    geobase_ai_pipeline: (params: ProviderParams) => {
+    geobase_ai_pipeline: (
+      params: ProviderParams,
+      modelId: string = "onnx-community/grounding-dino-tiny-ONNX"
+    ) => {
       return ZeroShotObjectDetection.getInstance(
-        "onnx-community/grounding-dino-tiny-ONNX",
+        modelId,
         params.provider,
         params
       );
@@ -63,12 +67,11 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     library: "transformers.js",
     model: "Xenova/slimsam-77-uniform",
     description: "Mask generation model.",
-    geobase_ai_pipeline: (params: ProviderParams) => {
-      return GenericSegmentation.getInstance(
-        "Xenova/slimsam-77-uniform",
-        params.provider,
-        params
-      );
+    geobase_ai_pipeline: (
+      params: ProviderParams,
+      modelId: string = "Xenova/slimsam-77-uniform"
+    ) => {
+      return GenericSegmentation.getInstance(modelId, params.provider, params);
     },
   },
   {
@@ -76,12 +79,11 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     library: "transformers.js",
     model: "mhassanch/WALDO30_yolov8m_640x640",
     description: "Object Detection model.",
-    geobase_ai_pipeline: (params: ProviderParams) => {
-      return ObjectDetection.getInstance(
-        "mhassanch/WALDO30_yolov8m_640x640",
-        params.provider,
-        params
-      );
+    geobase_ai_pipeline: (
+      params: ProviderParams,
+      modelId: string = "mhassanch/WALDO30_yolov8m_640x640"
+    ) => {
+      return ObjectDetection.getInstance(modelId, params.provider, params);
     },
   },
 ];
@@ -100,7 +102,9 @@ const domains = () => {
 
 const pipeline = async (
   task: HuggingFaceModelTasks | GeobaseAiModelTasks,
-  params: ProviderParams
+  params: ProviderParams,
+  model_id?: string,
+  model_params?: any // TODO: implement this
 ) => {
   const model = model_metadata.find(model => model.task === task);
 
@@ -108,7 +112,7 @@ const pipeline = async (
     throw new Error(`Model for task ${task} not found`);
   }
 
-  return model.geobase_ai_pipeline(params);
+  return model.geobase_ai_pipeline(params, model_id);
 };
 
 const geobaseAi = {
