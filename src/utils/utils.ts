@@ -1,4 +1,17 @@
-function removeDuplicates(detections, iouThreshold) {
+import { ObjectDectection } from "@/models/zero_shot_object_detection";
+import { GeoRawImage } from "@/types/images/GeoRawImage";
+import { RawImage } from "@huggingface/transformers";
+
+type detection = {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  score: number;
+  label: string;
+};
+
+function removeDuplicates(detections: detection[], iouThreshold: number) {
   const filteredDetections = [];
 
   for (const detection of detections) {
@@ -30,7 +43,7 @@ function removeDuplicates(detections, iouThreshold) {
   return filteredDetections;
 }
 
-function calculateIoU(det1, det2) {
+function calculateIoU(det1: detection, det2: detection) {
   const xOverlap = Math.max(
     0,
     Math.min(det1.x2, det2.x2) - Math.max(det1.x1, det2.x1)
@@ -47,12 +60,12 @@ function calculateIoU(det1, det2) {
 }
 
 export const postProcessYoloOutput = (
-  output: any,
-  pixel_values,
-  rawImage,
-  id2label
+  model_outputs: any,
+  pixel_values: { dims: number[] },
+  rawImage: RawImage,
+  id2label: { [key: number]: string }
 ) => {
-  const permuted = output.output0[0].transpose(1, 0);
+  const permuted = model_outputs.output0[0].transpose(1, 0);
   const threshold = 0.5; // Confidence threshold
   const [scaledHeight, scaledWidth] = pixel_values.dims.slice(-2);
   const results = [];
@@ -64,7 +77,8 @@ export const postProcessYoloOutput = (
     const y2 = ((yc + h / 2) / scaledHeight) * rawImage.height;
 
     const argmax = scores.reduce(
-      (maxIndex, val, idx, arr) => (val > arr[maxIndex] ? idx : maxIndex),
+      (maxIndex: number, val: number, idx: number, arr: number[]) =>
+        val > arr[maxIndex] ? idx : maxIndex,
       0
     );
     const score = scores[argmax];
@@ -84,11 +98,13 @@ export const postProcessYoloOutput = (
   const iouThreshold = 0.7;
   const filteredResults = removeDuplicates(results, iouThreshold);
 
-  const model_output = {
-    scores: filteredResults.map(d => d.score),
-    boxes: filteredResults.map(d => [d.x1, d.y1, d.x2, d.y2]),
-    labels: filteredResults.map(d => d.label),
-  };
+  const model_output: ObjectDectection[] = filteredResults.map(d => {
+    return {
+      score: d.score,
+      box: [d.x1, d.y1, d.x2, d.y2],
+      label: d.label,
+    };
+  });
 
   return model_output;
 };
@@ -96,12 +112,45 @@ export const postProcessYoloOutput = (
 export const parametersChanged = (
   instance: any,
   model_id: string,
-  provider: string,
+  // provider: string,
   providerParams: any
 ): boolean => {
   return (
     instance.model_id !== model_id ||
-    instance.provider !== provider ||
+    // instance.provider !== provider ||
     JSON.stringify(instance.providerParams) !== JSON.stringify(providerParams)
   );
+};
+
+export const detectionsToGeoJSON = (
+  detections: ObjectDectection[],
+  geoRawImage: GeoRawImage
+) => {
+  const features = detections.map(detection => {
+    const [x1, y1, x2, y2] = detection.box;
+    let bbox = [
+      [x1, y1],
+      [x2, y1],
+      [x2, y2],
+      [x1, y2],
+      [x1, y1],
+    ];
+    bbox = bbox.map(point => geoRawImage.pixelToWorld(point[0], point[1]));
+    return {
+      type: "Feature",
+      properties: {
+        label: detection.label,
+        score: detection.score,
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [bbox],
+      },
+    };
+  });
+
+  return {
+    type: "FeatureCollection",
+    features,
+  };
 };

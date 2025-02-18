@@ -1,58 +1,43 @@
 import { Mapbox } from "@/data_providers/mapbox";
-import { RawImage } from "@huggingface/transformers";
-import { SamModel, AutoProcessor } from "@huggingface/transformers";
+import {
+  SamModel,
+  AutoProcessor,
+  RawImage,
+  SamProcessor,
+} from "@huggingface/transformers";
 import { parametersChanged } from "@/utils/utils";
-
-interface ProviderParams {
-  apiKey: string;
-  style: string;
-}
+import { GeoRawImage } from "@/types/images/GeoRawImage";
+import { ProviderParams } from "@/geobase-ai";
 
 interface SegmentationResult {
-  embeddings: any;
   masks: any;
-  rawImage: RawImage;
+  geoRawImage: GeoRawImage;
 }
 
 export class GenericSegmentation {
   private static instance: GenericSegmentation | null = null;
-  private provider: string;
   private providerParams: ProviderParams;
-  private dataProvider: Mapbox;
+  private dataProvider: Mapbox | undefined;
   private model_id: string;
-  private model: typeof SamModel;
-  private processor: typeof AutoProcessor;
-  private image_inputs: any;
-  private image_embeddings: any;
+  private model: SamModel | undefined;
+  private processor: SamProcessor | undefined;
   private initialized: boolean = false;
 
-  private constructor(
-    model_id: string,
-    provider: string,
-    providerParams: ProviderParams
-  ) {
+  private constructor(model_id: string, providerParams: ProviderParams) {
     this.model_id = model_id;
-    this.provider = provider;
     this.providerParams = providerParams;
   }
 
   static async getInstance(
     model_id: string,
-    provider: string,
     providerParams: ProviderParams
   ): Promise<{ instance: GenericSegmentation }> {
     if (
       !GenericSegmentation.instance ||
-      parametersChanged(
-        GenericSegmentation.instance,
-        model_id,
-        provider,
-        providerParams
-      )
+      parametersChanged(GenericSegmentation.instance, model_id, providerParams)
     ) {
       GenericSegmentation.instance = new GenericSegmentation(
         model_id,
-        provider,
         providerParams
       );
       await GenericSegmentation.instance.initialize();
@@ -85,10 +70,11 @@ export class GenericSegmentation {
     }
 
     // Then initialize model components
-    this.model = await SamModel.from_pretrained(this.model_id, {
-      quantized: true,
-    });
-    this.processor = await AutoProcessor.from_pretrained(this.model_id);
+    this.model = (await SamModel.from_pretrained(this.model_id)) as SamModel;
+    this.processor = (await AutoProcessor.from_pretrained(
+      this.model_id,
+      {}
+    )) as SamProcessor;
 
     this.initialized = true;
   }
@@ -107,22 +93,43 @@ export class GenericSegmentation {
       throw new Error("Data provider not initialized properly");
     }
 
-    const rawImage = await this.polygon_to_image(polygon);
-    const inputs = await this.processor(rawImage, { input_points });
-    const outputs = await this.model(inputs);
-    const masks = await this.processor.post_process_masks(
-      outputs.pred_masks,
-      inputs.original_sizes,
-      inputs.reshaped_input_sizes
+    const geoRawImage = await this.polygon_to_image(polygon);
+    const rawImage = new RawImage(
+      geoRawImage.data,
+      geoRawImage.width,
+      geoRawImage.height,
+      geoRawImage.channels
     );
+
+    let masks;
+    try {
+      if (!this.processor || !this.model) {
+        throw new Error("Model or processor not initialized");
+      }
+      const inputs = await this.processor(rawImage, { input_points });
+      const outputs = await this.model(inputs);
+      masks = await this.processor.post_process_masks(
+        outputs.pred_masks,
+        inputs.original_sizes,
+        inputs.reshaped_input_sizes
+      );
+    } catch (e) {
+      console.error(e);
+      throw new Error("Failed to segment image");
+    }
 
     return {
       masks,
-      rawImage,
+      geoRawImage: geoRawImage,
     };
   }
 
-  private async polygon_to_image(polygon: GeoJSON.Feature): Promise<RawImage> {
+  private async polygon_to_image(
+    polygon: GeoJSON.Feature
+  ): Promise<GeoRawImage> {
+    if (!this.dataProvider) {
+      throw new Error("Data provider not initialized");
+    }
     const image = this.dataProvider.get_image(polygon);
     return image;
   }

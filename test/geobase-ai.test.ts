@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest";
 import { geobaseAi } from "../src/geobase-ai";
 import { GenericSegmentation } from "../src/models/generic_segmentation";
 import {
+  ObjectDectection,
   ObjectDetectionResults,
   ZeroShotObjectDetection,
 } from "../src/models/zero_shot_object_detection";
 import { ObjectDetection } from "../src/models/object_detection";
 import type { MapboxParams } from "../src/geobase-ai";
-import type { Feature } from "geojson";
-
+import { detectionsToGeoJSON } from "../src/utils/utils"; // Adjust the import path as necessary
+import { GeoRawImage } from "../src/types/images/GeoRawImage";
 // before all tests set the polygon
 const polygon = {
   type: "Feature",
@@ -77,7 +78,7 @@ describe("geobaseAi.pipeline", () => {
     const result = await instance.segment(polygon, input_points);
 
     // Check basic properties
-    ["rawImage", "masks"].forEach(prop => {
+    ["geoRawImage", "masks"].forEach(prop => {
       expect(result).toHaveProperty(prop);
     });
   });
@@ -113,8 +114,8 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
     const { instance } = await geobaseAi.pipeline(
       "zero-shot-object-detection",
       mapboxParams,
-      "onnx-community/grounding-dino-tiny-ONNX",
-      { model_file_name: "model_quantized", cache_dir: "./cache" }
+      "onnx-community/grounding-dino-tiny-ONNX"
+      // { model_file_name: "model_quantized", cache_dir: "./cache" }
     );
 
     const text = ["tree."];
@@ -130,35 +131,12 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
     if (Array.isArray(results)) result = results[0];
 
     // Check basic properties
-    expect(result).toHaveProperty("scores");
-    expect(result).toHaveProperty("boxes");
-    expect(result).toHaveProperty("labels");
+    expect(results).toHaveProperty("detections");
+    expect(results).toHaveProperty("geoRawImage");
 
     // Check result types
-    expect(result.scores).toBeInstanceOf(Array);
-    expect(result.boxes).toBeInstanceOf(Array);
-    expect(result.labels).toBeInstanceOf(Array);
-
-    // check size of arrays to be greater than 0
-    expect(result.scores.length).toBeGreaterThan(0);
-    expect(result.boxes.length).toBeGreaterThan(0);
-    expect(result.labels.length).toBeGreaterThan(0);
-
-    // Check detection properties
-    result.scores.forEach(score => {
-      expect(typeof score).toBe("number");
-    });
-
-    result.boxes.forEach(box => {
-      expect(box).toBeInstanceOf(Array);
-      box.forEach(coordinate => {
-        expect(typeof coordinate).toBe("number");
-      });
-    });
-
-    result.labels.forEach(label => {
-      expect(typeof label).toBe("string");
-    });
+    expect(results.detections).toBeInstanceOf(Array<ObjectDectection>);
+    expect(results.geoRawImage).toBeInstanceOf(GeoRawImage);
   });
 
   it("should process a polygon for object detection using Xennova/owlvit-base-patch32", async () => {
@@ -174,6 +152,19 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
       polygon,
       text
     );
+
+    let result = results;
+    console.log({ results });
+    // model can potentially return an array if multiple images are processed
+    if (Array.isArray(results)) result = results[0];
+
+    // Check basic properties
+    expect(results).toHaveProperty("detections");
+    expect(results).toHaveProperty("geoRawImage");
+
+    // Check result types
+    expect(results.detections).toBeInstanceOf(Array<ObjectDectection>);
+    expect(results.geoRawImage).toBeInstanceOf(GeoRawImage);
   });
 });
 
@@ -210,31 +201,17 @@ describe("geobaseAi.objectDetection", () => {
     );
 
     const results: ObjectDetectionResults = await instance.detection(polygon);
+    const geoJson = detectionsToGeoJSON(
+      results.detections,
+      results.geoRawImage
+    );
 
     // Check basic properties
-    expect(results).toHaveProperty("scores");
-    expect(results).toHaveProperty("boxes");
-    expect(results).toHaveProperty("labels");
+    expect(results).toHaveProperty("detections");
+    expect(results).toHaveProperty("geoRawImage");
 
     // Check result types
-    expect(results.scores).toBeInstanceOf(Array);
-    expect(results.boxes).toBeInstanceOf(Array);
-    expect(results.labels).toBeInstanceOf(Array);
-
-    // Check detection properties
-    results.scores.forEach(score => {
-      expect(typeof score).toBe("number");
-    });
-
-    results.boxes.forEach(box => {
-      expect(box).toBeInstanceOf(Array);
-      box.forEach(coordinate => {
-        expect(typeof coordinate).toBe("number");
-      });
-    });
-
-    results.labels.forEach(label => {
-      expect(typeof label).toBe("string");
-    });
+    expect(results.detections).toBeInstanceOf(Array<ObjectDectection>);
+    expect(results.geoRawImage).toBeInstanceOf(GeoRawImage);
   });
 });

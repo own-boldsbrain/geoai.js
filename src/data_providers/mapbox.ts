@@ -19,28 +19,28 @@ const addChain = (receiver: any) =>
   addChain(receiver);
 });
 
-const getTileBbox = (lon: number, lat: number, z: number) => {
-  z = Math.floor(z);
-  const [x, y, _z] = pointToTile([lon, lat], z);
-  const bbox = tileToBBox([x, y, z]);
-  return {
-    minX: bbox[0],
-    minY: bbox[1],
-    maxX: bbox[2],
-    maxY: bbox[3],
-  };
-};
+// const getTileBbox = (lon: number, lat: number, z: number) => {
+//   z = Math.floor(z);
+//   const [x, y, _z] = pointToTile([lon, lat], z);
+//   const bbox = tileToBBox([x, y, z]);
+//   return {
+//     minX: bbox[0],
+//     minY: bbox[1],
+//     maxX: bbox[2],
+//     maxY: bbox[3],
+//   };
+// };
 
-const getTileUrl = (
-  lon: number,
-  lat: number,
-  z: number,
-  accessToken: string
-) => {
-  z = Math.floor(z);
-  const [x, y, _z] = pointToTile([lon, lat], z);
-  return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${accessToken}`;
-};
+// const getTileUrl = (
+//   lon: number,
+//   lat: number,
+//   z: number,
+//   accessToken: string
+// ) => {
+//   z = Math.floor(z);
+//   const [x, y, _z] = pointToTile([lon, lat], z);
+//   return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${accessToken}`;
+// };
 
 const getTileUrlFromTileCoords = (tileCoords: any, accessToken: string) => {
   const [x, y, z] = tileCoords;
@@ -108,61 +108,58 @@ export class Mapbox {
       );
     }
     // convert the features back to json
-    let features = Array.from(featureCollection.features).map((feature: any) =>
+    Array.from(featureCollection.features).map((feature: any) =>
       JSON.parse(feature)
     );
     const tileUrls = [
-      tiles.bottomleft.tileGeoJson.properties.tileUrl,
-      tiles.bottomright.tileGeoJson.properties.tileUrl,
-      tiles.topright.tileGeoJson.properties.tileUrl,
-      tiles.topleft.tileGeoJson.properties.tileUrl,
+      tiles.bottomleft.tileGeoJson?.properties?.tileUrl,
+      tiles.bottomright.tileGeoJson?.properties?.tileUrl,
+      tiles.topright.tileGeoJson?.properties?.tileUrl,
+      tiles.topleft.tileGeoJson?.properties?.tileUrl,
     ];
-
-    // Add before creating tilesWithMetadata
-    console.log("Tile bboxes:");
-    console.log("bottomleft:", tiles.bottomleft.tileGeoJson.bbox);
-    console.log("bottomright:", tiles.bottomright.tileGeoJson.bbox);
-    console.log("topright:", tiles.topright.tileGeoJson.bbox);
-    console.log("topleft:", tiles.topleft.tileGeoJson.bbox);
 
     // Load images and create metadata objects
     const tilesWithMetadata: TileMetadata[] = [
       {
         image: await load_image(tileUrls[0]),
-        bbox: tiles.bottomleft.tileGeoJson.bbox,
+        bbox: tiles.bottomleft.tileGeoJson.bbox as [
+          number,
+          number,
+          number,
+          number,
+        ],
       },
       {
         image: await load_image(tileUrls[1]),
-        bbox: tiles.bottomright.tileGeoJson.bbox,
+        bbox: tiles.bottomright.tileGeoJson.bbox as [
+          number,
+          number,
+          number,
+          number,
+        ],
       },
       {
         image: await load_image(tileUrls[2]),
-        bbox: tiles.topright.tileGeoJson.bbox,
+        bbox: tiles.topright.tileGeoJson.bbox as [
+          number,
+          number,
+          number,
+          number,
+        ],
       },
       {
         image: await load_image(tileUrls[3]),
-        bbox: tiles.topleft.tileGeoJson.bbox,
+        bbox: tiles.topleft.tileGeoJson.bbox as [
+          number,
+          number,
+          number,
+          number,
+        ],
       },
     ];
 
     const { image: mergedImage, bounds } =
       this.mergeRawImages(tilesWithMetadata);
-
-    console.log("bounds", bounds);
-
-    // Add after bounds calculation
-    console.log("Individual north values:", [
-      tiles.bottomleft.tileGeoJson.bbox[3],
-      tiles.bottomright.tileGeoJson.bbox[3],
-      tiles.topright.tileGeoJson.bbox[3],
-      tiles.topleft.tileGeoJson.bbox[3],
-    ]);
-    console.log("Individual south values:", [
-      tiles.bottomleft.tileGeoJson.bbox[1],
-      tiles.bottomright.tileGeoJson.bbox[1],
-      tiles.topright.tileGeoJson.bbox[1],
-      tiles.topleft.tileGeoJson.bbox[1],
-    ]);
 
     // Calculate transform matrix
     const transform = {
@@ -183,81 +180,34 @@ export class Mapbox {
   }
 
   calculateTilesForBbox = (bbox: any, zoom: number) => {
-    console.log("Input bbox for tile calculation:", bbox);
-    console.log("Zoom level:", zoom);
-    console.log("bbox", bbox);
-    let _bbox1 = tileToBBox(pointToTile([bbox[0], bbox[1]], zoom));
-    console.log("_bbox1", _bbox1);
-    let _bbox2 = tileToBBox(pointToTile([bbox[2], bbox[1]], zoom));
-    console.log("_bbox2", _bbox2);
-    let _bbox3 = tileToBBox(pointToTile([bbox[0], bbox[3]], zoom));
-    console.log("_bbox3", _bbox3);
-    let _bbox4 = tileToBBox(pointToTile([bbox[2], bbox[3]], zoom));
-    console.log("_bbox4", _bbox4);
+    const getTileGeoJson = (bbox: any, zoom: number) => {
+      const feature = turfBboxPolygon(tileToBBox(pointToTile(bbox, zoom)));
+      feature.properties = {
+        tileCoords: pointToTile(bbox, zoom),
+        tileUrl: getTileUrlFromTileCoords(pointToTile(bbox, zoom), this.apiKey),
+      };
+      return feature;
+    };
     return {
       bottomleft: {
         coords: [bbox[0], bbox[1]],
         tile: pointToTile([bbox[0], bbox[1]], zoom),
-        tileGeoJson: turfBboxPolygon(
-          tileToBBox(pointToTile([bbox[0], bbox[1]], zoom))
-        ).chain(feature => {
-          feature.properties = {
-            tileCoords: pointToTile([bbox[0], bbox[1]], zoom),
-            tileUrl: getTileUrlFromTileCoords(
-              pointToTile([bbox[0], bbox[1]], zoom),
-              this.apiKey
-            ),
-          };
-          return feature;
-        }),
+        tileGeoJson: getTileGeoJson([bbox[0], bbox[1]], zoom),
       },
       bottomright: {
         coords: [bbox[2], bbox[1]],
         tile: pointToTile([bbox[2], bbox[1]], zoom),
-        tileGeoJson: turfBboxPolygon(
-          tileToBBox(pointToTile([bbox[2], bbox[1]], zoom))
-        ).chain(feature => {
-          feature.properties = {
-            tileCoords: pointToTile([bbox[2], bbox[1]], zoom),
-            tileUrl: getTileUrlFromTileCoords(
-              pointToTile([bbox[2], bbox[1]], zoom),
-              this.apiKey
-            ),
-          };
-          return feature;
-        }),
+        tileGeoJson: getTileGeoJson([bbox[2], bbox[1]], zoom),
       },
       topleft: {
         coords: [bbox[0], bbox[3]],
         tile: pointToTile([bbox[0], bbox[3]], zoom),
-        tileGeoJson: turfBboxPolygon(
-          tileToBBox(pointToTile([bbox[0], bbox[3]], zoom))
-        ).chain(feature => {
-          feature.properties = {
-            tileCoords: pointToTile([bbox[0], bbox[3]], zoom),
-            tileUrl: getTileUrlFromTileCoords(
-              pointToTile([bbox[0], bbox[3]], zoom),
-              this.apiKey
-            ),
-          };
-          return feature;
-        }),
+        tileGeoJson: getTileGeoJson([bbox[0], bbox[3]], zoom),
       },
       topright: {
         coords: [bbox[2], bbox[3]],
         tile: pointToTile([bbox[2], bbox[3]], zoom),
-        tileGeoJson: turfBboxPolygon(
-          tileToBBox(pointToTile([bbox[2], bbox[3]], zoom))
-        ).chain(feature => {
-          feature.properties = {
-            tileCoords: pointToTile([bbox[2], bbox[3]], zoom),
-            tileUrl: getTileUrlFromTileCoords(
-              pointToTile([bbox[2], bbox[3]], zoom),
-              this.apiKey
-            ),
-          };
-          return feature;
-        }),
+        tileGeoJson: getTileGeoJson([bbox[2], bbox[3]], zoom),
       },
     };
   };

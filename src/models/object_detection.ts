@@ -1,55 +1,41 @@
 import { Mapbox } from "@/data_providers/mapbox";
-import { AutoModel, AutoProcessor, RawImage } from "@huggingface/transformers";
+import {
+  AutoModel,
+  AutoProcessor,
+  Processor,
+  RawImage,
+  YolosForObjectDetection,
+} from "@huggingface/transformers";
 import { parametersChanged } from "@/utils/utils";
 
 import { ObjectDetectionResults } from "../models/zero_shot_object_detection";
 import { postProcessYoloOutput } from "@/utils/utils";
-
-interface ProviderParams {
-  apiKey: string;
-  style: string;
-}
-
+import { ProviderParams } from "@/geobase-ai";
+import { GeoRawImage } from "@/types/images/GeoRawImage";
 export class ObjectDetection {
   private static instance: ObjectDetection | null = null;
-  private provider: string;
   private providerParams: ProviderParams;
-  private dataProvider: Mapbox;
+  private dataProvider: Mapbox | undefined;
   private model_id: string;
-  private model: typeof AutoModel;
-  private processor: typeof AutoProcessor;
+  private model: YolosForObjectDetection | undefined;
+  private processor: Processor | undefined;
 
   private initialized: boolean = false;
 
-  private constructor(
-    model_id: string,
-    provider: string,
-    providerParams: ProviderParams
-  ) {
+  private constructor(model_id: string, providerParams: ProviderParams) {
     this.model_id = model_id;
-    this.provider = provider;
     this.providerParams = providerParams;
   }
 
   static async getInstance(
     model_id: string,
-    provider: string,
     providerParams: ProviderParams
   ): Promise<{ instance: ObjectDetection }> {
     if (
       !ObjectDetection.instance ||
-      parametersChanged(
-        ObjectDetection.instance,
-        model_id,
-        provider,
-        providerParams
-      )
+      parametersChanged(ObjectDetection.instance, model_id, providerParams)
     ) {
-      ObjectDetection.instance = new ObjectDetection(
-        model_id,
-        provider,
-        providerParams
-      );
+      ObjectDetection.instance = new ObjectDetection(model_id, providerParams);
       await ObjectDetection.instance.initialize();
     }
     return { instance: ObjectDetection.instance };
@@ -79,16 +65,21 @@ export class ObjectDetection {
       throw new Error("Failed to initialize data provider");
     }
 
-    this.model = await AutoModel.from_pretrained(this.model_id, {
+    this.model = (await AutoModel.from_pretrained(this.model_id, {
       dtype: "fp32",
-    });
+    })) as any;
 
-    this.processor = await AutoProcessor.from_pretrained(this.model_id);
+    this.processor = await AutoProcessor.from_pretrained(this.model_id, {});
 
     this.initialized = true;
   }
 
-  private async polygon_to_image(polygon: GeoJSON.Feature): Promise<RawImage> {
+  private async polygon_to_image(
+    polygon: GeoJSON.Feature
+  ): Promise<GeoRawImage> {
+    if (!this.dataProvider) {
+      throw new Error("Data provider not initialized");
+    }
     const image = this.dataProvider.get_image(polygon);
     return image;
   }
@@ -104,13 +95,21 @@ export class ObjectDetection {
       throw new Error("Data provider not initialized properly");
     }
 
-    const image = await this.polygon_to_image(polygon);
-    image.save("test_mapbox_image.png");
+    const geoRawImage = await this.polygon_to_image(polygon);
+    const rawImage = new RawImage(
+      geoRawImage.data,
+      geoRawImage.width,
+      geoRawImage.height,
+      geoRawImage.channels
+    );
 
     let outputs;
     let inputs;
     try {
-      inputs = await this.processor(image);
+      if (!this.processor || !this.model) {
+        throw new Error("Model or processor not initialized");
+      }
+      inputs = await this.processor(rawImage);
       outputs = await this.model({
         images: inputs.pixel_values,
         confidence: 0.9,
@@ -123,10 +122,13 @@ export class ObjectDetection {
     const results = postProcessYoloOutput(
       outputs,
       inputs.pixel_values,
-      image,
-      this.model.config.id2label
+      rawImage,
+      (this.model.config as any).id2label
     );
 
-    return results;
+    return {
+      detections: results,
+      geoRawImage,
+    };
   }
 }
