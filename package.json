@@ -1,15 +1,15 @@
 {
-  "name": "vite-vanilla-ts-lib-starter",
+  "name": "geobase-ai",
   "private": true,
   "version": "0.0.4",
-  "module": "./dist/vite-vanilla-ts-lib-starter.js",
+  "module": "./dist/geobase-ai.js",
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/vite-vanilla-ts-lib-starter.js"
+      "import": "./dist/geobase-ai.js"
     },
     "./dist/": {
-      "import": "./dist/"
+      "import": "./dist/geobase-ai.js"
     }
   },
   "types": "./dist/index.d.ts",

@@ -62,6 +62,19 @@ interface MergedResult {
   };
 }
 
+interface TileInfo {
+  coords: [number, number];
+  tile: [number, number, number];
+  tileGeoJson: GeoJSON.Feature<GeoJSON.Polygon>;
+}
+
+interface TilesForBbox {
+  bottomleft: TileInfo;
+  bottomright: TileInfo;
+  topleft: TileInfo;
+  topright: TileInfo;
+}
+
 export class Mapbox {
   apiKey: string;
   style: string;
@@ -179,7 +192,7 @@ export class Mapbox {
     );
   }
 
-  calculateTilesForBbox = (bbox: any, zoom: number) => {
+  calculateTilesForBbox = (bbox: number[], zoom: number): TilesForBbox => {
     const getTileGeoJson = (bbox: any, zoom: number) => {
       const feature = turfBboxPolygon(tileToBBox(pointToTile(bbox, zoom)));
       feature.properties = {

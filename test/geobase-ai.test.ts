@@ -160,7 +160,6 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
     );
 
     let result = results;
-    console.log({ results });
     // model can potentially return an array if multiple images are processed
     if (Array.isArray(results)) result = results[0];
 

@@ -1,7 +1,6 @@
 import { ObjectDectection } from "@/models/zero_shot_object_detection";
 import { GeoRawImage } from "@/types/images/GeoRawImage";
 import { RawImage } from "@huggingface/transformers";
-import * as turf from "@turf/turf";
 
 type detection = {
   x1: number;
