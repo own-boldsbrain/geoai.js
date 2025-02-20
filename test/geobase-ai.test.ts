@@ -8,7 +8,7 @@ import {
 } from "../src/models/zero_shot_object_detection";
 import { ObjectDetection } from "../src/models/object_detection";
 import type { MapboxParams } from "../src/geobase-ai";
-import { detectionsToGeoJSON } from "../src/utils/utils"; // Adjust the import path as necessary
+import { detectionsToGeoJSON, maskToGeoJSON } from "../src/utils/utils"; // Adjust the import path as necessary
 import { GeoRawImage } from "../src/types/images/GeoRawImage";
 // before all tests set the polygon
 const polygon = {
@@ -73,7 +73,7 @@ describe("geobaseAi.pipeline", () => {
       mapboxParams
     );
 
-    const input_points = [[[200, 200]]];
+    const input_points = [[[120, 190]]];
 
     const result = await instance.segment(polygon, input_points);
 
@@ -81,6 +81,12 @@ describe("geobaseAi.pipeline", () => {
     ["geoRawImage", "masks"].forEach(prop => {
       expect(result).toHaveProperty(prop);
     });
+
+    const { geoRawImage, masks } = result;
+    const maskGeoJson = maskToGeoJSON(masks, geoRawImage);
+    expect(maskGeoJson).toHaveProperty("type", "FeatureCollection");
+    expect(maskGeoJson).toHaveProperty("features");
+    expect(maskGeoJson.features).toBeInstanceOf(Array);
   });
 });
 

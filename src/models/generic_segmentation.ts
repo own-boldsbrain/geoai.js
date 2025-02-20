@@ -102,12 +102,13 @@ export class GenericSegmentation {
     );
 
     let masks;
+    let outputs;
     try {
       if (!this.processor || !this.model) {
         throw new Error("Model or processor not initialized");
       }
       const inputs = await this.processor(rawImage, { input_points });
-      const outputs = await this.model(inputs);
+      outputs = await this.model(inputs);
       masks = await this.processor.post_process_masks(
         outputs.pred_masks,
         inputs.original_sizes,
@@ -119,7 +120,10 @@ export class GenericSegmentation {
     }
 
     return {
-      masks,
+      masks: {
+        mask: masks,
+        scores: outputs.iou_scores.data,
+      },
       geoRawImage: geoRawImage,
     };
   }
