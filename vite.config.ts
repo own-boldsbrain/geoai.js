@@ -36,6 +36,7 @@ export default defineConfig({
   test: {
     watch: false,
     testTimeout: 1000000,
+    exclude: ["**/examples/**", "**/node_modules/**"],
   },
   resolve: {
     alias: [
