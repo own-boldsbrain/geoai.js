@@ -156,33 +156,40 @@ export const detectionsToGeoJSON = (
 };
 
 const getEdges = (binaryMask: number[][]) => {
-  let rows = binaryMask.length;
-  let cols = binaryMask[0].length;
-  let edges = Array.from({ length: rows }, () => Array(cols).fill(0));
+  const rows = binaryMask.length;
+  const cols = binaryMask[0].length;
+  const edges = Array.from({ length: rows }, () => Array(cols).fill(0));
 
-  let directions = [
-    [-1, 0],
-    [1, 0],
-    [0, -1],
-    [0, 1],
-    [-1, -1],
-    [-1, 1],
-    [1, -1],
-    [1, 1],
-  ];
-
-  for (let i = 1; i < rows - 1; i++) {
-    for (let j = 1; j < cols - 1; j++) {
-      if (binaryMask[i][j] === 1) {
-        for (let [dx, dy] of directions) {
-          let ni = i + dx,
-            nj = j + dy;
-          if (binaryMask[ni][nj] === 0) {
-            edges[i][j] = 1;
-            break;
-          }
-        }
+  const isEdge = (i: number, j: number) => {
+    if (binaryMask[i][j] === 0) return false;
+    for (const [dx, dy] of [
+      [-1, 0],
+      [1, 0],
+      [0, -1],
+      [0, 1],
+      [-1, -1],
+      [-1, 1],
+      [1, -1],
+      [1, 1],
+    ]) {
+      const ni = i + dx,
+        nj = j + dy;
+      if (
+        ni < 0 ||
+        ni >= rows ||
+        nj < 0 ||
+        nj >= cols ||
+        binaryMask[ni][nj] === 0
+      ) {
+        return true;
       }
+    }
+    return false;
+  };
+
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      edges[i][j] = isEdge(i, j) ? 1 : 0;
     }
   }
   return edges;
@@ -192,38 +199,65 @@ const getPolygonFromMask = (mask: number[][], geoRawImage: GeoRawImage) => {
   const edges = getEdges(mask);
   const height = edges.length;
   const width = edges[0].length;
-  const visited = Array.from({ length: height }, () =>
-    Array(width).fill(false)
-  );
-  const polygon: [number, number][] = [];
-  const directions = [
-    [0, 1],
-    [1, 0],
-    [0, -1],
-    [-1, 0],
-    [1, 1],
-    [1, -1],
-    [-1, 1],
-    [-1, -1],
-  ];
 
   const isValid = (y: number, x: number) =>
     y >= 0 && y < height && x >= 0 && x < width;
 
-  const dfs = (y: number, x: number) => {
-    if (!isValid(y, x) || visited[y][x] || edges[y][x] === 0) return;
-    visited[y][x] = true;
-    polygon.push(geoRawImage.pixelToWorld(x, y));
-    for (const [dy, dx] of directions) dfs(y + dy, x + dx);
-  };
+  const directions = [
+    [0, 1],
+    [1, 1],
+    [1, 0],
+    [1, -1],
+    [0, -1],
+    [-1, -1],
+    [-1, 0],
+    [-1, 1],
+  ];
 
-  for (let y = 0; y < height; ++y) {
-    for (let x = 0; x < width; ++x) {
-      if (!visited[y][x] && edges[y][x] === 1) dfs(y, x);
+  const polygon: [number, number][] = [];
+  let start: [number, number] | null = null;
+
+  // Find the first edge pixel
+  outerLoop: for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (edges[y][x] === 1) {
+        start = [y, x];
+        break outerLoop;
+      }
     }
   }
 
-  polygon.push(polygon[0]);
+  if (!start) return polygon; // No edges found
+
+  let current = start;
+  let prevDirection = 0;
+
+  do {
+    const [cy, cx] = current;
+    polygon.push(geoRawImage.pixelToWorld(cx, cy));
+
+    let found = false;
+    for (let i = 0; i < directions.length; i++) {
+      const dir = (prevDirection + i) % directions.length;
+      const [dy, dx] = directions[dir];
+      const ny = cy + dy,
+        nx = cx + dx;
+
+      if (isValid(ny, nx) && edges[ny][nx] === 1) {
+        current = [ny, nx];
+        prevDirection = (dir + directions.length - 2) % directions.length;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) break; // Stuck, break loop
+  } while (current[0] !== start[0] || current[1] !== start[1]);
+
+  if (polygon.length > 0) {
+    polygon.push(polygon[0]); // Close the polygon
+  }
+
   return polygon;
 };
 
