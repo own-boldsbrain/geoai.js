@@ -75,7 +75,7 @@ const model_metadata: GeobaseAiModelMetadata[] = [
   {
     task: "object-detection",
     library: "transformers.js",
-    model: "mhassanch/WALDO30_yolov8m_640x640",
+    model: "geobase/WALDO30_yolov8m_640x640",
     description: "Object Detection model.",
     geobase_ai_pipeline: (
       params: ProviderParams,
