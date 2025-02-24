@@ -19,29 +19,6 @@ const addChain = (receiver: any) =>
   addChain(receiver);
 });
 
-// const getTileBbox = (lon: number, lat: number, z: number) => {
-//   z = Math.floor(z);
-//   const [x, y, _z] = pointToTile([lon, lat], z);
-//   const bbox = tileToBBox([x, y, z]);
-//   return {
-//     minX: bbox[0],
-//     minY: bbox[1],
-//     maxX: bbox[2],
-//     maxY: bbox[3],
-//   };
-// };
-
-// const getTileUrl = (
-//   lon: number,
-//   lat: number,
-//   z: number,
-//   accessToken: string
-// ) => {
-//   z = Math.floor(z);
-//   const [x, y, _z] = pointToTile([lon, lat], z);
-//   return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${accessToken}`;
-// };
-
 const getTileUrlFromTileCoords = (tileCoords: any, accessToken: string) => {
   const [x, y, z] = tileCoords;
   return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${accessToken}`;
