@@ -1,3 +1,5 @@
+[![Main](https://github.com/decision-labs/geobase-ai.js/actions/workflows/main.yml/badge.svg)](https://github.com/decision-labs/geobase-ai.js/actions/workflows/main.yml)
+
 # Geobase AI JavaScript Library
 
 Provide user with a seamless experience of using Geo AI models in their frontend applications.
