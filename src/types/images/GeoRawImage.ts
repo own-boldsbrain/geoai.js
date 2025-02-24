@@ -28,12 +28,18 @@ export class GeoRawImage extends RawImage {
     height: number,
     channels: 1 | 2 | 3 | 4,
     bounds: Bounds,
-    transform: Transform,
     crs: string = "EPSG:4326" // Default to WGS84
   ) {
     super(data, width, height, channels);
     this.bounds = bounds;
-    this.transform = transform;
+    this.transform = {
+      a: (bounds.east - bounds.west) / width,
+      b: 0,
+      c: bounds.west,
+      d: 0,
+      e: -(bounds.north - bounds.south) / height,
+      f: bounds.north,
+    };
     this.crs = crs;
   }
 
@@ -86,7 +92,6 @@ export class GeoRawImage extends RawImage {
   static fromRawImage(
     rawImage: RawImage,
     bounds: Bounds,
-    transform: Transform, // TODO: let's calculate this from the rawimage width and height and bounds
     crs: string = "EPSG:4326"
   ): GeoRawImage {
     return new GeoRawImage(
@@ -95,7 +100,6 @@ export class GeoRawImage extends RawImage {
       rawImage.height,
       rawImage.channels as 1 | 2 | 3 | 4,
       bounds,
-      transform,
       crs
     );
   }
@@ -110,7 +114,6 @@ export class GeoRawImage extends RawImage {
       this.height,
       this.channels,
       { ...this.bounds },
-      { ...this.transform },
       this.crs
     );
   }

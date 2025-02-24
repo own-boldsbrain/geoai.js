@@ -151,22 +151,7 @@ export class Mapbox {
     const { image: mergedImage, bounds } =
       this.mergeRawImages(tilesWithMetadata);
 
-    // Calculate transform matrix
-    const transform = {
-      a: (bounds.east - bounds.west) / mergedImage.width,
-      b: 0,
-      c: bounds.west,
-      d: 0,
-      e: -(bounds.north - bounds.south) / mergedImage.height,
-      f: bounds.north,
-    };
-
-    return GeoRawImage.fromRawImage(
-      mergedImage,
-      bounds,
-      transform,
-      "EPSG:4326"
-    );
+    return GeoRawImage.fromRawImage(mergedImage, bounds, "EPSG:4326");
   }
 
   calculateTilesForBbox = (bbox: number[], zoom: number): TilesForBbox => {

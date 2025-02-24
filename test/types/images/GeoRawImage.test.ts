@@ -16,18 +16,9 @@ describe("GeoRawImage", () => {
     west: 12.481392196198271,
   };
 
-  const transform = {
-    a: (bounds.east - bounds.west) / width, // x scale
-    b: 0, // y skew
-    c: bounds.west, // x offset
-    d: 0, // x skew
-    e: -(bounds.north - bounds.south) / height, // y scale
-    f: bounds.north, // y offset
-  };
-
   it("should create from RawImage", () => {
     const rawImage = new RawImage(data, width, height, channels);
-    const geoImage = GeoRawImage.fromRawImage(rawImage, bounds, transform);
+    const geoImage = GeoRawImage.fromRawImage(rawImage, bounds);
 
     expect(geoImage).toBeInstanceOf(GeoRawImage);
     expect(geoImage.width).toBe(width);
@@ -36,28 +27,14 @@ describe("GeoRawImage", () => {
   });
 
   it("should have correct bounds", () => {
-    const geoImage = new GeoRawImage(
-      data,
-      width,
-      height,
-      channels,
-      bounds,
-      transform
-    );
+    const geoImage = new GeoRawImage(data, width, height, channels, bounds);
     const imageBounds = geoImage.getBounds();
 
     expect(imageBounds).toEqual(bounds);
   });
 
   it("should correctly convert between pixel and world coordinates", () => {
-    const geoImage = new GeoRawImage(
-      data,
-      width,
-      height,
-      channels,
-      bounds,
-      transform
-    );
+    const geoImage = new GeoRawImage(data, width, height, channels, bounds);
 
     // Test center point conversion
     const centerPixel = [width / 2, height / 2];
@@ -76,26 +53,12 @@ describe("GeoRawImage", () => {
   });
 
   it("should have the correct default CRS", () => {
-    const geoImage = new GeoRawImage(
-      data,
-      width,
-      height,
-      channels,
-      bounds,
-      transform
-    );
+    const geoImage = new GeoRawImage(data, width, height, channels, bounds);
     expect(geoImage.getCRS()).toBe("EPSG:4326");
   });
 
   it("should maintain georeferencing information when cloned", () => {
-    const geoImage = new GeoRawImage(
-      data,
-      width,
-      height,
-      channels,
-      bounds,
-      transform
-    );
+    const geoImage = new GeoRawImage(data, width, height, channels, bounds);
     const clonedImage = geoImage.clone();
 
     // Check that the clone is a GeoRawImage
