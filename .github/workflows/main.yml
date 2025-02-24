@@ -14,12 +14,12 @@ jobs:
     steps:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4.1.0
-        with:
-          version: # optional
-          dest: # optional, default is ~/setup-pnpm
-          run_install: # optional, default is null
-          package_json_file: # optional, default is package.json
-          standalone: # optional, default is false
+        # with:
+        #   version: # optional
+        #   dest: # optional, default is ~/setup-pnpm
+        #   run_install: # optional, default is null
+        #   package_json_file: # optional, default is package.json
+        #   standalone: # optional, default is false
       - name: Install dependencies
         run: pnpm install
       - name: Build
