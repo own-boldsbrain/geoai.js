@@ -86,7 +86,7 @@ export class GeoRawImage extends RawImage {
   static fromRawImage(
     rawImage: RawImage,
     bounds: Bounds,
-    transform: Transform,
+    transform: Transform, // TODO: let's calculate this from the rawimage width and height and bounds
     crs: string = "EPSG:4326"
   ): GeoRawImage {
     return new GeoRawImage(
