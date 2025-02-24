@@ -127,7 +127,17 @@ export const detectionsToGeoJSON = (
   geoRawImage: GeoRawImage
 ) => {
   const features = detections.map(detection => {
-    const [x1, y1, x2, y2] = detection.box;
+    let { xmin, ymin, xmax, ymax } = detection.box as any;
+
+    if (Array.isArray(detection.box)) {
+      [xmin, ymin, xmax, ymax] = detection.box;
+    }
+
+    const x1 = xmin;
+    const y1 = ymin;
+    const x2 = xmax;
+    const y2 = ymax;
+
     let bbox = [
       [x1, y1],
       [x2, y1],
@@ -266,8 +276,6 @@ export const maskToGeoJSON = (masks: any, geoRawImage: GeoRawImage) => {
   const numMasks = scores.length;
   const features = [];
 
-  console.log({ numMasks, scores });
-
   for (let index = 0; index < numMasks; index++) {
     const height = mask[0].dims[2];
     const width = mask[0].dims[3];
@@ -314,7 +322,6 @@ export const maskToGeoJSON = (masks: any, geoRawImage: GeoRawImage) => {
       },
     });
   }
-  console.log({ features });
 
   return {
     type: "FeatureCollection",
