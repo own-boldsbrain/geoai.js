@@ -41,7 +41,8 @@ describe("geobaseAi.genericSegmentation", () => {
       const encodedGeoJson = encodeURIComponent(geoJsonString);
       const geojsonIoUrl = `https://geojson.io/#data=data:application/json,${encodedGeoJson}`;
 
-      console.log(`View GeoJSON here: ${geojsonIoUrl}`);
+      console.log(`View GeoJSON here:`);
+      console.log(geojsonIoUrl);
     }
   });
 });
