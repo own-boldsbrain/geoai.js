@@ -26,19 +26,19 @@ describe("Mapbox", () => {
   } as GeoJSON.Feature;
 
   it("should return a GeoRawImage when getting an image", async () => {
-    const image = await mapbox.get_image(testPolygon);
+    const image = await mapbox.getImage(testPolygon);
     expect(image).toBeInstanceOf(GeoRawImage);
   });
 
   it("should return image with correct dimensions", async () => {
-    const image = await mapbox.get_image(testPolygon);
+    const image = await mapbox.getImage(testPolygon);
     expect(image.width).toBeGreaterThan(0);
     expect(image.height).toBeGreaterThan(0);
     expect(image.channels).toBe(3); // RGB image
   });
 
   it("should return image with bounds matching input polygon", async () => {
-    const image = await mapbox.get_image(testPolygon);
+    const image = await mapbox.getImage(testPolygon);
     const bounds = image.getBounds();
 
     // calucated from the combined tiles in the mapbox.ts file

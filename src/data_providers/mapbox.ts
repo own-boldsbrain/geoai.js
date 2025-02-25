@@ -61,7 +61,7 @@ export class Mapbox {
     this.style = style;
   }
 
-  async get_image(polygon: any) {
+  async getImage(polygon: any) {
     const bbox = turfBbox(polygon);
     let zoom = 20;
     // get tile for each of the 4 corners of the bbox
@@ -91,7 +91,7 @@ export class Mapbox {
       featureCollection.features.add(tiles.topleft.tileGeoJson);
       featureCollection.features.add(tiles.topright.tileGeoJson);
     }
-    // convert the features back to json
+
     const tileUrls = [
       tiles.bottomleft.tileGeoJson?.properties?.tileUrl,
       tiles.bottomright.tileGeoJson?.properties?.tileUrl,

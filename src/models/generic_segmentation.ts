@@ -134,7 +134,7 @@ export class GenericSegmentation {
     if (!this.dataProvider) {
       throw new Error("Data provider not initialized");
     }
-    const image = this.dataProvider.get_image(polygon);
+    const image = this.dataProvider.getImage(polygon);
     return image;
   }
 }
