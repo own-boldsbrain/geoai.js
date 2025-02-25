@@ -74,24 +74,15 @@ export class Mapbox {
     let yTileNum =
       Math.abs(tiles.bottomleft.tile[1] - tiles.topleft.tile[1]) + 1;
 
-    let featureCollection: any = {
-      type: "FeatureCollection",
-      features: new Set(),
-    };
-
     while (xTileNum > 2 && yTileNum > 2) {
       zoom--;
       tiles = this.calculateTilesForBbox(bbox, zoom);
       xTileNum =
         Math.abs(tiles.bottomleft.tile[0] - tiles.bottomright.tile[0]) + 1;
       yTileNum = Math.abs(tiles.bottomleft.tile[1] - tiles.topleft.tile[1]) + 1;
-
-      featureCollection.features.add(tiles.bottomleft.tileGeoJson);
-      featureCollection.features.add(tiles.bottomright.tileGeoJson);
-      featureCollection.features.add(tiles.topleft.tileGeoJson);
-      featureCollection.features.add(tiles.topright.tileGeoJson);
     }
 
+    // anti-clockwise order
     const tileUrls = [
       tiles.bottomleft.tileGeoJson?.properties?.tileUrl,
       tiles.bottomright.tileGeoJson?.properties?.tileUrl,
@@ -99,7 +90,7 @@ export class Mapbox {
       tiles.topleft.tileGeoJson?.properties?.tileUrl,
     ];
 
-    // Load images and create metadata objects
+    // Load images per tile and store their bounding boxes to later create GeoRawImage
     const tilesWithMetadata: TileMetadata[] = [
       {
         image: await load_image(tileUrls[0]),
@@ -139,6 +130,7 @@ export class Mapbox {
       },
     ];
 
+    // Merge the images and create a GeoRawImage
     const { image: mergedImage, bounds } =
       this.mergeRawImages(tilesWithMetadata);
 
@@ -178,8 +170,12 @@ export class Mapbox {
     };
   };
 
+  // takes the 4 tiles with their bounding box provided
+  // in an array in the anti-clockwise order starting
+  // with the bottom left tile
   mergeRawImages(tiles: TileMetadata[]): MergedResult {
     // Each image has the same dimensions and number of channels
+    // assuming all tiles have the same dimensions and number of channels
     const tileWidth = tiles[0].image.width;
     const tileHeight = tiles[0].image.height;
     const channels = tiles[0].image.channels;
@@ -192,6 +188,8 @@ export class Mapbox {
     );
 
     // Helper function to copy a single tile into the final image
+    // takes the source image, the destination image, the offset x and y
+    // and copies the tile into the final image at the specified offset
     function copyTileToFinalImage(
       source: Uint8ClampedArray | Uint8Array,
       dest: Uint8ClampedArray,
