@@ -86,21 +86,12 @@ export class Mapbox {
         Math.abs(tiles.bottomleft.tile[0] - tiles.bottomright.tile[0]) + 1;
       yTileNum = Math.abs(tiles.bottomleft.tile[1] - tiles.topleft.tile[1]) + 1;
 
-      featureCollection.features.add(
-        JSON.stringify(tiles.bottomleft.tileGeoJson)
-      );
-      featureCollection.features.add(
-        JSON.stringify(tiles.bottomright.tileGeoJson)
-      );
-      featureCollection.features.add(JSON.stringify(tiles.topleft.tileGeoJson));
-      featureCollection.features.add(
-        JSON.stringify(tiles.topright.tileGeoJson)
-      );
+      featureCollection.features.add(tiles.bottomleft.tileGeoJson);
+      featureCollection.features.add(tiles.bottomright.tileGeoJson);
+      featureCollection.features.add(tiles.topleft.tileGeoJson);
+      featureCollection.features.add(tiles.topright.tileGeoJson);
     }
     // convert the features back to json
-    Array.from(featureCollection.features).map((feature: any) =>
-      JSON.parse(feature)
-    );
     const tileUrls = [
       tiles.bottomleft.tileGeoJson?.properties?.tileUrl,
       tiles.bottomright.tileGeoJson?.properties?.tileUrl,
