@@ -56,7 +56,9 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     geobase_ai_pipeline: (
       params: ProviderParams,
       modelId: string = "onnx-community/grounding-dino-tiny-ONNX"
-    ) => {
+    ): Promise<{
+      instance: ZeroShotObjectDetection;
+    }> => {
       return ZeroShotObjectDetection.getInstance(modelId, params);
     },
   },
@@ -68,7 +70,9 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     geobase_ai_pipeline: (
       params: ProviderParams,
       modelId: string = "Xenova/slimsam-77-uniform"
-    ) => {
+    ): Promise<{
+      instance: GenericSegmentation;
+    }> => {
       return GenericSegmentation.getInstance(modelId, params);
     },
   },
@@ -80,7 +84,9 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     geobase_ai_pipeline: (
       params: ProviderParams,
       modelId: string = "geobase/WALDO30_yolov8m_640x640"
-    ) => {
+    ): Promise<{
+      instance: ObjectDetection;
+    }> => {
       return ObjectDetection.getInstance(modelId, params);
     },
   },

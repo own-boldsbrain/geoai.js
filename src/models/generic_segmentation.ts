@@ -81,7 +81,7 @@ export class GenericSegmentation {
 
   async segment(
     polygon: GeoJSON.Feature,
-    input_points: number[][]
+    input_points: number[][][]
   ): Promise<SegmentationResult> {
     // Ensure initialization is complete
     if (!this.initialized) {

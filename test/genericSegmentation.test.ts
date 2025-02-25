@@ -24,7 +24,10 @@ describe("geobaseAi.genericSegmentation", () => {
 
     for (const [quadrant, polygon] of Object.entries(quadrants)) {
       const input_points = [[[122, 190]]];
-      const result = await instance.segment(polygon, input_points);
+      const result = await (instance as GenericSegmentation).segment(
+        polygon,
+        input_points
+      );
 
       // Check basic properties
       ["geoRawImage", "masks"].forEach(prop => {
