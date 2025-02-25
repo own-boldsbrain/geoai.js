@@ -83,7 +83,7 @@ export class ZeroShotObjectDetection {
     polygon: GeoJSON.Feature
   ): Promise<GeoRawImage> {
     if (!this.dataProvider) {
-      throw new Error("Data provider not initialized properly");
+      throw new Error("Data provider not initialized");
     }
     const image = this.dataProvider.getImage(polygon);
     return image;
@@ -100,7 +100,7 @@ export class ZeroShotObjectDetection {
 
     // Double-check data provider after initialization
     if (!this.dataProvider) {
-      throw new Error("Data provider not initialized properly");
+      throw new Error("Data provider not initialized");
     }
 
     const geoRawImage = await this.polygon_to_image(polygon);

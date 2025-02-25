@@ -90,7 +90,7 @@ export class GenericSegmentation {
 
     // Double-check data provider after initialization
     if (!this.dataProvider) {
-      throw new Error("Data provider not initialized properly");
+      throw new Error("Data provider not initialized");
     }
 
     const geoRawImage = await this.polygon_to_image(polygon);
