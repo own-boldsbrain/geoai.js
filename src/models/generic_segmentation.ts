@@ -94,12 +94,6 @@ export class GenericSegmentation {
     }
 
     const geoRawImage = await this.polygon_to_image(polygon);
-    const rawImage = new RawImage(
-      geoRawImage.data,
-      geoRawImage.width,
-      geoRawImage.height,
-      geoRawImage.channels
-    );
 
     let masks;
     let outputs;
@@ -107,7 +101,9 @@ export class GenericSegmentation {
       if (!this.processor || !this.model) {
         throw new Error("Model or processor not initialized");
       }
-      const inputs = await this.processor(rawImage, { input_points });
+      const inputs = await this.processor(geoRawImage as RawImage, {
+        input_points,
+      });
       outputs = await this.model(inputs);
       masks = await this.processor.post_process_masks(
         outputs.pred_masks,

@@ -104,17 +104,11 @@ export class ZeroShotObjectDetection {
     }
 
     const geoRawImage = await this.polygon_to_image(polygon);
-    const rawImage = new RawImage(
-      geoRawImage.data,
-      geoRawImage.width,
-      geoRawImage.height,
-      geoRawImage.channels
-    );
 
     let outputs;
     try {
       const candidate_labels = Array.isArray(text) ? text : [text];
-      outputs = await this.detector(rawImage, candidate_labels, {
+      outputs = await this.detector(geoRawImage as RawImage, candidate_labels, {
         topk: 4,
         threshold: 0.2,
       });

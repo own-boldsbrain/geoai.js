@@ -96,12 +96,6 @@ export class ObjectDetection {
     }
 
     const geoRawImage = await this.polygon_to_image(polygon);
-    const rawImage = new RawImage(
-      geoRawImage.data,
-      geoRawImage.width,
-      geoRawImage.height,
-      geoRawImage.channels
-    );
 
     let outputs;
     let inputs;
@@ -109,7 +103,7 @@ export class ObjectDetection {
       if (!this.processor || !this.model) {
         throw new Error("Model or processor not initialized");
       }
-      inputs = await this.processor(rawImage);
+      inputs = await this.processor(geoRawImage as RawImage);
       outputs = await this.model({
         images: inputs.pixel_values,
         confidence: 0.9,
