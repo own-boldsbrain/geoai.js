@@ -116,7 +116,7 @@ export class ObjectDetection {
     const results = postProcessYoloOutput(
       outputs,
       inputs.pixel_values,
-      rawImage,
+      geoRawImage as RawImage,
       (this.model.config as any).id2label
     );
 
