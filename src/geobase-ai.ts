@@ -42,7 +42,9 @@ type GeobaseAiModelMetadata = {
   geobase_ai_pipeline: (
     params: ProviderParams,
     modelId?: string
-  ) => Promise<{ instance: GenericSegmentation | ZeroShotObjectDetection }>;
+  ) => Promise<{
+    instance: GenericSegmentation | ZeroShotObjectDetection | ObjectDetection;
+  }>;
 };
 
 const model_metadata: GeobaseAiModelMetadata[] = [
@@ -54,12 +56,10 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     geobase_ai_pipeline: (
       params: ProviderParams,
       modelId: string = "onnx-community/grounding-dino-tiny-ONNX"
-    ) => {
-      return ZeroShotObjectDetection.getInstance(
-        modelId,
-        params.provider,
-        params
-      );
+    ): Promise<{
+      instance: ZeroShotObjectDetection;
+    }> => {
+      return ZeroShotObjectDetection.getInstance(modelId, params);
     },
   },
   {
@@ -70,20 +70,24 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     geobase_ai_pipeline: (
       params: ProviderParams,
       modelId: string = "Xenova/slimsam-77-uniform"
-    ) => {
-      return GenericSegmentation.getInstance(modelId, params.provider, params);
+    ): Promise<{
+      instance: GenericSegmentation;
+    }> => {
+      return GenericSegmentation.getInstance(modelId, params);
     },
   },
   {
     task: "object-detection",
     library: "transformers.js",
-    model: "mhassanch/WALDO30_yolov8m_640x640",
+    model: "geobase/WALDO30_yolov8m_640x640",
     description: "Object Detection model.",
     geobase_ai_pipeline: (
       params: ProviderParams,
-      modelId: string = "mhassanch/WALDO30_yolov8m_640x640"
-    ) => {
-      return ObjectDetection.getInstance(modelId, params.provider, params);
+      modelId: string = "geobase/WALDO30_yolov8m_640x640"
+    ): Promise<{
+      instance: ObjectDetection;
+    }> => {
+      return ObjectDetection.getInstance(modelId, params);
     },
   },
 ];
@@ -103,8 +107,8 @@ const domains = () => {
 const pipeline = async (
   task: HuggingFaceModelTasks | GeobaseAiModelTasks,
   params: ProviderParams,
-  model_id?: string,
-  model_params?: any // TODO: implement this
+  model_id?: string
+  // model_params?: any // TODO: implement this
 ) => {
   const model = model_metadata.find(model => model.task === task);
 

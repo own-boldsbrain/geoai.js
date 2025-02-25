@@ -1,40 +1,36 @@
 import { Mapbox } from "@/data_providers/mapbox";
 import { pipeline, RawImage } from "@huggingface/transformers";
 import { parametersChanged } from "@/utils/utils";
-interface ProviderParams {
-  apiKey: string;
-  style: string;
-}
+import { ProviderParams } from "@/geobase-ai";
+import { GeoRawImage } from "@/types/images/GeoRawImage";
+
+export type ObjectDectection = {
+  label: string;
+  score: number;
+  box: [number, number, number, number];
+};
 
 export interface ObjectDetectionResults {
-  scores: number[];
-  boxes: number[][];
-  labels: string[];
+  detections: Array<ObjectDectection>;
+  geoRawImage: GeoRawImage;
 }
 
 export class ZeroShotObjectDetection {
   private static instance: ZeroShotObjectDetection | null = null;
-  private provider: string;
   private providerParams: ProviderParams;
-  private dataProvider: Mapbox;
+  private dataProvider: Mapbox | undefined;
   private model_id: string;
   private detector: any;
 
   private initialized: boolean = false;
 
-  private constructor(
-    model_id: string,
-    provider: string,
-    providerParams: ProviderParams
-  ) {
+  private constructor(model_id: string, providerParams: ProviderParams) {
     this.model_id = model_id;
-    this.provider = provider;
     this.providerParams = providerParams;
   }
 
   static async getInstance(
     model_id: string,
-    provider: string,
     providerParams: ProviderParams
   ): Promise<{ instance: ZeroShotObjectDetection }> {
     if (
@@ -42,13 +38,11 @@ export class ZeroShotObjectDetection {
       parametersChanged(
         ZeroShotObjectDetection.instance,
         model_id,
-        provider,
         providerParams
       )
     ) {
       ZeroShotObjectDetection.instance = new ZeroShotObjectDetection(
         model_id,
-        provider,
         providerParams
       );
       await ZeroShotObjectDetection.instance.initialize();
@@ -85,8 +79,13 @@ export class ZeroShotObjectDetection {
     this.initialized = true;
   }
 
-  private async polygon_to_image(polygon: GeoJSON.Feature): Promise<RawImage> {
-    const image = this.dataProvider.get_image(polygon);
+  private async polygon_to_image(
+    polygon: GeoJSON.Feature
+  ): Promise<GeoRawImage> {
+    if (!this.dataProvider) {
+      throw new Error("Data provider not initialized");
+    }
+    const image = this.dataProvider.getImage(polygon);
     return image;
   }
 
@@ -101,15 +100,15 @@ export class ZeroShotObjectDetection {
 
     // Double-check data provider after initialization
     if (!this.dataProvider) {
-      throw new Error("Data provider not initialized properly");
+      throw new Error("Data provider not initialized");
     }
 
-    const image = await this.polygon_to_image(polygon);
+    const geoRawImage = await this.polygon_to_image(polygon);
 
     let outputs;
     try {
       const candidate_labels = Array.isArray(text) ? text : [text];
-      outputs = await this.detector(image, candidate_labels, {
+      outputs = await this.detector(geoRawImage as RawImage, candidate_labels, {
         topk: 4,
         threshold: 0.2,
       });
@@ -117,23 +116,9 @@ export class ZeroShotObjectDetection {
       console.debug("error", error);
       throw error;
     }
-
-    const model_output = {
-      scores: [],
-      boxes: [],
-      labels: [],
+    return {
+      detections: outputs,
+      geoRawImage,
     };
-
-    outputs.forEach((item: any) => {
-      model_output.scores.push(item.score);
-      model_output.boxes.push([
-        item.box.xmin,
-        item.box.ymin,
-        item.box.xmax,
-        item.box.ymax,
-      ]);
-      model_output.labels.push(item.label);
-    });
-    return model_output;
   }
 }
