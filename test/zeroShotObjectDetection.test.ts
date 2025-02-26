@@ -35,21 +35,60 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
     expect(result1.instance).toBe(result2.instance);
   });
 
+  it("should create a new instance for different configurations of onnx-community/grounding-dino-tiny-ONNX", async () => {
+    const result1 = await geobaseAi.pipeline(
+      "zero-shot-object-detection",
+      mapboxParams
+    );
+    const result2 = await geobaseAi.pipeline(
+      "zero-shot-object-detection",
+      mapboxParams,
+      "onnx-community/grounding-dino-tiny-ONNX",
+      { model_file_name: "model_quantized", cache_dir: "./cache" }
+    );
+    expect(result1.instance.detector).not.toBe(result2.instance.detector);
+  });
+
+  it("should throw exception for invalid model parameters for model onnx-community/grounding-dino-tiny-ONNX", async () => {
+    const invalidOptions = [
+      { revision: "invalid_revision" },
+      { subfolder: "invalid_subfolder" },
+      { model_file_name: "invalid_model_file_name" },
+      { device: "invalid_device" },
+      { dtype: "invalid_dtype" },
+    ];
+
+    for (const options of invalidOptions) {
+      try {
+        await geobaseAi.pipeline(
+          "zero-shot-object-detection",
+          mapboxParams,
+          "onnx-community/grounding-dino-tiny-ONNX",
+          options
+        );
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect(error.message).toMatch(
+          /Invalid dtype|Unsupported device|Could not locate file|Unauthorized access to file/
+        );
+      }
+    }
+  });
+
   it("should process a polygon for object detection using onnx-community/grounding-dino-tiny-ONNX", async () => {
     const { instance } = await geobaseAi.pipeline(
       "zero-shot-object-detection",
       mapboxParams,
-      "onnx-community/grounding-dino-tiny-ONNX"
-      // { model_file_name: "model_quantized", cache_dir: "./cache" }
+      "onnx-community/grounding-dino-tiny-ONNX",
+      { model_file_name: "model_quantized", cache_dir: "./cache" }
     );
 
     const text = ["tree."];
 
     for (const [quadrant, polygon] of Object.entries(quadrants)) {
-      const results: ObjectDetectionResults = await instance.detection(
-        polygon,
-        text
-      );
+      const results: ObjectDetectionResults = await (
+        instance as ZeroShotObjectDetection
+      ).detection(polygon, text);
 
       let result = results;
 
@@ -77,6 +116,47 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
     }
   });
 
+  it("should create a new instance for different configurations of Xennova/owlvit-base-patch32", async () => {
+    const result1 = await geobaseAi.pipeline(
+      "zero-shot-object-detection",
+      mapboxParams,
+      "Xenova/owlvit-base-patch32"
+    );
+    const result2 = await geobaseAi.pipeline(
+      "zero-shot-object-detection",
+      mapboxParams,
+      "Xenova/owlvit-base-patch32",
+      { model_file_name: "model_quantized", cache_dir: "./cache" }
+    );
+    expect(result1.instance.detector).not.toBe(result2.instance.detector);
+  });
+
+  it("should throw exception for invalid model parameters for model Xennova/owlvit-base-patch32", async () => {
+    const invalidOptions = [
+      { revision: "invalid_revision" },
+      { subfolder: "invalid_subfolder" },
+      { model_file_name: "invalid_model_file_name" },
+      { device: "invalid_device" },
+      { dtype: "invalid_dtype" },
+    ];
+
+    for (const options of invalidOptions) {
+      try {
+        await geobaseAi.pipeline(
+          "zero-shot-object-detection",
+          mapboxParams,
+          "Xennova/owlvit-base-patch32",
+          options
+        );
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect(error.message).toMatch(
+          /Invalid dtype|Unsupported device|Could not locate file|Unauthorized access to file/
+        );
+      }
+    }
+  });
+
   it("should process a polygon for object detection using Xennova/owlvit-base-patch32", async () => {
     const { instance } = await geobaseAi.pipeline(
       "zero-shot-object-detection",
@@ -87,10 +167,9 @@ describe("geobaseAi.zeroShotObjectDetection", () => {
     const text = ["tree", "car", "vehicle", "building", "road", "person"];
 
     for (const [quadrant, polygon] of Object.entries(quadrants)) {
-      const results: ObjectDetectionResults = await instance.detection(
-        polygon,
-        text
-      );
+      const results: ObjectDetectionResults = await (
+        instance as ZeroShotObjectDetection
+      ).detection(polygon, text);
 
       const geoJson = detectionsToGeoJSON(
         results.detections,

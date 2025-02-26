@@ -5,6 +5,7 @@
 import { GenericSegmentation } from "./models/generic_segmentation";
 import { ObjectDetection } from "./models/object_detection";
 import { ZeroShotObjectDetection } from "./models/zero_shot_object_detection";
+import { PretrainedOptions } from "@huggingface/transformers";
 
 type MapboxParams = {
   provider: "mapbox";
@@ -41,7 +42,8 @@ type GeobaseAiModelMetadata = {
   description: string;
   geobase_ai_pipeline: (
     params: ProviderParams,
-    modelId?: string
+    modelId?: string,
+    modelParams?: PretrainedOptions
   ) => Promise<{
     instance: GenericSegmentation | ZeroShotObjectDetection | ObjectDetection;
   }>;
@@ -55,11 +57,12 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     description: "Zero-shot object detection model.",
     geobase_ai_pipeline: (
       params: ProviderParams,
-      modelId: string = "onnx-community/grounding-dino-tiny-ONNX"
+      modelId: string = "onnx-community/grounding-dino-tiny-ONNX",
+      modelParams?: PretrainedOptions
     ): Promise<{
       instance: ZeroShotObjectDetection;
     }> => {
-      return ZeroShotObjectDetection.getInstance(modelId, params);
+      return ZeroShotObjectDetection.getInstance(modelId, params, modelParams);
     },
   },
   {
@@ -69,11 +72,12 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     description: "Mask generation model.",
     geobase_ai_pipeline: (
       params: ProviderParams,
-      modelId: string = "Xenova/slimsam-77-uniform"
+      modelId: string = "Xenova/slimsam-77-uniform",
+      modelParams?: PretrainedOptions
     ): Promise<{
       instance: GenericSegmentation;
     }> => {
-      return GenericSegmentation.getInstance(modelId, params);
+      return GenericSegmentation.getInstance(modelId, params, modelParams);
     },
   },
   {
@@ -83,11 +87,12 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     description: "Object Detection model.",
     geobase_ai_pipeline: (
       params: ProviderParams,
-      modelId: string = "geobase/WALDO30_yolov8m_640x640"
+      modelId: string = "geobase/WALDO30_yolov8m_640x640",
+      modelParams?: PretrainedOptions
     ): Promise<{
       instance: ObjectDetection;
     }> => {
-      return ObjectDetection.getInstance(modelId, params);
+      return ObjectDetection.getInstance(modelId, params, modelParams);
     },
   },
 ];
@@ -107,8 +112,8 @@ const domains = () => {
 const pipeline = async (
   task: HuggingFaceModelTasks | GeobaseAiModelTasks,
   params: ProviderParams,
-  model_id?: string
-  // model_params?: any // TODO: implement this
+  model_id?: string,
+  modelParams?: any
 ) => {
   const model = model_metadata.find(model => model.task === task);
 
@@ -116,7 +121,7 @@ const pipeline = async (
     throw new Error(`Model for task ${task} not found`);
   }
 
-  return model.geobase_ai_pipeline(params, model_id);
+  return model.geobase_ai_pipeline(params, model_id, modelParams);
 };
 
 const geobaseAi = {

@@ -12,6 +12,8 @@ import { ObjectDetectionResults } from "../models/zero_shot_object_detection";
 import { postProcessYoloOutput } from "@/utils/utils";
 import { ProviderParams } from "@/geobase-ai";
 import { GeoRawImage } from "@/types/images/GeoRawImage";
+import { PretrainedOptions } from "@huggingface/transformers";
+
 export class ObjectDetection {
   private static instance: ObjectDetection | null = null;
   private providerParams: ProviderParams;
@@ -19,23 +21,38 @@ export class ObjectDetection {
   private model_id: string;
   private model: YolosForObjectDetection | undefined;
   private processor: Processor | undefined;
-
+  private modelParams: PretrainedOptions | undefined;
   private initialized: boolean = false;
 
-  private constructor(model_id: string, providerParams: ProviderParams) {
+  private constructor(
+    model_id: string,
+    providerParams: ProviderParams,
+    modelParams?: PretrainedOptions
+  ) {
     this.model_id = model_id;
     this.providerParams = providerParams;
+    this.modelParams = modelParams;
   }
 
   static async getInstance(
     model_id: string,
-    providerParams: ProviderParams
+    providerParams: ProviderParams,
+    modelParams?: PretrainedOptions
   ): Promise<{ instance: ObjectDetection }> {
     if (
       !ObjectDetection.instance ||
-      parametersChanged(ObjectDetection.instance, model_id, providerParams)
+      parametersChanged(
+        ObjectDetection.instance,
+        model_id,
+        providerParams,
+        modelParams
+      )
     ) {
-      ObjectDetection.instance = new ObjectDetection(model_id, providerParams);
+      ObjectDetection.instance = new ObjectDetection(
+        model_id,
+        providerParams,
+        modelParams
+      );
       await ObjectDetection.instance.initialize();
     }
     return { instance: ObjectDetection.instance };
@@ -65,9 +82,10 @@ export class ObjectDetection {
       throw new Error("Failed to initialize data provider");
     }
 
-    this.model = (await AutoModel.from_pretrained(this.model_id, {
-      dtype: "fp32",
-    })) as any;
+    this.model = (await AutoModel.from_pretrained(
+      this.model_id,
+      this.modelParams
+    )) as any;
 
     this.processor = await AutoProcessor.from_pretrained(this.model_id, {});
 
