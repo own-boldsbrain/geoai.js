@@ -5,20 +5,21 @@ import {
   RawImage,
   SamProcessor,
 } from "@huggingface/transformers";
-import { parametersChanged } from "@/utils/utils";
+import { maskToGeoJSON, parametersChanged } from "@/utils/utils";
 import { GeoRawImage } from "@/types/images/GeoRawImage";
 import { ProviderParams } from "@/geobase-ai";
 import { PretrainedOptions } from "@huggingface/transformers";
+import { Geobase } from "@/data_providers/geobase";
 
 interface SegmentationResult {
-  masks: any;
+  masks: GeoJSON.FeatureCollection;
   geoRawImage: GeoRawImage;
 }
 
 export class GenericSegmentation {
   private static instance: GenericSegmentation | null = null;
   private providerParams: ProviderParams;
-  private dataProvider: Mapbox | undefined;
+  private dataProvider: Mapbox | Geobase | undefined;
   private model_id: string;
   private model: SamModel | undefined;
   private processor: SamProcessor | undefined;
@@ -70,6 +71,13 @@ export class GenericSegmentation {
           this.providerParams.style
         );
         break;
+      case "geobase":
+        this.dataProvider = new Geobase({
+          projectRef: this.providerParams.projectRef,
+          cogImagery: this.providerParams.cogImagery,
+          apikey: this.providerParams.apikey,
+        });
+        break;
       case "sentinel":
         throw new Error("Sentinel provider not implemented yet");
       default:
@@ -98,7 +106,7 @@ export class GenericSegmentation {
 
   async segment(
     polygon: GeoJSON.Feature,
-    input_points: number[][][]
+    input_points: any
   ): Promise<SegmentationResult> {
     // Ensure initialization is complete
     if (!this.initialized) {
@@ -118,6 +126,9 @@ export class GenericSegmentation {
       if (!this.processor || !this.model) {
         throw new Error("Model or processor not initialized");
       }
+      input_points = [
+        [geoRawImage.worldToPixel(input_points[0], input_points[1])],
+      ];
       const inputs = await this.processor(geoRawImage as RawImage, {
         input_points,
       });
@@ -131,12 +142,16 @@ export class GenericSegmentation {
       console.error(e);
       throw new Error("Failed to segment image");
     }
-
-    return {
-      masks: {
+    const geoJsonMask = maskToGeoJSON(
+      {
         mask: masks,
         scores: outputs.iou_scores.data,
       },
+      geoRawImage
+    );
+
+    return {
+      masks: geoJsonMask,
       geoRawImage: geoRawImage,
     };
   }

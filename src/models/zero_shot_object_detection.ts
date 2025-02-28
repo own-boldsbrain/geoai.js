@@ -1,24 +1,20 @@
 import { Mapbox } from "@/data_providers/mapbox";
 import { pipeline, RawImage } from "@huggingface/transformers";
-import { parametersChanged } from "@/utils/utils";
+import { detectionsToGeoJSON, parametersChanged } from "@/utils/utils";
 import { ProviderParams } from "@/geobase-ai";
 import { GeoRawImage } from "@/types/images/GeoRawImage";
 import { PretrainedOptions } from "@huggingface/transformers";
-export type ObjectDectection = {
-  label: string;
-  score: number;
-  box: [number, number, number, number];
-};
+import { Geobase } from "@/data_providers/geobase";
 
 export interface ObjectDetectionResults {
-  detections: Array<ObjectDectection>;
+  detections: GeoJSON.FeatureCollection;
   geoRawImage: GeoRawImage;
 }
 
 export class ZeroShotObjectDetection {
   private static instance: ZeroShotObjectDetection | null = null;
   private providerParams: ProviderParams;
-  private dataProvider: Mapbox | undefined;
+  private dataProvider: Mapbox | Geobase | undefined;
   private model_id: string;
   private detector: any;
   private modelParams: PretrainedOptions | undefined;
@@ -69,6 +65,13 @@ export class ZeroShotObjectDetection {
           this.providerParams.apiKey,
           this.providerParams.style
         );
+        break;
+      case "geobase":
+        this.dataProvider = new Geobase({
+          projectRef: this.providerParams.projectRef,
+          cogImagery: this.providerParams.cogImagery,
+          apikey: this.providerParams.apikey,
+        });
         break;
       case "sentinel":
         throw new Error("Sentinel provider not implemented yet");
@@ -129,8 +132,9 @@ export class ZeroShotObjectDetection {
       console.debug("error", error);
       throw error;
     }
+    const detectionsGeoJson = detectionsToGeoJSON(outputs, geoRawImage);
     return {
-      detections: outputs,
+      detections: detectionsGeoJson,
       geoRawImage,
     };
   }

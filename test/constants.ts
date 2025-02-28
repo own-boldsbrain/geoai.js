@@ -7,22 +7,33 @@ export const mapboxParams: ProviderParams = {
   style: "mapbox://styles/mapbox/satellite-v9",
 };
 
+export const geobaseParams: ProviderParams = {
+  provider: "geobase",
+  projectRef: "wmrosdnjsecywfkvxtrw",
+  apikey:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4OTY1NDU4MjUsImlhdCI6MTczODc2MTQyNSwiaXNzIjoic3VwYWJhc2UiLCJyb2xlIjoiYW5vbiJ9.M8jeru5dbHe4tGh52xe2E2HlUiGCAPbZ8-JrfbxiRk0",
+  cogImagery:
+    "https://oin-hotosm-temp.s3.amazonaws.com/63556b6771072f000580f8cd/0/63556b6771072f000580f8ce.tif",
+};
+
 export const polygon = {
   type: "Feature",
   properties: {},
   geometry: {
     coordinates: [
       [
-        [12.482802629103247, 41.885379230564524],
-        [12.481392196198271, 41.885379230564524],
-        [12.481392196198271, 41.884332326712524],
-        [12.482802629103247, 41.884332326712524],
-        [12.482802629103247, 41.885379230564524],
+        [-102.32245205602885, 19.536415661502275],
+        [-102.32245205602885, 19.534836349733624],
+        [-102.32080637971754, 19.534836349733624],
+        [-102.32080637971754, 19.536415661502275],
+        [-102.32245205602885, 19.536415661502275],
       ],
     ],
     type: "Polygon",
   },
 } as GeoJSON.Feature;
+
+export const input_point = [-102.32207526163147, 19.53570142468871];
 
 export const quadrants = {
   "north-west": {
@@ -89,4 +100,11 @@ export const quadrants = {
       type: "Polygon",
     },
   } as GeoJSON.Feature,
+};
+
+export const quadrants_points = {
+  "north-west": [-119.03412134909516, 47.93472750933009],
+  "north-east": [12.417432949881146, 47.886045665409426],
+  "south-east": [18.587564882328365, -33.98004626342711],
+  "south-west": [-69.2315934241316, -51.60952167421363],
 };

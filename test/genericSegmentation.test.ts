@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { geobaseAi } from "../src/geobase-ai";
 import { GenericSegmentation } from "../src/models/generic_segmentation";
-import { mapboxParams, quadrants } from "./constants";
+import {
+  geobaseParams,
+  input_point,
+  mapboxParams,
+  polygon,
+  quadrants,
+  quadrants_points,
+} from "./constants";
 import { maskToGeoJSON } from "../src/utils/utils";
 
 describe("geobaseAi.genericSegmentation", () => {
@@ -63,7 +70,7 @@ describe("geobaseAi.genericSegmentation", () => {
     );
 
     for (const [quadrant, polygon] of Object.entries(quadrants)) {
-      const input_points = [[[122, 190]]];
+      const input_points = quadrants_points[quadrant];
       const result = await (instance as GenericSegmentation).segment(
         polygon,
         input_points
@@ -74,18 +81,47 @@ describe("geobaseAi.genericSegmentation", () => {
         expect(result).toHaveProperty(prop);
       });
 
-      const { geoRawImage, masks } = result;
-      const maskGeoJson = maskToGeoJSON(masks, geoRawImage);
-      expect(maskGeoJson).toHaveProperty("type", "FeatureCollection");
-      expect(maskGeoJson).toHaveProperty("features");
-      expect(maskGeoJson.features).toBeInstanceOf(Array);
+      const { masks } = result;
+      expect(masks).toHaveProperty("type", "FeatureCollection");
+      expect(masks).toHaveProperty("features");
+      expect(masks.features).toBeInstanceOf(Array);
 
-      const geoJsonString = JSON.stringify(maskGeoJson);
+      const geoJsonString = JSON.stringify(masks);
       const encodedGeoJson = encodeURIComponent(geoJsonString);
       const geojsonIoUrl = `https://geojson.io/#data=data:application/json,${encodedGeoJson}`;
 
       console.log(`View GeoJSON here:`);
       console.log(geojsonIoUrl);
     }
+  });
+
+  it("should process a polygon for segmentation and generate valid GeoJSON for source geobase", async () => {
+    const { instance } = await geobaseAi.pipeline(
+      "mask-generation",
+      geobaseParams
+    );
+
+    const input_points = input_point;
+    const result = await (instance as GenericSegmentation).segment(
+      polygon,
+      input_points
+    );
+
+    // Check basic properties
+    ["geoRawImage", "masks"].forEach(prop => {
+      expect(result).toHaveProperty(prop);
+    });
+
+    const { masks } = result;
+    expect(masks).toHaveProperty("type", "FeatureCollection");
+    expect(masks).toHaveProperty("features");
+    expect(masks.features).toBeInstanceOf(Array);
+
+    const geoJsonString = JSON.stringify(masks);
+    const encodedGeoJson = encodeURIComponent(geoJsonString);
+    const geojsonIoUrl = `https://geojson.io/#data=data:application/json,${encodedGeoJson}`;
+
+    console.log(`View GeoJSON here:`);
+    console.log(geojsonIoUrl);
   });
 });

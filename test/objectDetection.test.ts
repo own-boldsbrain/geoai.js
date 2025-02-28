@@ -1,12 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { geobaseAi } from "../src/geobase-ai";
-import { mapboxParams, quadrants } from "./constants";
+import { geobaseParams, mapboxParams, polygon, quadrants } from "./constants";
 import { ObjectDetection } from "../src/models/object_detection";
 import { detectionsToGeoJSON } from "../src/utils/utils";
-import {
-  ObjectDectection,
-  ObjectDetectionResults,
-} from "../src/models/zero_shot_object_detection";
+import { ObjectDetectionResults } from "../src/models/zero_shot_object_detection";
 import { GeoRawImage } from "../src/types/images/GeoRawImage";
 
 describe("geobaseAi.objectDetection", () => {
@@ -14,7 +11,7 @@ describe("geobaseAi.objectDetection", () => {
     const result = await geobaseAi.pipeline(
       "object-detection",
       mapboxParams,
-      "mhassanch/WALDO30_yolov8m_640x640"
+      "geobase/WALDO30_yolov8m_640x640"
     );
 
     expect(result.instance).toBeInstanceOf(ObjectDetection);
@@ -24,12 +21,12 @@ describe("geobaseAi.objectDetection", () => {
     const result1 = await geobaseAi.pipeline(
       "object-detection",
       mapboxParams,
-      "mhassanch/WALDO30_yolov8m_640x640"
+      "geobase/WALDO30_yolov8m_640x640"
     );
     const result2 = await geobaseAi.pipeline(
       "object-detection",
       mapboxParams,
-      "mhassanch/WALDO30_yolov8m_640x640"
+      "geobase/WALDO30_yolov8m_640x640"
     );
 
     expect(result1.instance).toBe(result2.instance);
@@ -69,12 +66,8 @@ describe("geobaseAi.objectDetection", () => {
 
     for (const [quadrant, polygon] of Object.entries(quadrants)) {
       const results: ObjectDetectionResults = await instance.detection(polygon);
-      const geoJson = detectionsToGeoJSON(
-        results.detections,
-        results.geoRawImage
-      );
 
-      const geoJsonString = JSON.stringify(geoJson);
+      const geoJsonString = JSON.stringify(results.detections);
       const encodedGeoJson = encodeURIComponent(geoJsonString);
       const geojsonIoUrl = `https://geojson.io/#data=data:application/json,${encodedGeoJson}`;
 
@@ -85,8 +78,32 @@ describe("geobaseAi.objectDetection", () => {
       expect(results).toHaveProperty("geoRawImage");
 
       // Check result types
-      expect(results.detections).toBeInstanceOf(Array<ObjectDectection>);
+      expect(results.detections.type).toBe("FeatureCollection");
+      expect(Array.isArray(results.detections.features)).toBe(true);
       expect(results.geoRawImage).toBeInstanceOf(GeoRawImage);
     }
+  });
+  it("should process a polygon for object detection for polygon for source geobase", async () => {
+    const { instance } = await geobaseAi.pipeline(
+      "object-detection",
+      geobaseParams
+    );
+
+    const results: ObjectDetectionResults = await instance.detection(polygon);
+
+    const geoJsonString = JSON.stringify(results.detections);
+    const encodedGeoJson = encodeURIComponent(geoJsonString);
+    const geojsonIoUrl = `https://geojson.io/#data=data:application/json,${encodedGeoJson}`;
+
+    console.log(`View GeoJSON here: ${geojsonIoUrl}`);
+
+    // Check basic properties
+    expect(results).toHaveProperty("detections");
+    expect(results).toHaveProperty("geoRawImage");
+
+    // Check result types
+    expect(results.detections.type).toBe("FeatureCollection");
+    expect(Array.isArray(results.detections.features)).toBe(true);
+    expect(results.geoRawImage).toBeInstanceOf(GeoRawImage);
   });
 });
