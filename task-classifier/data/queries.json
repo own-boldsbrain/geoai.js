@@ -1,0 +1,82 @@
+[
+  {
+    "query": "Detect all the cars in this area",
+    "task": "zero-shot-object-detection"
+  },
+  {
+    "query": "Segment the buildings in the image",
+    "task": "mask-generation"
+  },
+  {
+    "query": "Identify all the pedestrians in the scene",
+    "task": "object-detection"
+  },
+  {
+    "query": "Detect all the trees in the park",
+    "task": "zero-shot-object-detection"
+  },
+  {
+    "query": "Segment the roads in the satellite image",
+    "task": "mask-generation"
+  },
+  {
+    "query": "Identify all the animals in the forest",
+    "task": "object-detection"
+  },
+  {
+    "query": "Detect all the boats in the harbor",
+    "task": "zero-shot-object-detection"
+  },
+  {
+    "query": "Segment the rivers in the map",
+    "task": "mask-generation"
+  },
+  {
+    "query": "Identify all the bicycles in the city",
+    "task": "object-detection"
+  },
+  {
+    "query": "Detect all the airplanes at the airport",
+    "task": "zero-shot-object-detection"
+  },
+  {
+    "query": "Segment the vegetation in the image",
+    "task": "mask-generation"
+  },
+  {
+    "query": "Identify all the buses in the traffic",
+    "task": "object-detection"
+  },
+  {
+    "query": "Detect all the people in the crowd",
+    "task": "zero-shot-object-detection"
+  },
+  {
+    "query": "Segment the lakes in the satellite image",
+    "task": "mask-generation"
+  },
+  {
+    "query": "Identify all the trucks on the highway",
+    "task": "object-detection"
+  },
+  {
+    "query": "Detect all the motorcycles in the parking lot",
+    "task": "zero-shot-object-detection"
+  },
+  {
+    "query": "Segment the mountains in the landscape",
+    "task": "mask-generation"
+  },
+  {
+    "query": "Identify all the traffic signs in the street",
+    "task": "object-detection"
+  },
+  {
+    "query": "Detect all the birds in the sky",
+    "task": "zero-shot-object-detection"
+  },
+  {
+    "query": "Segment the fields in the aerial image",
+    "task": "mask-generation"
+  }
+]

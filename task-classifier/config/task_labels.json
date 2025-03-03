@@ -1,0 +1,7 @@
+{
+  "task_labels": [
+    "object-detection",
+    "zero-shot-object-detection",
+    "mask-generation"
+  ]
+}
