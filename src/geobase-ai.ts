@@ -4,6 +4,7 @@
 
 import { GenericSegmentation } from "./models/generic_segmentation";
 import { ObjectDetection } from "./models/object_detection";
+import { OrientedObjectDetection } from "./models/oriented_object_detection";
 import { ZeroShotObjectDetection } from "./models/zero_shot_object_detection";
 import { PretrainedOptions } from "@huggingface/transformers";
 
@@ -32,7 +33,8 @@ type HuggingFaceModelTasks =
   | "mask-generation"
   | "zero-shot-object-detection"
   | "zero-shot-image-classification"
-  | "object-detection";
+  | "object-detection"
+  | "oriented-object-detection";
 
 type GeobaseAiModelTasks =
   | "damage-assessment"
@@ -52,7 +54,11 @@ type GeobaseAiModelMetadata = {
     modelId?: string,
     modelParams?: PretrainedOptions
   ) => Promise<{
-    instance: GenericSegmentation | ZeroShotObjectDetection | ObjectDetection;
+    instance:
+      | GenericSegmentation
+      | ZeroShotObjectDetection
+      | ObjectDetection
+      | OrientedObjectDetection;
   }>;
 };
 
@@ -100,6 +106,21 @@ const model_metadata: GeobaseAiModelMetadata[] = [
       instance: ObjectDetection;
     }> => {
       return ObjectDetection.getInstance(modelId, params, modelParams);
+    },
+  },
+  {
+    task: "oriented-object-detection",
+    library: "transformers.js",
+    model: "geobase/gghl-oriented-object-detection",
+    description: "Oriented Object Detection model.",
+    geobase_ai_pipeline: (
+      params: ProviderParams,
+      modelId: string = "geobase/gghl-oriented-object-detection",
+      modelParams?: PretrainedOptions
+    ): Promise<{
+      instance: OrientedObjectDetection;
+    }> => {
+      return OrientedObjectDetection.getInstance(modelId, params, modelParams);
     },
   },
 ];
