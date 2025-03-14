@@ -10,6 +10,7 @@ import { Geobase } from "@/data_providers/geobase";
 import * as ort from "onnxruntime-web";
 // import { createPolyIoUModule } from '../utils/wasm/polyiou.js';
 import * as turf from "@turf/turf";
+import { iouPoly } from "@/utils/gghl/polyiou";
 
 interface ConvertPredParams {
   pred_bbox: number[][];
@@ -17,6 +18,16 @@ interface ConvertPredParams {
   org_img_shape: [number, number];
   valid_scale: [number, number];
   conf_thresh: number;
+}
+
+interface NMSOptions {
+  conf_thres?: number;
+  iou_thres?: number;
+  merge?: boolean;
+  classes?: number[];
+  multi_label?: boolean;
+  agnostic?: boolean;
+  without_iouthres?: boolean;
 }
 
 export class OrientedObjectDetection {
@@ -237,86 +248,7 @@ export class OrientedObjectDetection {
       return [x1, y1, x2, y2];
     });
   }
-  // private convertPred(
-  //   pred_bbox: number[][],
-  //   test_input_size: number,
-  //   org_img_shape: [number, number],
-  //   valid_scale: [number, number],
-  //   conf_thresh: number
-  // ): number[][] {
-  //   const pred_xyxy = this.xywh2xyxy(pred_bbox.map(bbox => bbox.slice(0, 4)));
-  //   const pred_conf = pred_bbox.map(bbox => bbox[13]);
-  //   const pred_prob = pred_bbox.map(bbox => bbox.slice(14));
-  //   const [org_h, org_w] = org_img_shape;
-  //   console.log({org_h, org_w});
-  //   const resize_ratio = Math.min(1.0 * test_input_size / org_w, 1.0 * test_input_size / org_h);
-  //   const dw = (test_input_size - resize_ratio * org_w) / 2;
-  //   const dh = (test_input_size - resize_ratio * org_h) / 2;
 
-  //   for (let i = 0; i < pred_xyxy.length; i++) {
-  //     pred_xyxy[i][0] = (pred_xyxy[i][0] - dw) / resize_ratio;
-  //     pred_xyxy[i][1] = (pred_xyxy[i][1] - dh) / resize_ratio;
-  //     pred_xyxy[i][2] = (pred_xyxy[i][2] - dw) / resize_ratio;
-  //     pred_xyxy[i][3] = (pred_xyxy[i][3] - dh) / resize_ratio;
-  //   }
-
-  //   const pred_s = pred_bbox.map(bbox => bbox.slice(4, 8));
-  //   const pred_r = pred_bbox.map(bbox => bbox.slice(8, 9));
-  //   const zero = pred_s.map(() => [0, 0, 0, 0]);
-
-  //   for (let i = 0; i < pred_s.length; i++) {
-  //     if (pred_r[i][0] > 0.9) {
-  //       pred_s[i] = zero[i];
-  //     }
-  //   }
-
-  //   for (let i = 0; i < pred_xyxy.length; i++) {
-  //     pred_xyxy[i][0] = Math.max(pred_xyxy[i][0], 0);
-  //     pred_xyxy[i][1] = Math.max(pred_xyxy[i][1], 0);
-  //     pred_xyxy[i][2] = Math.min(pred_xyxy[i][2], org_w - 1);
-  //     pred_xyxy[i][3] = Math.min(pred_xyxy[i][3], org_h - 1);
-  //   }
-
-  //   const invalid_mask = pred_xyxy.map(bbox => bbox[0] > bbox[2] || bbox[1] > bbox[3]);
-
-  //   for (let i = 0; i < invalid_mask.length; i++) {
-  //     if (invalid_mask[i]) {
-  //       pred_xyxy[i] = [0, 0, 0, 0];
-  //       pred_s[i] = [0, 0, 0, 0];
-  //     }
-  //   }
-
-  //   const bboxes_scale = pred_xyxy.map(bbox => Math.sqrt((bbox[2] - bbox[0]) * (bbox[3] - bbox[1])));
-  //   const scale_mask = bboxes_scale.map(scale => valid_scale[0] < scale && scale < valid_scale[1]);
-
-  //   const classes = pred_prob.map(prob => prob.indexOf(Math.max(...prob)));
-  //   const scores = pred_conf.map((conf, i) => conf * pred_prob[i][classes[i]]);
-  //   const score_mask = scores.map(score => score > conf_thresh);
-  //   const mask = scale_mask.map((scale, i) => scale && score_mask[i]);
-
-  //   const filtered_pred_xyxy = pred_xyxy.filter((_, i) => mask[i]);
-  //   const filtered_pred_s = pred_s.filter((_, i) => mask[i]);
-  //   const filtered_pred_conf = pred_conf.filter((_, i) => mask[i]);
-  //   const filtered_pred_prob = pred_prob.filter((_, i) => mask[i]);
-
-  //   const coor4points = filtered_pred_s.map((s, i) => {
-  //     const [x1, y1, x2, y2, x3, y3, x4, y4] = [
-  //       s[0] * (filtered_pred_xyxy[i][2] - filtered_pred_xyxy[i][0]) + filtered_pred_xyxy[i][0],
-  //       filtered_pred_xyxy[i][1],
-  //       filtered_pred_xyxy[i][2],
-  //       s[1] * (filtered_pred_xyxy[i][3] - filtered_pred_xyxy[i][1]) + filtered_pred_xyxy[i][1],
-  //       filtered_pred_xyxy[i][2] - s[2] * (filtered_pred_xyxy[i][2] - filtered_pred_xyxy[i][0]),
-  //       filtered_pred_xyxy[i][3],
-  //       filtered_pred_xyxy[i][0],
-  //       filtered_pred_xyxy[i][3] - s[3] * (filtered_pred_xyxy[i][3] - filtered_pred_xyxy[i][1])
-  //     ];
-  //     return [x1, y1, x2, y2, x3, y3, x4, y4];
-  //   });
-
-  //   const bboxes = coor4points.map((points, i) => [...points, filtered_pred_conf[i], ...filtered_pred_prob[i]]);
-
-  //   return bboxes;
-  // }
   private convertPred({
     pred_bbox,
     test_input_size,
@@ -523,244 +455,422 @@ export class OrientedObjectDetection {
     return bboxes;
   }
 
-  private async non_max_suppression_4points(
-    geoRawImage: GeoRawImage,
+  /**
+   * Performs Rotate-Non-Maximum Suppression (RNMS) on inference results.
+   * @param prediction Array of predictions with shape (batch_size, num_boxes, [xywh, score, num_classes, num_angles]).
+   * @param conf_thres Confidence threshold.
+   * @param iou_thres IoU threshold.
+   * @param merge Whether to merge overlapping boxes.
+   * @param classes Array of class indices to filter by.
+   * @param agnostic Whether to treat all classes as the same during NMS.
+   * @param without_iouthres Whether to skip IoU thresholding.
+   * @returns Array of filtered boxes after NMS.
+   */
+  private nonMaxSuppression4Points(
     prediction: number[][][],
-    conf_thres: number = 0.2,
-    iou_thres: number = 0.45,
-    classes: number[] | null = null,
-    multi_label: boolean = true,
-    without_iouthres: boolean = false
-  ): Promise<number[][]> {
-    const nc = prediction[0][0].length - 9;
-    const xc = prediction[0].map(p => p[8] > conf_thres);
+    {
+      conf_thres = 0.4,
+      iou_thres = 0.45,
+      classes = undefined,
+      multi_label = true,
+      without_iouthres = false,
+    }: NMSOptions = {}
+  ): number[][][] {
+    const batchSize = prediction.length;
+    const numClasses = prediction[0][0].length - 9;
 
-    const max_det = 500;
-    multi_label = multi_label && nc > 1;
+    // Initialize output array
+    const output: number[][][] = Array.from({ length: batchSize }, () => []);
 
-    const output: number[][] = [];
+    // Iterate over each image in the batch
+    for (let xi = 0; xi < batchSize; xi++) {
+      const x = prediction[xi];
 
-    for (let xi = 0; xi < prediction.length; xi++) {
-      let x = prediction[xi].filter((_, i) => xc[i]);
+      // Filter out boxes with confidence below the threshold
+      const filteredBoxes = x.filter(box => box[8] > conf_thres);
 
-      if (!x.length) continue;
+      if (filteredBoxes.length === 0) {
+        continue; // Skip if no boxes remain
+      }
 
-      x.forEach(p => {
-        for (let i = 9; i < p.length; i++) {
-          p[i] = p[i] * p[8];
-        }
-      });
-
-      let box = x.map(p => p.slice(0, 8));
-
-      if (multi_label) {
-        const filtered = [];
-        for (let i = 0; i < x.length; i++) {
-          for (let j = 9; j < x[i].length; j++) {
-            if (x[i][j] > conf_thres) {
-              filtered.push([...box[i], x[i][j], j - 9]);
+      // Compute confidence scores
+      const boxesWithScores: number[][] = [];
+      if (multi_label && numClasses > 1) {
+        filteredBoxes.forEach(box => {
+          box.slice(9).forEach((score, j) => {
+            const confScore = score * box[8];
+            if (confScore > conf_thres) {
+              boxesWithScores.push([
+                ...box.slice(0, 8), // xywhθ
+                confScore, // Confidence score
+                j, // Class index
+              ]);
             }
-          }
-        }
-        x = filtered;
+          });
+        });
       } else {
-        x = x
-          .map(p => {
-            const maxConf = Math.max(...p.slice(9));
-            const maxIndex = p.slice(9).indexOf(maxConf);
-            return [...box[prediction[0].indexOf(p)], maxConf, maxIndex];
-          })
-          .filter(p => p[8] > conf_thres);
+        filteredBoxes.forEach(box => {
+          const maxConf = Math.max(
+            ...box.slice(9).map(score => score * box[8])
+          );
+          const classIndex = box
+            .slice(9)
+            .map(score => score * box[8])
+            .indexOf(maxConf);
+          if (maxConf > conf_thres) {
+            boxesWithScores.push([
+              ...box.slice(0, 8), // xywhθ
+              maxConf, // Confidence score
+              classIndex, // Class index
+            ]);
+          }
+        });
       }
 
       if (without_iouthres) {
-        output.push(...x);
+        output[xi] = boxesWithScores;
         continue;
       }
 
-      if (classes) {
-        x = x.filter(p => classes.includes(p[9]));
+      // Filter by class if specified
+      const filteredByClass = classes
+        ? boxesWithScores.filter(box => classes.includes(box[box.length - 1]))
+        : boxesWithScores;
+
+      if (filteredByClass.length === 0) {
+        continue; // Skip if no boxes remain after class filtering
       }
 
-      if (!x.length) continue;
+      // Sort boxes by confidence score
+      filteredByClass.sort((a, b) => b[8] - a[8]);
 
-      x.sort((a, b) => b[8] - a[8]);
-
-      const boxes_4points = x.map(p => p.slice(0, 8));
-      const scores = x.map(p => p[8]);
-
-      //convert 4 points to lat long coordinates
-      // const boxes_4points_latlong = boxes_4points.map(box => {
-      //   const points = [
-      //     [box[0], box[1]], [box[2], box[3]], [box[4], box[5]], [box[6], box[7]]
-      //   ].map(point => {
-      //     point = point.map(Math.round)
-      //     return geoRawImage.pixelToWorld(point[0], point[1]);
-      //   });
-      //   return points.flat();
-      // });
-      const i = await this.py_cpu_nms_poly_fast(
-        boxes_4points,
+      // Perform polygonal NMS
+      const boxes4Points = filteredByClass.map(box => box.slice(0, 8));
+      const scores = filteredByClass.map(box => box[8]);
+      console.log({ boxes4Points, scores });
+      const keepIndices = this.pyCpuNmsPolyFast(
+        boxes4Points,
         scores,
         iou_thres
       );
+      console.log({ keepIndices });
 
-      if (i.length > max_det) {
-        i.length = max_det;
-      }
+      // Limit the number of detections
+      const maxDet = 500;
+      const finalIndices = keepIndices.slice(0, maxDet);
 
-      output.push(...i.map(index => x[index]));
+      output[xi] = finalIndices.map(i => filteredByClass[i]);
     }
 
     return output;
   }
 
-  private async iouPoly(p: number[], q: number[]): Promise<number> {
-    if (p.length !== 8 || q.length !== 8) {
-      throw new Error(
-        "Each polygon must have exactly 4 points (8 values: x1, y1, x2, y2, x3, y3, x4, y4)"
-      );
-    }
-
-    // Helper function: Compute polygon area using Shoelace formula
-    function polygonArea(points: number[][]): number {
-      let area = 0;
-      const n = points.length;
-      for (let i = 0; i < n; i++) {
-        const [x1, y1] = points[i];
-        const [x2, y2] = points[(i + 1) % n];
-        area += x1 * y2 - x2 * y1;
-      }
-      return Math.abs(area) / 2;
-    }
-
-    // Convert flat array [x1, y1, x2, y2, x3, y3, x4, y4] → [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
-    const poly1 = [
-      [p[0], p[1]],
-      [p[2], p[3]],
-      [p[4], p[5]],
-      [p[6], p[7]],
-    ];
-    const poly2 = [
-      [q[0], q[1]],
-      [q[2], q[3]],
-      [q[4], q[5]],
-      [q[6], q[7]],
-    ];
-
-    // Compute intersection points (Brute-force approximation)
-    function getIntersectionPoints(
-      polyA: number[][],
-      polyB: number[][]
-    ): number[][] {
-      let intersection: number[][] = [];
-
-      for (let pt of polyA) {
-        if (isInside(pt, polyB)) intersection.push(pt);
-      }
-      for (let pt of polyB) {
-        if (isInside(pt, polyA)) intersection.push(pt);
-      }
-      return intersection;
-    }
-
-    // Check if a point is inside a polygon using ray-casting
-    function isInside(point: number[], polygon: number[][]): boolean {
-      let [px, py] = point;
-      let inside = false;
-      const n = polygon.length;
-
-      for (let i = 0, j = n - 1; i < n; j = i++) {
-        const [xi, yi] = polygon[i];
-        const [xj, yj] = polygon[j];
-
-        const intersect =
-          yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi;
-
-        if (intersect) inside = !inside;
-      }
-      return inside;
-    }
-
-    // Get intersection polygon points
-    const intersectionPolygon = getIntersectionPoints(poly1, poly2);
-
-    if (intersectionPolygon.length < 3) {
-      return 0;
-    }
-    // Compute areas
-    const area1 = polygonArea(poly1);
-    const area2 = polygonArea(poly2);
-    const interArea = polygonArea(intersectionPolygon);
-
-    // Compute IoU
-    return interArea / (area1 + area2 - interArea);
-  }
-
-  private async py_cpu_nms_poly_fast(
-    boxes: number[][],
+  /**
+   * Polygonal NMS implementation.
+   * @param dets Array of polygons with shape (num_detections, [poly]).
+   * @param scores Array of confidence scores with shape (num_detections, 1).
+   * @param thresh IoU threshold.
+   * @returns Array of indices to keep after NMS.
+   */
+  private pyCpuNmsPolyFast(
+    dets: number[][],
     scores: number[],
-    iou_thres: number
-  ): Promise<number[]> {
-    const x1 = boxes.map(box => Math.min(box[0], box[2], box[4], box[6]));
-    const y1 = boxes.map(box => Math.min(box[1], box[3], box[5], box[7]));
-    const x2 = boxes.map(box => Math.max(box[0], box[2], box[4], box[6]));
-    const y2 = boxes.map(box => Math.max(box[1], box[3], box[5], box[7]));
-    const areas = x1.map((x, i) => (x2[i] - x + 1) * (y2[i] - y1[i] + 1));
+    thresh: number
+  ): number[] {
+    const obbs = dets.map(det => det.slice(0, 8)); // Extract polygons
+    const x1 = obbs.map(obb => Math.min(...obb.filter((_, i) => i % 2 === 0)));
+    const y1 = obbs.map(obb => Math.min(...obb.filter((_, i) => i % 2 === 1)));
+    const x2 = obbs.map(obb => Math.max(...obb.filter((_, i) => i % 2 === 0)));
+    const y2 = obbs.map(obb => Math.max(...obb.filter((_, i) => i % 2 === 1)));
+    const areas = x1.map((_, i) => (x2[i] - x1[i] + 1) * (y2[i] - y1[i] + 1));
 
-    const polys = boxes.map(box => [
-      box[0],
-      box[1],
-      box[2],
-      box[3],
-      box[4],
-      box[5],
-      box[6],
-      box[7],
+    const polys = dets.map(det => [
+      det[0],
+      det[1],
+      det[2],
+      det[3],
+      det[4],
+      det[5],
+      det[6],
+      det[7],
     ]);
 
-    const order = scores
-      .map((score, i) => [score, i])
-      .sort((a, b) => b[0] - a[0])
-      .map(item => item[1]);
+    let order = scores
+      .map((score, index) => ({ score, index }))
+      .sort((a, b) => b.score - a.score)
+      .map(item => item.index);
+    // order = [16, 14, 13,  9, 10, 15, 12, 18,  7,  3, 21, 17,  5,  1,  0,  6,  4, 11,  2, 22, 20,  8, 19]
 
+    console.log({ order });
     const keep: number[] = [];
     while (order.length > 0) {
-      const i = order[0];
+      const i = order.shift()!; // Remove the first element
       keep.push(i);
 
-      const xx1 = order.slice(1).map(j => Math.max(x1[i], x1[j]));
-      const yy1 = order.slice(1).map(j => Math.max(y1[i], y1[j]));
-      const xx2 = order.slice(1).map(j => Math.min(x2[i], x2[j]));
-      const yy2 = order.slice(1).map(j => Math.min(y2[i], y2[j]));
-      const w = xx2.map((x, idx) => Math.max(0.0, x - xx1[idx] + 1));
-      const h = yy2.map((y, idx) => Math.max(0.0, y - yy1[idx] + 1));
-      const inter = w.map((width, idx) => width * h[idx]);
-      const hbb_ovr = inter.map(
-        (area, idx) => area / (areas[i] + areas[order[idx + 1]] - area)
+      const xx1 = x1.map(val => Math.max(x1[i], val));
+      const yy1 = y1.map(val => Math.max(y1[i], val));
+      const xx2 = x2.map(val => Math.min(x2[i], val));
+      const yy2 = y2.map(val => Math.min(y2[i], val));
+
+      const w = xx2.map((val, idx) => Math.max(0, val - xx1[idx]));
+      const h = yy2.map((val, idx) => Math.max(0, val - yy1[idx]));
+      const hbbInter = w.map((val, idx) => val * h[idx]);
+      const hbbOvr = hbbInter.map(
+        (val, idx) => val / (areas[i] + areas[idx] - val)
       );
 
-      const h_inds = hbb_ovr
-        .map((overlap, idx) => (overlap > 0 ? idx : -1))
+      const h_inds = hbbOvr
+        .map((val, idx) => (val > 0 ? idx : -1))
         .filter(idx => idx !== -1);
-      const tmp_order = order.slice(1).filter((_, idx) => h_inds.includes(idx));
+
+      const tmp_order = order.filter((_, idx) => h_inds.includes(idx));
 
       for (let j = 0; j < tmp_order.length; j++) {
-        const iou = await this.iouPoly(polys[i], polys[tmp_order[j]]);
-        console.log({ iou });
-        hbb_ovr[h_inds[j]] = iou;
+        const iou = iouPoly(polys[i], polys[tmp_order[j]]);
+        hbbOvr[h_inds[j]] = iou;
       }
 
-      const inds = hbb_ovr
-        .map((overlap, idx) => (overlap <= iou_thres ? idx : -1))
+      // console.log({ hbbOvr });
+
+      const inds = hbbOvr
+        .map((val, idx) => (val < thresh ? idx : -1))
         .filter(idx => idx !== -1);
-      order.splice(0, 1);
-      for (let k = inds.length - 1; k >= 0; k--) {
-        order.splice(inds[k], 1);
-      }
+
+      order.push(
+        ...order.splice(0, order.length).filter((_, idx) => inds.includes(idx))
+      );
     }
-    return keep;
+
+    return keep; //[16, 3, 21, 5, 22, 20];
   }
+
+  // private async non_max_suppression_4points(
+  //   prediction: number[][][],
+  //   conf_thres: number = 0.2,
+  //   iou_thres: number = 0.45,
+  //   classes: number[] | null = null,
+  //   multi_label: boolean = true,
+  //   without_iouthres: boolean = false
+  // ): Promise<number[][]> {
+  //   const nc = prediction[0][0].length - 9;
+  //   const xc = prediction[0].map(p => p[8] > conf_thres);
+
+  //   const max_det = 500;
+  //   multi_label = multi_label && nc > 1;
+
+  //   const output: number[][] = [];
+
+  //   for (let xi = 0; xi < prediction.length; xi++) {
+  //     let x = prediction[xi].filter((_, i) => xc[i]);
+
+  //     if (!x.length) continue;
+
+  //     x.forEach(p => {
+  //       for (let i = 9; i < p.length; i++) {
+  //         p[i] = p[i] * p[8];
+  //       }
+  //     });
+
+  //     let box = x.map(p => p.slice(0, 8));
+
+  //     if (multi_label) {
+  //       const filtered = [];
+  //       for (let i = 0; i < x.length; i++) {
+  //         for (let j = 9; j < x[i].length; j++) {
+  //           if (x[i][j] > conf_thres) {
+  //             filtered.push([...box[i], x[i][j], j - 9]);
+  //           }
+  //         }
+  //       }
+  //       x = filtered;
+  //     } else {
+  //       x = x
+  //         .map(p => {
+  //           const maxConf = Math.max(...p.slice(9));
+  //           const maxIndex = p.slice(9).indexOf(maxConf);
+  //           return [...box[prediction[0].indexOf(p)], maxConf, maxIndex];
+  //         })
+  //         .filter(p => p[8] > conf_thres);
+  //     }
+
+  //     if (without_iouthres) {
+  //       output.push(...x);
+  //       continue;
+  //     }
+
+  //     if (classes) {
+  //       x = x.filter(p => classes.includes(p[9]));
+  //     }
+
+  //     if (!x.length) continue;
+
+  //     x.sort((a, b) => b[8] - a[8]);
+
+  //     const boxes_4points = x.map(p => p.slice(0, 8));
+  //     const scores = x.map(p => p[8]);
+
+  //     const i = await this.py_cpu_nms_poly_fast(
+  //       boxes_4points,
+  //       scores,
+  //       iou_thres
+  //     );
+
+  //     if (i.length > max_det) {
+  //       i.length = max_det;
+  //     }
+
+  //     output.push(...i.map(index => x[index]));
+  //   }
+
+  //   return output;
+  // }
+
+  // private async iouPoly(p: number[], q: number[]): Promise<number> {
+  //   if (p.length !== 8 || q.length !== 8) {
+  //     throw new Error(
+  //       "Each polygon must have exactly 4 points (8 values: x1, y1, x2, y2, x3, y3, x4, y4)"
+  //     );
+  //   }
+
+  //   // Helper function: Compute polygon area using Shoelace formula
+  //   function polygonArea(points: number[][]): number {
+  //     let area = 0;
+  //     const n = points.length;
+  //     for (let i = 0; i < n; i++) {
+  //       const [x1, y1] = points[i];
+  //       const [x2, y2] = points[(i + 1) % n];
+  //       area += x1 * y2 - x2 * y1;
+  //     }
+  //     return Math.abs(area) / 2;
+  //   }
+
+  //   // Convert flat array [x1, y1, x2, y2, x3, y3, x4, y4] → [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
+  //   const poly1 = [
+  //     [p[0], p[1]],
+  //     [p[2], p[3]],
+  //     [p[4], p[5]],
+  //     [p[6], p[7]],
+  //   ];
+  //   const poly2 = [
+  //     [q[0], q[1]],
+  //     [q[2], q[3]],
+  //     [q[4], q[5]],
+  //     [q[6], q[7]],
+  //   ];
+
+  //   // Compute intersection points (Brute-force approximation)
+  //   function getIntersectionPoints(
+  //     polyA: number[][],
+  //     polyB: number[][]
+  //   ): number[][] {
+  //     let intersection: number[][] = [];
+
+  //     for (let pt of polyA) {
+  //       if (isInside(pt, polyB)) intersection.push(pt);
+  //     }
+  //     for (let pt of polyB) {
+  //       if (isInside(pt, polyA)) intersection.push(pt);
+  //     }
+  //     return intersection;
+  //   }
+
+  //   // Check if a point is inside a polygon using ray-casting
+  //   function isInside(point: number[], polygon: number[][]): boolean {
+  //     let [px, py] = point;
+  //     let inside = false;
+  //     const n = polygon.length;
+
+  //     for (let i = 0, j = n - 1; i < n; j = i++) {
+  //       const [xi, yi] = polygon[i];
+  //       const [xj, yj] = polygon[j];
+
+  //       const intersect =
+  //         yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi;
+
+  //       if (intersect) inside = !inside;
+  //     }
+  //     return inside;
+  //   }
+
+  //   // Get intersection polygon points
+  //   const intersectionPolygon = getIntersectionPoints(poly1, poly2);
+
+  //   if (intersectionPolygon.length < 3) {
+  //     return 0;
+  //   }
+  //   // Compute areas
+  //   const area1 = polygonArea(poly1);
+  //   const area2 = polygonArea(poly2);
+  //   const interArea = polygonArea(intersectionPolygon);
+
+  //   // Compute IoU
+  //   return interArea / (area1 + area2 - interArea);
+  // }
+
+  // private async py_cpu_nms_poly_fast(
+  //   boxes: number[][],
+  //   scores: number[],
+  //   iou_thres: number
+  // ): Promise<number[]> {
+  //   const x1 = boxes.map(box => Math.min(box[0], box[2], box[4], box[6]));
+  //   const y1 = boxes.map(box => Math.min(box[1], box[3], box[5], box[7]));
+  //   const x2 = boxes.map(box => Math.max(box[0], box[2], box[4], box[6]));
+  //   const y2 = boxes.map(box => Math.max(box[1], box[3], box[5], box[7]));
+  //   const areas = x1.map((x, i) => (x2[i] - x + 1) * (y2[i] - y1[i] + 1));
+
+  //   const polys = boxes.map(box => [
+  //     box[0],
+  //     box[1],
+  //     box[2],
+  //     box[3],
+  //     box[4],
+  //     box[5],
+  //     box[6],
+  //     box[7],
+  //   ]);
+
+  //   const order = scores
+  //     .map((score, i) => [score, i])
+  //     .sort((a, b) => b[0] - a[0])
+  //     .map(item => item[1]);
+
+  //   const keep: number[] = [];
+  //   while (order.length > 0) {
+  //     const i = order[0];
+  //     keep.push(i);
+
+  //     const xx1 = order.slice(1).map(j => Math.max(x1[i], x1[j]));
+  //     const yy1 = order.slice(1).map(j => Math.max(y1[i], y1[j]));
+  //     const xx2 = order.slice(1).map(j => Math.min(x2[i], x2[j]));
+  //     const yy2 = order.slice(1).map(j => Math.min(y2[i], y2[j]));
+  //     const w = xx2.map((x, idx) => Math.max(0.0, x - xx1[idx] + 1));
+  //     const h = yy2.map((y, idx) => Math.max(0.0, y - yy1[idx] + 1));
+  //     const inter = w.map((width, idx) => width * h[idx]);
+  //     const hbb_ovr = inter.map(
+  //       (area, idx) => area / (areas[i] + areas[order[idx + 1]] - area)
+  //     );
+
+  //     const h_inds = hbb_ovr
+  //       .map((overlap, idx) => (overlap > 0 ? idx : -1))
+  //       .filter(idx => idx !== -1);
+  //     const tmp_order = order.slice(1).filter((_, idx) => h_inds.includes(idx));
+
+  //     for (let j = 0; j < tmp_order.length; j++) {
+  //       const iou = await this.iouPoly(polys[i], polys[tmp_order[j]]);
+  //       console.log({ iou });
+  //       hbb_ovr[h_inds[j]] = iou;
+  //     }
+
+  //     const inds = hbb_ovr
+  //       .map((overlap, idx) => (overlap <= iou_thres ? idx : -1))
+  //       .filter(idx => idx !== -1);
+  //     order.splice(0, 1);
+  //     for (let k = inds.length - 1; k >= 0; k--) {
+  //       order.splice(inds[k], 1);
+  //     }
+  //   }
+  //   return keep;
+  // }
 
   private async postProcessor(
     outputs: any,
@@ -769,7 +879,6 @@ export class OrientedObjectDetection {
     geoRawImage.save(
       "/home/shoaib/scratch/code/geobase-ai.js/merged-geobase_gghl.png"
     );
-    console.log({ geoRawImage });
 
     //convert tensor to array
     const dimsensions = outputs.output.dims;
@@ -795,18 +904,13 @@ export class OrientedObjectDetection {
       conf_thresh: 0.2,
     });
 
-    //print dimensions of predbboxes
-    console.log({
-      predbboxes: predbboxes.length,
-      predbboxes_0: predbboxes[0].length,
-    });
+    const options: NMSOptions = {
+      conf_thres: 0.2,
+      iou_thres: 0.45,
+      multi_label: true,
+    };
 
-    predbboxes = await this.non_max_suppression_4points(
-      geoRawImage,
-      predbboxes,
-      0.2,
-      0.45
-    );
+    predbboxes = await this.nonMaxSuppression4Points([predbboxes], options)[0];
 
     console.log(JSON.stringify(predbboxes));
 
@@ -849,13 +953,7 @@ export class OrientedObjectDetection {
         },
       };
       featureCollection.features.push(feature);
-
-      // img.drawPolygon(points, color, 2);
-      // img.drawText(`${class_name} ${score.toFixed(4)}`, [x1, y1], { color: [255, 255, 255], fontSize: 0.3 });
     }
-
-    // const storePath = `${this.pred_result_path}/imgs/${img_id}.png`;
-    // img.save(storePath, { quality: 100 });
 
     console.log(JSON.stringify(featureCollection));
 
