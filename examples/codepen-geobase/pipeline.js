@@ -41,7 +41,7 @@ worker.onerror = function (error) {
 /**
  * Sends a message to the worker and returns a promise that resolves with the response
  */
-function sendWorkerMessage(type, payload, timeoutMs = 30000) {
+function sendWorkerMessage(type, payload, timeoutMs = 300000) {
   return new Promise((resolve, reject) => {
     const id = messageIdCounter++;
 

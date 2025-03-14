@@ -147,6 +147,5 @@ export function iouPoly(p: number[], q: number[]): number {
   }
 
   const iou = interArea / unionArea;
-  console.log("IoU:", iou);
   return iou;
 }

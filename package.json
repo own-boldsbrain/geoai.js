@@ -63,7 +63,8 @@
     "@turf/center": "^7.2.0",
     "@turf/polygon-smooth": "^7.2.0",
     "@turf/turf": "^7.2.0",
-    "global-mercator": "github:decision-labs/global-mercator"
+    "global-mercator": "github:decision-labs/global-mercator",
+    "onnxruntime-web": "^1.21.0"
   },
   "packageManager": "pnpm@9.15.1+sha512.1acb565e6193efbebda772702950469150cf12bcc764262e7587e71d19dc98a423dff9536e57ea44c49bdf790ff694e83c27be5faa23d67e0c033b583be4bfcf"
 }

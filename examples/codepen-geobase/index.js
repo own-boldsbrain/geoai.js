@@ -48,7 +48,8 @@ const map = new maplibregl.Map({
 
 // const task = "zero-shot-object-detection";
 // const task = "object-detection";
-const task = "mask-generation";
+// const task = "mask-generation";
+const task = "oriented-object-detection";
 
 let polygon = {
   type: "Feature",
@@ -186,6 +187,9 @@ map.on("load", async () => {
     case "zero-shot-object-detection":
     case "object-detection":
       await runObjectDetection();
+      break;
+    case "oriented-object-detection":
+      await runOrientedObjectDetection();
       break;
     default:
       throw new Error(`Unknown task: ${task}`);
@@ -357,6 +361,115 @@ async function runObjectDetection() {
     }
   } catch (error) {
     console.error("Error during object detection:", error);
+  } finally {
+    isProcessing = false;
+  }
+}
+
+async function runOrientedObjectDetection() {
+  if (!instance_id || isProcessing) return;
+
+  isProcessing = true;
+
+  // Add a loading indicator for oriented object detection
+  const loadingElement =
+    document.getElementById("loading-indicator") ||
+    document.createElement("div");
+
+  if (!document.getElementById("loading-indicator")) {
+    loadingElement.id = "loading-indicator";
+    loadingElement.style.position = "absolute";
+    loadingElement.style.top = "10px";
+    loadingElement.style.left = "10px";
+    loadingElement.style.backgroundColor = "white";
+    loadingElement.style.padding = "10px";
+    loadingElement.style.borderRadius = "4px";
+    loadingElement.style.zIndex = "1000";
+    document.body.appendChild(loadingElement);
+  }
+
+  loadingElement.innerHTML = "Processing oriented object detection...";
+
+  try {
+    const output = await callPipeline(task, instance_id, {
+      polygon,
+    });
+
+    console.log("Oriented object detection result:", output);
+
+    // Verify that output is a valid GeoJSON
+    if (!output || !output.type || !output.features) {
+      console.error("Invalid GeoJSON output:", output);
+      throw new Error("Invalid output format");
+    }
+
+    // Ensure we have the map and source before updating
+    if (map && map.loaded()) {
+      // Check if source exists
+      if (map.getSource("detected-objects")) {
+        console.log("Updating detected-objects source with new data");
+        map.getSource("detected-objects").setData(output);
+      } else {
+        console.error("Source 'detected-objects' not found in map");
+        // Create the source if it doesn't exist (fallback)
+        if (!map.getSource("detected-objects")) {
+          console.log("Adding missing source 'detected-objects'");
+          map.addSource("detected-objects", {
+            type: "geojson",
+            data: { type: "FeatureCollection", features: [] },
+          });
+
+          // Add layers for this source if they don't exist
+          if (!map.getLayer("detected-objects-fill")) {
+            map.addLayer({
+              id: "detected-objects-fill",
+              type: "fill",
+              source: "detected-objects",
+              paint: {
+                "fill-color": "#ff0000",
+                "fill-opacity": 0.3,
+              },
+            });
+          }
+
+          if (!map.getLayer("detected-objects-outline")) {
+            map.addLayer({
+              id: "detected-objects-outline",
+              type: "line",
+              source: "detected-objects",
+              paint: {
+                "line-color": "#ff0000",
+                "line-width": 2,
+              },
+            });
+          }
+
+          // Now update the source with our data
+          map.getSource("detected-objects").setData(output);
+        }
+      }
+    } else {
+      console.error("Map not fully loaded when trying to update source");
+    }
+
+    // Update loading indicator
+    if (loadingElement) {
+      loadingElement.innerHTML = "Oriented object detection completed";
+      // Hide the indicator after 5 seconds (changed from 300000ms/5min)
+      setTimeout(() => {
+        loadingElement.style.display = "none";
+      }, 5000);
+    }
+  } catch (error) {
+    console.error("Error during oriented object detection:", error);
+
+    // Update loading indicator with error
+    if (loadingElement) {
+      loadingElement.innerHTML = "Error during oriented object detection.";
+      setTimeout(() => {
+        loadingElement.style.display = "none";
+      }, 5000);
+    }
   } finally {
     isProcessing = false;
   }

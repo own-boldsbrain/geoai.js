@@ -13,7 +13,7 @@ export const geobaseParams: ProviderParams = {
   apikey:
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4OTY1NDU4MjUsImlhdCI6MTczODc2MTQyNSwiaXNzIjoic3VwYWJhc2UiLCJyb2xlIjoiYW5vbiJ9.M8jeru5dbHe4tGh52xe2E2HlUiGCAPbZ8-JrfbxiRk0",
   cogImagery:
-    "https://oin-hotosm-temp.s3.amazonaws.com/63556b6771072f000580f8cd/0/63556b6771072f000580f8ce.tif",
+    "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/67ba1d2bec9237a9ebd358a3/0/67ba1d2bec9237a9ebd358a4.tif",
 };
 
 export const polygon = {
@@ -22,11 +22,11 @@ export const polygon = {
   geometry: {
     coordinates: [
       [
-        [-102.32245205602885, 19.536415661502275],
-        [-102.32245205602885, 19.534836349733624],
-        [-102.32080637971754, 19.534836349733624],
-        [-102.32080637971754, 19.536415661502275],
-        [-102.32245205602885, 19.536415661502275],
+        [114.84807353432808, -3.449255329675921],
+        [114.84807353432808, -3.4502955104658923],
+        [114.84870049348092, -3.4502955104658923],
+        [114.84870049348092, -3.449255329675921],
+        [114.84807353432808, -3.449255329675921],
       ],
     ],
     type: "Polygon",

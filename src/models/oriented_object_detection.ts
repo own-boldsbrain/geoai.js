@@ -8,8 +8,6 @@ import { GeoRawImage } from "@/types/images/GeoRawImage";
 import { PretrainedOptions } from "@huggingface/transformers";
 import { Geobase } from "@/data_providers/geobase";
 import * as ort from "onnxruntime-web";
-// import { createPolyIoUModule } from '../utils/wasm/polyiou.js';
-import * as turf from "@turf/turf";
 import { iouPoly } from "@/utils/gghl/polyiou";
 
 interface ConvertPredParams {
@@ -20,7 +18,7 @@ interface ConvertPredParams {
   conf_thresh: number;
 }
 
-interface NMSOptions {
+export interface NMSOptions {
   conf_thres?: number;
   iou_thres?: number;
   merge?: boolean;
@@ -83,55 +81,27 @@ export class OrientedObjectDetection {
     return { instance: OrientedObjectDetection.instance };
   }
 
-  // private async preProcessor(image: GeoRawImage): Promise<any> {
-  //   const transposeImage = (img: number[][][]): number[][][] => {
-  //     const height = img.length;
-  //     const width = img[0].length;
-  //     const channels = img[0][0].length;
-
-  //     // Initialize the transposed image
-  //     const transposed = new Array(channels)
-  //         .fill(0)
-  //         .map(() => new Array(height)
-  //             .fill(0)
-  //             .map(() => new Array(width).fill(0)));
-
-  //     // Perform the transpose operation
-  //     for (let c = 0; c < channels; c++) {
-  //         for (let h = 0; h < height; h++) {
-  //             for (let w = 0; w < width; w++) {
-  //                 transposed[c][h][w] = img[h][w][c];
-  //             }
-  //         }
-  //     }
-
-  //     return transposed;
-  //   }
-  //   const rawImage = new RawImage(image.data,image.height,image.width, image.channels);
-  //   rawImage.resize(512, 512);
-  //   console.log({rawImage});
-
-  //   rawImage.save("/home/shoaib/scratch/code/geobase-ai.js/merged-geobase_gghl_resized.png");
-  //   const floatData = Float32Array.from(rawImage.data);
-  //   const inputs = {
-  //       input: new ort.Tensor(floatData, [1,3, rawImage.height, rawImage.width])
-  //   };
-  //   return inputs;
-  // }
   private async preProcessor(image: GeoRawImage): Promise<any> {
     // Create RawImage instance and resize it
-    const rawImage = new RawImage(
+    let rawImage = new RawImage(
       image.data,
       image.height,
       image.width,
       image.channels
     );
-    rawImage.resize(512, 512);
 
-    // Save the resized image (for debugging purposes)
-    rawImage.save(
-      "/home/shoaib/scratch/code/geobase-ai.js/merged-geobase_gghl_resized.png"
-    );
+    // If image has 4 channels, convert it to 3 channels (e.g., remove alpha channel)
+    if (image.channels > 3) {
+      const newData = new Uint8Array(image.width * image.height * 3);
+      for (let i = 0, j = 0; i < image.data.length; i += 4, j += 3) {
+        newData[j] = image.data[i]; // R
+        newData[j + 1] = image.data[i + 1]; // G
+        newData[j + 2] = image.data[i + 2]; // B
+      }
+      rawImage = new RawImage(newData, image.height, image.width, 3);
+    }
+
+    rawImage.resize(512, 512);
 
     // Convert RawImage to a tensor in CHW format
     const tensor = rawImage.toTensor("CHW"); // Transpose to CHW format
@@ -186,8 +156,15 @@ export class OrientedObjectDetection {
       throw new Error("Failed to initialize data provider");
     }
 
+    const response = await fetch(this.model_id);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch model from URL: ${response.statusText}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+
     // Load model using ONNX Runtime
-    this.model = await ort.InferenceSession.create(this.model_id);
+    this.model = await ort.InferenceSession.create(uint8Array);
     this.initialized = true;
   }
 
@@ -201,7 +178,10 @@ export class OrientedObjectDetection {
     return image;
   }
 
-  async detection(polygon: GeoJSON.Feature): Promise<ObjectDetectionResults> {
+  async detection(
+    polygon: GeoJSON.Feature,
+    options: NMSOptions = {}
+  ): Promise<ObjectDetectionResults> {
     // Ensure initialization is complete
     if (!this.initialized) {
       await this.initialize();
@@ -226,27 +206,12 @@ export class OrientedObjectDetection {
       throw error;
     }
 
-    console.log({ outputs });
-
-    outputs = this.postProcessor(outputs, geoRawImage);
-
-    // return outputs as any;
+    outputs = await this.postProcessor(outputs, geoRawImage, options);
 
     return {
       detections: outputs,
       geoRawImage,
     };
-  }
-
-  private xywh2xyxy(x: number[][]): number[][] {
-    return x.map(bbox => {
-      const [x, y, w, h] = bbox;
-      const x1 = x - w / 2;
-      const y1 = y - h / 2;
-      const x2 = x + w / 2;
-      const y2 = y + h / 2;
-      return [x1, y1, x2, y2];
-    });
   }
 
   private convertPred({
@@ -256,71 +221,27 @@ export class OrientedObjectDetection {
     valid_scale,
     conf_thresh,
   }: ConvertPredParams): number[][] {
-    const fs = require("fs");
-    const logFile =
-      "/home/shoaib/scratch/code/geobase-ai.js/convertPred_debug.log";
-
-    // Helper function to log array shapes
-    const logShape = (lineNum: number, name: string, arr: any[]) => {
-      const shape = Array.isArray(arr)
-        ? `[${arr.length}${Array.isArray(arr[0]) ? `, ${arr[0].length}` : ""}]`
-        : "not an array";
-      const logMessage = `Line ${lineNum}: ${name}.shape = ${shape}\n`;
-      console.log(logMessage);
-      fs.appendFileSync(logFile, logMessage);
-    };
-
-    // Clear previous log file
-    const timestamp = new Date().toISOString();
-    fs.writeFileSync(logFile, `Starting convertPred method at ${timestamp}\n`);
-    fs.appendFileSync(
-      logFile,
-      `Input parameters: test_input_size=${test_input_size}, org_img_shape=(${org_img_shape[0]}, ${org_img_shape[1]}), valid_scale=[${valid_scale[0]}, ${valid_scale[1] === Infinity ? "inf" : valid_scale[1]}]\n\n`
-    );
-
-    // Log input array shapes
-    logShape(276, "pred_bbox", pred_bbox);
-
     const [org_h, org_w] = org_img_shape;
-    fs.appendFileSync(
-      logFile,
-      `Line 279: org_h, org_w = (${org_h}, ${org_w})\n`
-    );
 
     const resize_ratio = Math.min(
       test_input_size / org_w,
       test_input_size / org_h
     );
-    fs.appendFileSync(logFile, `Line 282: resize_ratio = ${resize_ratio}\n`);
-
     const dw = (test_input_size - resize_ratio * org_w) / 2;
-    fs.appendFileSync(logFile, `Line 285: dw = ${dw}\n`);
-
     const dh = (test_input_size - resize_ratio * org_h) / 2;
-    fs.appendFileSync(logFile, `Line 288: dh = ${dh}\n`);
 
     // Extract and convert xywh to xyxy
     const xywh = pred_bbox.map(bbox => bbox.slice(0, 4));
-    logShape(291, "xywh", xywh);
-
     const xyxy = xywh.map(box => {
       const [x, y, w, h] = box;
       return [x - w / 2, y - h / 2, x + w / 2, y + h / 2];
     });
-    logShape(297, "xyxy", xyxy);
 
     // Extract other components
     const pred_s = pred_bbox.map(bbox => bbox.slice(4, 8));
-    logShape(301, "pred_s", pred_s);
-
     const pred_r = pred_bbox.map(bbox => bbox[8]);
-    logShape(304, "pred_r", pred_r);
-
     const pred_conf = pred_bbox.map(bbox => bbox[13]);
-    logShape(307, "pred_conf", pred_conf);
-
     const pred_prob = pred_bbox.map(bbox => bbox.slice(14));
-    logShape(310, "pred_prob", pred_prob);
 
     // Adjust coordinates
     const adjusted_xyxy = xyxy.map(box => {
@@ -331,16 +252,12 @@ export class OrientedObjectDetection {
         (box[3] - dh) / resize_ratio,
       ];
     });
-    logShape(320, "adjusted_xyxy", adjusted_xyxy);
 
     // Handle rotation
     const zero = pred_s.map(() => [0, 0, 0, 0]);
-    logShape(324, "zero", zero);
-
     const pred_s_adjusted = pred_s.map((s, i) => {
       return pred_r[i] > 0.9 ? zero[i] : s;
     });
-    logShape(328, "pred_s_adjusted", pred_s_adjusted);
 
     // Clip coordinates
     const clipped_xyxy = adjusted_xyxy.map(box => {
@@ -351,76 +268,41 @@ export class OrientedObjectDetection {
         Math.min(org_h - 1, box[3]),
       ];
     });
-    logShape(337, "clipped_xyxy", clipped_xyxy);
 
     // Find invalid boxes
     const invalid_mask = clipped_xyxy.map(
       box => box[0] > box[2] || box[1] > box[3]
-    );
-    fs.appendFileSync(
-      logFile,
-      `Line 341: invalid_mask count = ${invalid_mask.filter(Boolean).length}\n`
     );
 
     // Zero out invalid boxes
     const final_xyxy = clipped_xyxy.map((box, i) => {
       return invalid_mask[i] ? [0, 0, 0, 0] : box;
     });
-    logShape(346, "final_xyxy", final_xyxy);
-
     const final_pred_s = pred_s_adjusted.map((s, i) => {
       return invalid_mask[i] ? [0, 0, 0, 0] : s;
     });
-    logShape(351, "final_pred_s", final_pred_s);
 
     // Calculate scale and apply scale mask
     const bboxes_scale = final_xyxy.map(box =>
       Math.sqrt((box[2] - box[0]) * (box[3] - box[1]))
     );
-    logShape(357, "bboxes_scale", bboxes_scale);
-
     const scale_mask = bboxes_scale.map(
       scale => valid_scale[0] < scale && scale < valid_scale[1]
-    );
-    fs.appendFileSync(
-      logFile,
-      `Line 362: scale_mask count = ${scale_mask.filter(Boolean).length}\n`
     );
 
     // Calculate class scores
     const classes = pred_prob.map(prob => prob.indexOf(Math.max(...prob)));
-    logShape(366, "classes", classes);
-
     const scores = pred_conf.map((conf, i) => conf * pred_prob[i][classes[i]]);
-    logShape(369, "scores", scores);
-
-    console.log({ scores: scores.slice(0, 10) });
-
     const score_mask = scores.map(score => score > conf_thresh);
-    fs.appendFileSync(
-      logFile,
-      `Line 372: score_mask count = ${score_mask.filter(Boolean).length}\n`
-    );
 
     // Combine masks
     const mask = scale_mask.map((scale, i) => scale && score_mask[i]);
-    fs.appendFileSync(
-      logFile,
-      `Line 376: combined mask count = ${mask.filter(Boolean).length}\n`
-    );
 
     // Apply masks to filter arrays
     const filtered_xyxy = final_xyxy.filter((_, i) => mask[i]);
-    logShape(380, "filtered_xyxy", filtered_xyxy);
-
     const filtered_pred_s = final_pred_s.filter((_, i) => mask[i]);
-    logShape(383, "filtered_pred_s", filtered_pred_s);
-
     const filtered_pred_conf = pred_conf.filter((_, i) => mask[i]);
-    logShape(386, "filtered_pred_conf", filtered_pred_conf);
-
     const filtered_pred_prob = pred_prob.filter((_, i) => mask[i]);
-    logShape(389, "filtered_pred_prob", filtered_pred_prob);
 
     // Calculate 4 corner points
     const coor4points = filtered_pred_s.map((s, i) => {
@@ -439,18 +321,11 @@ export class OrientedObjectDetection {
         y2 - s[3] * height, // y4
       ];
     });
-    logShape(406, "coor4points", coor4points);
 
     // Combine with confidence and class probabilities
     const bboxes = coor4points.map((points, i) => {
       return [...points, filtered_pred_conf[i], ...filtered_pred_prob[i]];
     });
-    logShape(412, "bboxes", bboxes);
-
-    fs.appendFileSync(
-      logFile,
-      `\nFinished convertPred method at ${new Date().toISOString()}\n`
-    );
 
     return bboxes;
   }
@@ -460,9 +335,7 @@ export class OrientedObjectDetection {
    * @param prediction Array of predictions with shape (batch_size, num_boxes, [xywh, score, num_classes, num_angles]).
    * @param conf_thres Confidence threshold.
    * @param iou_thres IoU threshold.
-   * @param merge Whether to merge overlapping boxes.
    * @param classes Array of class indices to filter by.
-   * @param agnostic Whether to treat all classes as the same during NMS.
    * @param without_iouthres Whether to skip IoU thresholding.
    * @returns Array of filtered boxes after NMS.
    */
@@ -476,6 +349,7 @@ export class OrientedObjectDetection {
       without_iouthres = false,
     }: NMSOptions = {}
   ): number[][][] {
+    console.log("prediction", { prediction });
     const batchSize = prediction.length;
     const numClasses = prediction[0][0].length - 9;
 
@@ -547,13 +421,11 @@ export class OrientedObjectDetection {
       // Perform polygonal NMS
       const boxes4Points = filteredByClass.map(box => box.slice(0, 8));
       const scores = filteredByClass.map(box => box[8]);
-      console.log({ boxes4Points, scores });
       const keepIndices = this.pyCpuNmsPolyFast(
         boxes4Points,
         scores,
         iou_thres
       );
-      console.log({ keepIndices });
 
       // Limit the number of detections
       const maxDet = 500;
@@ -599,9 +471,7 @@ export class OrientedObjectDetection {
       .map((score, index) => ({ score, index }))
       .sort((a, b) => b.score - a.score)
       .map(item => item.index);
-    // order = [16, 14, 13,  9, 10, 15, 12, 18,  7,  3, 21, 17,  5,  1,  0,  6,  4, 11,  2, 22, 20,  8, 19]
 
-    console.log({ order });
     const keep: number[] = [];
     while (order.length > 0) {
       const i = order.shift()!; // Remove the first element
@@ -630,8 +500,6 @@ export class OrientedObjectDetection {
         hbbOvr[h_inds[j]] = iou;
       }
 
-      // console.log({ hbbOvr });
-
       const inds = hbbOvr
         .map((val, idx) => (val < thresh ? idx : -1))
         .filter(idx => idx !== -1);
@@ -641,245 +509,14 @@ export class OrientedObjectDetection {
       );
     }
 
-    return keep; //[16, 3, 21, 5, 22, 20];
+    return keep;
   }
-
-  // private async non_max_suppression_4points(
-  //   prediction: number[][][],
-  //   conf_thres: number = 0.2,
-  //   iou_thres: number = 0.45,
-  //   classes: number[] | null = null,
-  //   multi_label: boolean = true,
-  //   without_iouthres: boolean = false
-  // ): Promise<number[][]> {
-  //   const nc = prediction[0][0].length - 9;
-  //   const xc = prediction[0].map(p => p[8] > conf_thres);
-
-  //   const max_det = 500;
-  //   multi_label = multi_label && nc > 1;
-
-  //   const output: number[][] = [];
-
-  //   for (let xi = 0; xi < prediction.length; xi++) {
-  //     let x = prediction[xi].filter((_, i) => xc[i]);
-
-  //     if (!x.length) continue;
-
-  //     x.forEach(p => {
-  //       for (let i = 9; i < p.length; i++) {
-  //         p[i] = p[i] * p[8];
-  //       }
-  //     });
-
-  //     let box = x.map(p => p.slice(0, 8));
-
-  //     if (multi_label) {
-  //       const filtered = [];
-  //       for (let i = 0; i < x.length; i++) {
-  //         for (let j = 9; j < x[i].length; j++) {
-  //           if (x[i][j] > conf_thres) {
-  //             filtered.push([...box[i], x[i][j], j - 9]);
-  //           }
-  //         }
-  //       }
-  //       x = filtered;
-  //     } else {
-  //       x = x
-  //         .map(p => {
-  //           const maxConf = Math.max(...p.slice(9));
-  //           const maxIndex = p.slice(9).indexOf(maxConf);
-  //           return [...box[prediction[0].indexOf(p)], maxConf, maxIndex];
-  //         })
-  //         .filter(p => p[8] > conf_thres);
-  //     }
-
-  //     if (without_iouthres) {
-  //       output.push(...x);
-  //       continue;
-  //     }
-
-  //     if (classes) {
-  //       x = x.filter(p => classes.includes(p[9]));
-  //     }
-
-  //     if (!x.length) continue;
-
-  //     x.sort((a, b) => b[8] - a[8]);
-
-  //     const boxes_4points = x.map(p => p.slice(0, 8));
-  //     const scores = x.map(p => p[8]);
-
-  //     const i = await this.py_cpu_nms_poly_fast(
-  //       boxes_4points,
-  //       scores,
-  //       iou_thres
-  //     );
-
-  //     if (i.length > max_det) {
-  //       i.length = max_det;
-  //     }
-
-  //     output.push(...i.map(index => x[index]));
-  //   }
-
-  //   return output;
-  // }
-
-  // private async iouPoly(p: number[], q: number[]): Promise<number> {
-  //   if (p.length !== 8 || q.length !== 8) {
-  //     throw new Error(
-  //       "Each polygon must have exactly 4 points (8 values: x1, y1, x2, y2, x3, y3, x4, y4)"
-  //     );
-  //   }
-
-  //   // Helper function: Compute polygon area using Shoelace formula
-  //   function polygonArea(points: number[][]): number {
-  //     let area = 0;
-  //     const n = points.length;
-  //     for (let i = 0; i < n; i++) {
-  //       const [x1, y1] = points[i];
-  //       const [x2, y2] = points[(i + 1) % n];
-  //       area += x1 * y2 - x2 * y1;
-  //     }
-  //     return Math.abs(area) / 2;
-  //   }
-
-  //   // Convert flat array [x1, y1, x2, y2, x3, y3, x4, y4] → [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
-  //   const poly1 = [
-  //     [p[0], p[1]],
-  //     [p[2], p[3]],
-  //     [p[4], p[5]],
-  //     [p[6], p[7]],
-  //   ];
-  //   const poly2 = [
-  //     [q[0], q[1]],
-  //     [q[2], q[3]],
-  //     [q[4], q[5]],
-  //     [q[6], q[7]],
-  //   ];
-
-  //   // Compute intersection points (Brute-force approximation)
-  //   function getIntersectionPoints(
-  //     polyA: number[][],
-  //     polyB: number[][]
-  //   ): number[][] {
-  //     let intersection: number[][] = [];
-
-  //     for (let pt of polyA) {
-  //       if (isInside(pt, polyB)) intersection.push(pt);
-  //     }
-  //     for (let pt of polyB) {
-  //       if (isInside(pt, polyA)) intersection.push(pt);
-  //     }
-  //     return intersection;
-  //   }
-
-  //   // Check if a point is inside a polygon using ray-casting
-  //   function isInside(point: number[], polygon: number[][]): boolean {
-  //     let [px, py] = point;
-  //     let inside = false;
-  //     const n = polygon.length;
-
-  //     for (let i = 0, j = n - 1; i < n; j = i++) {
-  //       const [xi, yi] = polygon[i];
-  //       const [xj, yj] = polygon[j];
-
-  //       const intersect =
-  //         yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi;
-
-  //       if (intersect) inside = !inside;
-  //     }
-  //     return inside;
-  //   }
-
-  //   // Get intersection polygon points
-  //   const intersectionPolygon = getIntersectionPoints(poly1, poly2);
-
-  //   if (intersectionPolygon.length < 3) {
-  //     return 0;
-  //   }
-  //   // Compute areas
-  //   const area1 = polygonArea(poly1);
-  //   const area2 = polygonArea(poly2);
-  //   const interArea = polygonArea(intersectionPolygon);
-
-  //   // Compute IoU
-  //   return interArea / (area1 + area2 - interArea);
-  // }
-
-  // private async py_cpu_nms_poly_fast(
-  //   boxes: number[][],
-  //   scores: number[],
-  //   iou_thres: number
-  // ): Promise<number[]> {
-  //   const x1 = boxes.map(box => Math.min(box[0], box[2], box[4], box[6]));
-  //   const y1 = boxes.map(box => Math.min(box[1], box[3], box[5], box[7]));
-  //   const x2 = boxes.map(box => Math.max(box[0], box[2], box[4], box[6]));
-  //   const y2 = boxes.map(box => Math.max(box[1], box[3], box[5], box[7]));
-  //   const areas = x1.map((x, i) => (x2[i] - x + 1) * (y2[i] - y1[i] + 1));
-
-  //   const polys = boxes.map(box => [
-  //     box[0],
-  //     box[1],
-  //     box[2],
-  //     box[3],
-  //     box[4],
-  //     box[5],
-  //     box[6],
-  //     box[7],
-  //   ]);
-
-  //   const order = scores
-  //     .map((score, i) => [score, i])
-  //     .sort((a, b) => b[0] - a[0])
-  //     .map(item => item[1]);
-
-  //   const keep: number[] = [];
-  //   while (order.length > 0) {
-  //     const i = order[0];
-  //     keep.push(i);
-
-  //     const xx1 = order.slice(1).map(j => Math.max(x1[i], x1[j]));
-  //     const yy1 = order.slice(1).map(j => Math.max(y1[i], y1[j]));
-  //     const xx2 = order.slice(1).map(j => Math.min(x2[i], x2[j]));
-  //     const yy2 = order.slice(1).map(j => Math.min(y2[i], y2[j]));
-  //     const w = xx2.map((x, idx) => Math.max(0.0, x - xx1[idx] + 1));
-  //     const h = yy2.map((y, idx) => Math.max(0.0, y - yy1[idx] + 1));
-  //     const inter = w.map((width, idx) => width * h[idx]);
-  //     const hbb_ovr = inter.map(
-  //       (area, idx) => area / (areas[i] + areas[order[idx + 1]] - area)
-  //     );
-
-  //     const h_inds = hbb_ovr
-  //       .map((overlap, idx) => (overlap > 0 ? idx : -1))
-  //       .filter(idx => idx !== -1);
-  //     const tmp_order = order.slice(1).filter((_, idx) => h_inds.includes(idx));
-
-  //     for (let j = 0; j < tmp_order.length; j++) {
-  //       const iou = await this.iouPoly(polys[i], polys[tmp_order[j]]);
-  //       console.log({ iou });
-  //       hbb_ovr[h_inds[j]] = iou;
-  //     }
-
-  //     const inds = hbb_ovr
-  //       .map((overlap, idx) => (overlap <= iou_thres ? idx : -1))
-  //       .filter(idx => idx !== -1);
-  //     order.splice(0, 1);
-  //     for (let k = inds.length - 1; k >= 0; k--) {
-  //       order.splice(inds[k], 1);
-  //     }
-  //   }
-  //   return keep;
-  // }
 
   private async postProcessor(
     outputs: any,
-    geoRawImage: GeoRawImage
+    geoRawImage: GeoRawImage,
+    options: NMSOptions = {}
   ): Promise<any> {
-    geoRawImage.save(
-      "/home/shoaib/scratch/code/geobase-ai.js/merged-geobase_gghl.png"
-    );
-
     //convert tensor to array
     const dimsensions = outputs.output.dims;
     // convert 1 d array to 2d array
@@ -888,12 +525,6 @@ export class OrientedObjectDetection {
     for (let i = 0; i < dimsensions[0]; i++) {
       pred_bbox.push(data.slice(i * dimsensions[1], (i + 1) * dimsensions[1]));
     }
-    //save model output in file
-    const fs = require("fs");
-    await fs.writeFileSync(
-      "/home/shoaib/scratch/code/geobase-ai.js/model_output.json",
-      JSON.stringify(pred_bbox, null, 2)
-    );
 
     const valid_scale: [number, number] = [0, Infinity];
     let predbboxes = this.convertPred({
@@ -901,27 +532,17 @@ export class OrientedObjectDetection {
       test_input_size: 512,
       org_img_shape: [geoRawImage.width, geoRawImage.height],
       valid_scale,
-      conf_thresh: 0.2,
+      conf_thresh: options.conf_thres || 0.5,
     });
 
-    const options: NMSOptions = {
-      conf_thres: 0.2,
-      iou_thres: 0.45,
-      multi_label: true,
-    };
+    if (predbboxes.length === 0) {
+      return {
+        type: "FeatureCollection",
+        features: [],
+      };
+    }
 
-    predbboxes = await this.nonMaxSuppression4Points([predbboxes], options)[0];
-
-    console.log(JSON.stringify(predbboxes));
-
-    // predbboxes = [
-    //   [222, 244, 257, 289, 237, 306, 202, 262, 0.79, 3],
-    //   [357, 172, 380, 216, 357, 229, 333, 186, 0.76, 3],
-    //   [193, 231, 212, 332, 149, 342, 130, 243, 0.74, 3],
-    //   [299, 364, 321, 374, 317, 384, 294, 374, 0.61, 2],
-    //   [347, 351, 352, 356, 346, 363, 341, 359, 0.61, 13],
-    //   [448, 218, 465, 260, 459, 262, 441, 220, 0.59, 2]
-    // ];
+    predbboxes = this.nonMaxSuppression4Points([predbboxes], options)[0];
 
     const featureCollection: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
@@ -954,8 +575,6 @@ export class OrientedObjectDetection {
       };
       featureCollection.features.push(feature);
     }
-
-    console.log(JSON.stringify(featureCollection));
 
     return featureCollection;
   }

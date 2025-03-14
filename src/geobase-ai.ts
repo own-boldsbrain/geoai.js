@@ -115,7 +115,7 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     description: "Oriented Object Detection model.",
     geobase_ai_pipeline: (
       params: ProviderParams,
-      modelId: string = "geobase/gghl-oriented-object-detection",
+      modelId: string = "https://huggingface.co/geobase/gghl-oriented-object-detection/resolve/main/onnx/model_quantized.onnx",
       modelParams?: PretrainedOptions
     ): Promise<{
       instance: OrientedObjectDetection;

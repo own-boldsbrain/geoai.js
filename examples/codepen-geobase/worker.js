@@ -29,6 +29,16 @@ async function callPipeline(task, instance_id, input) {
       const output_geojson = output.detections;
       return output_geojson;
     }
+    case "oriented-object-detection": {
+      const options = {
+        conf_thres: 0.3,
+        iou_thres: 0.45,
+        multi_label: true,
+      };
+      const output = await instance.detection(input.polygon, options);
+      const output_geojson = output.detections;
+      return output_geojson;
+    }
     default: {
       throw new Error(`Unknown task: ${task}`);
     }
