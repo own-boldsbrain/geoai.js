@@ -213,7 +213,10 @@ const getEdges = (binaryMask: number[][]) => {
   return edges;
 };
 
-const getPolygonFromMask = (mask: number[][], geoRawImage: GeoRawImage) => {
+export const getPolygonFromMask = (
+  mask: number[][],
+  geoRawImage: GeoRawImage
+) => {
   const edges = getEdges(mask);
   const height = edges.length;
   const width = edges[0].length;
