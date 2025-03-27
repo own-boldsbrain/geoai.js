@@ -23,8 +23,8 @@ const fileName = {
 
 const formats = Object.keys(fileName) as Array<keyof typeof fileName>;
 
-export default defineConfig({
-  plugins: [commonjs()],
+export default defineConfig(({ command }) => ({
+  plugins: command === "build" ? [commonjs()] : [],
   base: "./",
   build: {
     outDir: "./build/dist",
@@ -46,4 +46,4 @@ export default defineConfig({
       { find: "@@", replacement: path.resolve(__dirname) },
     ],
   },
-});
+}));
