@@ -1,7 +1,7 @@
 import { Mapbox } from "@/data_providers/mapbox";
 import { RawImage } from "@huggingface/transformers";
 import { parametersChanged, refineMasks } from "@/utils/utils";
-import sharp from "sharp";
+const cv = require("@techstark/opencv-js");
 
 import { ProviderParams } from "@/geobase-ai";
 import { GeoRawImage } from "@/types/images/GeoRawImage";
@@ -84,33 +84,30 @@ export class LandCoverClassification {
       rawImage = new RawImage(newData, image.height, image.width, 3);
     }
 
-    let hwcData = rawImage.toTensor("HWC").data as Uint8Array;
+    // Convert the raw image data to an OpenCV Mat
+    let mat = cv.matFromArray(
+      rawImage.height,
+      rawImage.width,
+      rawImage.channels === 4 ? cv.CV_8UC4 : cv.CV_8UC3,
+      rawImage.data
+    );
 
-    // Ensure it's in RGB format (remove alpha if present)
-    const channels = image.channels > 3 ? 3 : image.channels;
+    // Resize the image to 1024x1024
+    let resizedMat = new cv.Mat();
+    let newSize = new cv.Size(1024, 1024);
+    cv.resize(mat, resizedMat, newSize, 0, 0, cv.INTER_LINEAR);
 
-    // Convert the pixel data into an actual image
-    const formattedBuffer = await sharp(Buffer.from(hwcData), {
-      raw: {
-        width: image.width,
-        height: image.height,
-        channels: channels,
-      },
-    })
-      .toFormat("jpg") // Convert to PNG format
-      .toBuffer();
-
-    // Resize to 1024x1024
-    const resizedBuffer = await sharp(formattedBuffer)
-      .resize(1024, 1024)
-      .raw()
-      .toBuffer();
-
-    // Convert resized buffer back to Uint8Array
-    const resizedImageData = new Uint8Array(resizedBuffer);
+    // Convert the resized Mat back to a Uint8Array
+    const resizedImageData = new Uint8Array(resizedMat.data);
 
     // Create a new RawImage object with resized data
     const resizedRawImage = new RawImage(resizedImageData, 1024, 1024, 3);
+
+    console.log("resizedRawImage", { resizedRawImage });
+
+    // Clean up OpenCV Mats
+    mat.delete();
+    resizedMat.delete();
 
     let tensor = resizedRawImage.toTensor("CHW");
     const data = tensor.data as Uint8Array;
