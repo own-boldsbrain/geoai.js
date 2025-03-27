@@ -3,6 +3,7 @@
 // https://huggingface.co/models?pipeline_tag=zero-shot-image-classification&library=transformers.js
 
 import { GenericSegmentation } from "./models/generic_segmentation";
+import { SolarPanelDetection } from "./models/geoai_models";
 import { LandCoverClassification } from "./models/land_cover_classification";
 import { ObjectDetection } from "./models/object_detection";
 import { OrientedObjectDetection } from "./models/oriented_object_detection";
@@ -43,7 +44,8 @@ type GeobaseAiModelTasks =
   | "land-cover-classification"
   | "land-use-classification"
   | "land-cover-change-detection"
-  | "land-use-change-detection";
+  | "land-use-change-detection"
+  | "solar-panel-detection";
 
 type GeobaseAiModelMetadata = {
   task: HuggingFaceModelTasks | GeobaseAiModelTasks;
@@ -60,7 +62,8 @@ type GeobaseAiModelMetadata = {
       | ZeroShotObjectDetection
       | ObjectDetection
       | OrientedObjectDetection
-      | LandCoverClassification;
+      | LandCoverClassification
+      | SolarPanelDetection;
   }>;
 };
 
@@ -138,6 +141,21 @@ const model_metadata: GeobaseAiModelMetadata[] = [
       instance: LandCoverClassification;
     }> => {
       return LandCoverClassification.getInstance(modelId, params, modelParams);
+    },
+  },
+  {
+    task: "solar-panel-detection",
+    library: "geobase-ai",
+    model: "geobase/geoai_models",
+    description: "Land Cover Classification model.",
+    geobase_ai_pipeline: (
+      params: ProviderParams,
+      modelId: string = "https://huggingface.co/geobase/geoai_models/resolve/main/solarPanelDetection_quantized.onnx",
+      modelParams?: PretrainedOptions
+    ): Promise<{
+      instance: SolarPanelDetection;
+    }> => {
+      return SolarPanelDetection.getInstance(modelId, params, modelParams);
     },
   },
 ];

@@ -16,6 +16,32 @@ export const geobaseParams: ProviderParams = {
     "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/67ba1d2bec9237a9ebd358a3/0/67ba1d2bec9237a9ebd358a4.tif",
 };
 
+export const geobaseParamsSolarPanel: ProviderParams = {
+  provider: "geobase",
+  projectRef: "wmrosdnjsecywfkvxtrw",
+  apikey:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4OTY1NDU4MjUsImlhdCI6MTczODc2MTQyNSwiaXNzIjoic3VwYWJhc2UiLCJyb2xlIjoiYW5vbiJ9.M8jeru5dbHe4tGh52xe2E2HlUiGCAPbZ8-JrfbxiRk0",
+  cogImagery:
+    "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/solar_panels_davis_ca.tif",
+};
+
+export const polygonSolarPannel = {
+  type: "Feature",
+  properties: {},
+  geometry: {
+    coordinates: [
+      [
+        [-121.77483138694643, 38.55347243518358],
+        [-121.77483138694643, 38.553215934463736],
+        [-121.77421502202081, 38.553215934463736],
+        [-121.77421502202081, 38.55347243518358],
+        [-121.77483138694643, 38.55347243518358],
+      ],
+    ],
+    type: "Polygon",
+  },
+} as GeoJSON.Feature;
+
 export const polygon = {
   type: "Feature",
   properties: {},
