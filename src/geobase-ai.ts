@@ -3,6 +3,7 @@
 // https://huggingface.co/models?pipeline_tag=zero-shot-image-classification&library=transformers.js
 
 import { GenericSegmentation } from "./models/generic_segmentation";
+import { LandCoverClassification } from "./models/land_cover_classification";
 import { ObjectDetection } from "./models/object_detection";
 import { OrientedObjectDetection } from "./models/oriented_object_detection";
 import { ZeroShotObjectDetection } from "./models/zero_shot_object_detection";
@@ -58,7 +59,8 @@ type GeobaseAiModelMetadata = {
       | GenericSegmentation
       | ZeroShotObjectDetection
       | ObjectDetection
-      | OrientedObjectDetection;
+      | OrientedObjectDetection
+      | LandCoverClassification;
   }>;
 };
 
@@ -121,6 +123,21 @@ const model_metadata: GeobaseAiModelMetadata[] = [
       instance: OrientedObjectDetection;
     }> => {
       return OrientedObjectDetection.getInstance(modelId, params, modelParams);
+    },
+  },
+  {
+    task: "land-cover-classification",
+    library: "geobase-ai",
+    model: "geobase/sparsemask",
+    description: "Land Cover Classification model.",
+    geobase_ai_pipeline: (
+      params: ProviderParams,
+      modelId: string = "https://huggingface.co/geobase/sparsemask/resolve/main/onnx/sparsemask_model.onnx",
+      modelParams?: PretrainedOptions
+    ): Promise<{
+      instance: LandCoverClassification;
+    }> => {
+      return LandCoverClassification.getInstance(modelId, params, modelParams);
     },
   },
 ];

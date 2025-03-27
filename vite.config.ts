@@ -2,6 +2,7 @@
 import path from "path";
 import { defineConfig } from "vite";
 import packageJson from "./package.json";
+import commonjs from "vite-plugin-commonjs";
 
 const getPackageName = () => {
   return packageJson.name;
@@ -23,6 +24,7 @@ const fileName = {
 const formats = Object.keys(fileName) as Array<keyof typeof fileName>;
 
 export default defineConfig({
+  plugins: [commonjs()],
   base: "./",
   build: {
     outDir: "./build/dist",

@@ -48,8 +48,9 @@ const map = new maplibregl.Map({
 
 // const task = "zero-shot-object-detection";
 // const task = "object-detection";
-// const task = "mask-generation";
-const task = "oriented-object-detection";
+const task = "mask-generation";
+// const task = "oriented-object-detection";
+// const task = "land-cover-classification";
 
 let polygon = {
   type: "Feature",
@@ -190,6 +191,9 @@ map.on("load", async () => {
       break;
     case "oriented-object-detection":
       await runOrientedObjectDetection();
+      break;
+    case "land-cover-classification":
+      await runLandCoverClassification();
       break;
     default:
       throw new Error(`Unknown task: ${task}`);
@@ -466,6 +470,217 @@ async function runOrientedObjectDetection() {
     // Update loading indicator with error
     if (loadingElement) {
       loadingElement.innerHTML = "Error during oriented object detection.";
+      setTimeout(() => {
+        loadingElement.style.display = "none";
+      }, 5000);
+    }
+  } finally {
+    isProcessing = false;
+  }
+}
+
+async function runLandCoverClassification() {
+  if (!instance_id || isProcessing) return;
+
+  isProcessing = true;
+
+  // Add a loading indicator
+  const loadingElement =
+    document.getElementById("loading-indicator") ||
+    document.createElement("div");
+
+  if (!document.getElementById("loading-indicator")) {
+    loadingElement.id = "loading-indicator";
+    loadingElement.style.position = "absolute";
+    loadingElement.style.top = "10px";
+    loadingElement.style.left = "10px";
+    loadingElement.style.backgroundColor = "white";
+    loadingElement.style.padding = "10px";
+    loadingElement.style.borderRadius = "4px";
+    loadingElement.style.zIndex = "1000";
+    document.body.appendChild(loadingElement);
+  }
+
+  loadingElement.innerHTML = "Processing land cover classification...";
+
+  try {
+    const { output_geojson, geoRawImage, binaryMasks, outputRawImage } =
+      await callPipeline(task, instance_id, {
+        polygon,
+      });
+
+    console.log("Land cover classification result:", output_geojson);
+    console.log("bounds:", typeof outputImage.data[0]);
+    //bounds east: 114.850388 north: -3.44831 south : -3.450366 west : 114.849014
+    const bbox = [
+      [outputImage.bounds.west, outputImage.bounds.south],
+      [outputImage.bounds.east, outputImage.bounds.north],
+    ];
+
+    let imageData;
+
+    // Create an ImageData object from the raw image data
+    if (outputImage.data) {
+      const imageDataArray = Object.values(outputImage.data);
+      // Add an alpha channel to the image data
+      const rgbaDataArray = [];
+      for (let i = 0; i < imageDataArray.length; i += 3) {
+        rgbaDataArray.push(
+          imageDataArray[i],
+          imageDataArray[i + 1],
+          imageDataArray[i + 2],
+          255
+        );
+      }
+
+      imageData = new ImageData(
+        new Uint8ClampedArray(rgbaDataArray),
+        outputRawImage.width,
+        outputRawImage.height
+      );
+    } else {
+      throw new Error("Invalid raw image data");
+    }
+
+    // Create a canvas to draw the image
+    const canvas = document.createElement("canvas");
+    canvas.width = outputRawImage.width;
+    canvas.height = outputRawImage.height;
+    const ctx = canvas.getContext("2d");
+    ctx.putImageData(imageData, 0, 0);
+
+    // Convert the canvas to a data URL
+    const dataUrl = canvas.toDataURL();
+
+    // Add the image as a source to the map
+    map.addSource("land-cover-image", {
+      type: "image",
+      url: dataUrl,
+      coordinates: [
+        [geoRawImage.bounds.west, geoRawImage.bounds.north],
+        [geoRawImage.bounds.east, geoRawImage.bounds.north],
+        [geoRawImage.bounds.east, geoRawImage.bounds.south],
+        [geoRawImage.bounds.west, geoRawImage.bounds.south],
+      ],
+    });
+
+    // Add a layer to display the image
+    map.addLayer({
+      id: "land-cover-image-layer",
+      type: "raster",
+      source: "land-cover-image",
+      paint: {
+        "raster-opacity": 0.7,
+      },
+    });
+
+    // // Define colors for different classes
+    // const colors = [
+    //   "#ff0000", // red
+    //   "#00ff00", // green
+    //   "#0000ff", // blue
+    //   "#ffff00", // yellow
+    //   "#ff00ff", // magenta
+    //   "#00ffff", // cyan
+    //   "#800080", // purple
+    //   "#ffa500", // orange
+    // ];
+
+    // // Remove any existing land cover layers
+    // for (let i = 0; i < 20; i++) {
+    //   const sourceId = `land-cover-source-${i}`;
+    //   const fillLayerId = `land-cover-fill-${i}`;
+    //   const outlineLayerId = `land-cover-outline-${i}`;
+
+    //   if (map.getLayer(fillLayerId)) {
+    //     map.removeLayer(fillLayerId);
+    //   }
+    //   if (map.getLayer(outlineLayerId)) {
+    //     map.removeLayer(outlineLayerId);
+    //   }
+    //   if (map.getSource(sourceId)) {
+    //     map.removeSource(sourceId);
+    //   }
+    // }
+
+    // // Add each feature collection as a separate source with its own layers
+    // output_geojson.forEach((featureCollection, index) => {
+    //   const color = colors[index % colors.length];
+    //   const sourceId = `land-cover-source-${index}`;
+    //   const fillLayerId = `land-cover-fill-${index}`;
+    //   const outlineLayerId = `land-cover-outline-${index}`;
+
+    //   // Get class name from first feature if available
+    //   let className = "Class " + (index + 1);
+    //   if (
+    //     featureCollection.features &&
+    //     featureCollection.features.length > 0 &&
+    //     featureCollection.features[0].properties &&
+    //     featureCollection.features[0].properties.label
+    //   ) {
+    //     className = featureCollection.features[0].properties.label;
+    //   }
+
+    //   // Create a new source for this feature collection
+    //   map.addSource(sourceId, {
+    //     type: "geojson",
+    //     data: featureCollection,
+    //   });
+
+    //   // Add fill layer
+    //   map.addLayer({
+    //     id: fillLayerId,
+    //     type: "fill",
+    //     source: sourceId,
+    //     paint: {
+    //       "fill-color": color,
+    //       "fill-opacity": 0.3,
+    //     },
+    //   });
+
+    //   // Add outline layer
+    //   map.addLayer({
+    //     id: outlineLayerId,
+    //     type: "line",
+    //     source: sourceId,
+    //     paint: {
+    //       "line-color": color,
+    //       "line-width": 2,
+    //     },
+    //   });
+
+    //   // Add click event for this layer
+    //   map.on("click", fillLayerId, e => {
+    //     if (!e.features.length) return;
+    //     new maplibregl.Popup()
+    //       .setLngLat(e.lngLat)
+    //       .setHTML(`<strong>Class:</strong> ${className}`)
+    //       .addTo(map);
+    //   });
+
+    //   // Change cursor on hover
+    //   map.on("mouseenter", fillLayerId, () => {
+    //     map.getCanvas().style.cursor = "pointer";
+    //   });
+
+    //   map.on("mouseleave", fillLayerId, () => {
+    //     map.getCanvas().style.cursor = "";
+    //   });
+    // });
+
+    // // Update loading indicator
+    // if (loadingElement) {
+    //   loadingElement.innerHTML = "Land cover classification completed";
+    //   setTimeout(() => {
+    //     loadingElement.style.display = "none";
+    //   }, 5000);
+    // }
+  } catch (error) {
+    console.error("Error during land cover classification:", error);
+
+    // Update loading indicator with error
+    if (loadingElement) {
+      loadingElement.innerHTML = "Error during land cover classification.";
       setTimeout(() => {
         loadingElement.style.display = "none";
       }, 5000);
