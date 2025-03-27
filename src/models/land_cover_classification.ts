@@ -1,7 +1,7 @@
 import { Mapbox } from "@/data_providers/mapbox";
 import { RawImage } from "@huggingface/transformers";
 import { parametersChanged, refineMasks } from "@/utils/utils";
-// import sharp from "sharp";
+import sharp from "sharp";
 
 import { ProviderParams } from "@/geobase-ai";
 import { GeoRawImage } from "@/types/images/GeoRawImage";
@@ -84,42 +84,48 @@ export class LandCoverClassification {
       rawImage = new RawImage(newData, image.height, image.width, 3);
     }
 
-    // let hwcData = rawImage.toTensor("HWC").data as Uint8Array;
+    let hwcData = rawImage.toTensor("HWC").data as Uint8Array;
 
-    // // Ensure it's in RGB format (remove alpha if present)
-    // const channels = image.channels > 3 ? 3 : image.channels;
+    // Ensure it's in RGB format (remove alpha if present)
+    const channels = image.channels > 3 ? 3 : image.channels;
 
-    // // Convert the pixel data into an actual image
-    // const formattedBuffer = await sharp(Buffer.from(hwcData), {
-    //   raw: {
-    //     width: image.width,
-    //     height: image.height,
-    //     channels: channels,
-    //   },
-    // })
-    //   .toFormat("jpg") // Convert to PNG format
-    //   .toBuffer();
+    // Convert the pixel data into an actual image
+    const formattedBuffer = await sharp(Buffer.from(hwcData), {
+      raw: {
+        width: image.width,
+        height: image.height,
+        channels: channels,
+      },
+    })
+      .toFormat("jpg") // Convert to PNG format
+      .toBuffer();
 
-    // // Resize to 1024x1024
-    // const resizedBuffer = await sharp(formattedBuffer)
-    //   .resize(1024, 1024)
-    //   .raw()
-    //   .toBuffer();
+    // Resize to 1024x1024
+    const resizedBuffer = await sharp(formattedBuffer)
+      .resize(1024, 1024)
+      .raw()
+      .toBuffer();
 
-    // // Convert resized buffer back to Uint8Array
-    // const resizedImageData = new Uint8Array(resizedBuffer);
+    // Convert resized buffer back to Uint8Array
+    const resizedImageData = new Uint8Array(resizedBuffer);
 
-    // // Create a new RawImage object with resized data
-    // const resizedRawImage = new RawImage(resizedImageData, 1024, 1024, 3);
+    // Create a new RawImage object with resized data
+    const resizedRawImage = new RawImage(resizedImageData, 1024, 1024, 3);
 
-    let tensor = rawImage.toTensor("CHW");
+    let tensor = resizedRawImage.toTensor("CHW");
     const data = tensor.data as Uint8Array;
 
     // Create a Float32Array to store normalized pixel values
-    const floatData = new Float32Array(image.width * image.height * 3);
+    const floatData = new Float32Array(
+      resizedRawImage.width * resizedRawImage.height * 3
+    );
 
     // Normalize pixel values to the range [0, 1]
-    for (let i = 0; i < image.width * image.height * 3; i++) {
+    for (
+      let i = 0;
+      i < resizedRawImage.width * resizedRawImage.height * 3;
+      i++
+    ) {
       floatData[i] = data[i] / 255.0; // Normalize to [0, 1]
     }
 
@@ -128,17 +134,26 @@ export class LandCoverClassification {
     const std = [0.0195, 0.0169, 0.0179];
 
     // Normalize pixel values
-    for (let i = 0; i < image.width * image.height * 3; i++) {
+    for (
+      let i = 0;
+      i < resizedRawImage.width * resizedRawImage.height * 3;
+      i++
+    ) {
       floatData[i] = (floatData[i] - mean[i % 3]) / std[i % 3];
     }
     // Convert Float32Array to Float32 tensor
     let normal_tensor = new ort.Tensor("float32", floatData, [
       3,
-      image.height,
-      image.width,
+      resizedRawImage.height,
+      resizedRawImage.width,
     ]);
     // Add batch dimension (1, C, H, W)
-    normal_tensor = normal_tensor.reshape([1, 3, image.height, image.width]);
+    normal_tensor = normal_tensor.reshape([
+      1,
+      3,
+      resizedRawImage.height,
+      resizedRawImage.width,
+    ]);
 
     // Create the ONNX Runtime tensor
     const inputs = { input: normal_tensor };

@@ -48,9 +48,9 @@ const map = new maplibregl.Map({
 
 // const task = "zero-shot-object-detection";
 // const task = "object-detection";
-const task = "mask-generation";
+// const task = "mask-generation";
 // const task = "oriented-object-detection";
-// const task = "land-cover-classification";
+const task = "land-cover-classification";
 
 let polygon = {
   type: "Feature",
@@ -504,10 +504,13 @@ async function runLandCoverClassification() {
   loadingElement.innerHTML = "Processing land cover classification...";
 
   try {
-    const { output_geojson, geoRawImage, binaryMasks, outputRawImage } =
-      await callPipeline(task, instance_id, {
+    const { output_geojson, binaryMasks, outputImage } = await callPipeline(
+      task,
+      instance_id,
+      {
         polygon,
-      });
+      }
+    );
 
     console.log("Land cover classification result:", output_geojson);
     console.log("bounds:", typeof outputImage.data[0]);
@@ -535,8 +538,8 @@ async function runLandCoverClassification() {
 
       imageData = new ImageData(
         new Uint8ClampedArray(rgbaDataArray),
-        outputRawImage.width,
-        outputRawImage.height
+        outputImage.width,
+        outputImage.height
       );
     } else {
       throw new Error("Invalid raw image data");
@@ -544,8 +547,8 @@ async function runLandCoverClassification() {
 
     // Create a canvas to draw the image
     const canvas = document.createElement("canvas");
-    canvas.width = outputRawImage.width;
-    canvas.height = outputRawImage.height;
+    canvas.width = outputImage.width;
+    canvas.height = outputImage.height;
     const ctx = canvas.getContext("2d");
     ctx.putImageData(imageData, 0, 0);
 
@@ -557,10 +560,10 @@ async function runLandCoverClassification() {
       type: "image",
       url: dataUrl,
       coordinates: [
-        [geoRawImage.bounds.west, geoRawImage.bounds.north],
-        [geoRawImage.bounds.east, geoRawImage.bounds.north],
-        [geoRawImage.bounds.east, geoRawImage.bounds.south],
-        [geoRawImage.bounds.west, geoRawImage.bounds.south],
+        [outputImage.bounds.west, outputImage.bounds.north],
+        [outputImage.bounds.east, outputImage.bounds.north],
+        [outputImage.bounds.east, outputImage.bounds.south],
+        [outputImage.bounds.west, outputImage.bounds.south],
       ],
     });
 
