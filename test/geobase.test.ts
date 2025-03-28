@@ -67,7 +67,8 @@ describe("Geobase", () => {
 
     // Create a bound function to maintain 'this' context
     const getTileUrl = testGeobase.getTileUrlFromTileCoords.bind(testGeobase);
-    const url = getTileUrl([123, 456, 18]);
+    console.log({ getTileUrl });
+    const url = getTileUrl([123, 456, 18], testGeobase);
 
     expect(url).toBe(
       "https://wmrosdnjsecywfkvxtrw.geobase.app/titiler/v1/cog/tiles/WebMercatorQuad/18/123/456" +

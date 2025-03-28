@@ -1,5 +1,4 @@
 import { Mapbox } from "@/data_providers/mapbox";
-import { RawImage } from "@huggingface/transformers";
 import { getPolygonFromMask, parametersChanged } from "@/utils/utils";
 
 import { ObjectDetectionResults } from "../models/zero_shot_object_detection";
@@ -49,29 +48,30 @@ export class SolarPanelDetection {
     image: GeoRawImage
   ): Promise<{ input: ort.Tensor }> {
     // Create RawImage instance and resize it
-    let rawImage = new RawImage(
-      image.data,
-      image.height,
-      image.width,
-      image.channels
-    );
-    rawImage.save("solarpanelinput.png");
+    // let rawImage = new RawImage(
+    //   image.data,
+    //   image.height,
+    //   image.width,
+    //   image.channels
+    // );
+    // await rawImage.save("solarpanelinput.png");
+    // console.log("rawImage", image);
 
     // If image has 4 channels, convert it to 3 channels (e.g., remove alpha channel)
-    if (image.channels > 3) {
-      const newData = new Uint8Array(image.width * image.height * 3);
-      for (let i = 0, j = 0; i < image.data.length; i += 4, j += 3) {
-        newData[j] = image.data[i]; // R
-        newData[j + 1] = image.data[i + 1]; // G
-        newData[j + 2] = image.data[i + 2]; // B
-      }
-      rawImage = new RawImage(newData, image.height, image.width, 3);
-    }
+    // if (image.channels > 3) {
+    //   const newData = new Uint8Array(image.width * image.height * 3);
+    //   for (let i = 0, j = 0; i < image.data.length; i += 4, j += 3) {
+    //     newData[j] = image.data[i]; // R
+    //     newData[j + 1] = image.data[i + 1]; // G
+    //     newData[j + 2] = image.data[i + 2]; // B
+    //   }
+    //   rawImage = new RawImage(newData, image.height, image.width, 3);
+    // }
 
     // rawImage.resize(512, 512);
 
     // Convert RawImage to a tensor in CHW format
-    const tensor = rawImage.toTensor("CHW"); // Transpose to CHW format, it is equal in python transpose(2, 0, 1)
+    const tensor = image.toTensor("CHW"); // Transpose to CHW format, it is equal in python transpose(2, 0, 1)
 
     // Convert tensor data to Float32Array
     const floatData = new Float32Array(tensor.data.length);
@@ -141,7 +141,7 @@ export class SolarPanelDetection {
     if (!this.dataProvider) {
       throw new Error("Data provider not initialized");
     }
-    const image = this.dataProvider.getImage(polygon);
+    const image = await this.dataProvider.getImage(polygon);
     return image;
   }
 
