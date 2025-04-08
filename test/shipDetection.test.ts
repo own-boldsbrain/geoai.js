@@ -1,22 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import { geobaseAi } from "../src/geobase-ai";
-import {
-  geobaseParamsSolarPanel,
-  mapboxParams,
-  polygonSolarPannel,
-} from "./constants";
+import { geobaseParamsShip, mapboxParams, polygonShip } from "./constants";
 import { GeoRawImage } from "../src/types/images/GeoRawImage";
-import { SolarPanelDetection } from "../src/models/geoai_models";
+import { ShipDetection } from "../src/models/geoai_models";
 
-describe("test model solar pannel detection", () => {
+describe("test model geobase/ship-detection", () => {
   it.skip("should initialize a solar panel detection pipeline", async () => {
     const result = await geobaseAi.pipeline(
       "solar-panel-detection",
       mapboxParams
     );
 
-    expect(result.instance).toBeInstanceOf(SolarPanelDetection);
+    expect(result.instance).toBeInstanceOf(ShipDetection);
   });
 
   it.skip("should reuse the same instance for the same model", async () => {
@@ -31,14 +27,14 @@ describe("test model solar pannel detection", () => {
 
     expect(result1.instance).toBe(result2.instance);
   });
-  it("should process a polygon for solar pannel detection for polygon for source geobase", async () => {
+  it("should process a polygon for ship detection for polygon for source geobase", async () => {
     const { instance } = await geobaseAi.pipeline(
       "solar-panel-detection",
-      geobaseParamsSolarPanel
+      geobaseParamsShip
     );
 
-    const results: any = await (instance as SolarPanelDetection).inference(
-      polygonSolarPannel
+    const results: any = await (instance as ShipDetection).inference(
+      polygonShip
     );
 
     const geoJsonString = JSON.stringify(results.detections);

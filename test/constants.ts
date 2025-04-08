@@ -25,6 +25,32 @@ export const geobaseParamsSolarPanel: ProviderParams = {
     "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/solar_panels_davis_ca.tif",
 };
 
+export const geobaseParamsShip: ProviderParams = {
+  provider: "geobase",
+  projectRef: "wmrosdnjsecywfkvxtrw",
+  apikey:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4OTY1NDU4MjUsImlhdCI6MTczODc2MTQyNSwiaXNzIjoic3VwYWJhc2UiLCJyb2xlIjoiYW5vbiJ9.M8jeru5dbHe4tGh52xe2E2HlUiGCAPbZ8-JrfbxiRk0",
+  cogImagery:
+    "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/ships_dubai.tif",
+};
+
+export const polygonShip = {
+  type: "Feature",
+  properties: {},
+  geometry: {
+    coordinates: [
+      [
+        [55.13443273773737, 25.1145182544451],
+        [55.13443273773737, 25.112566269789895],
+        [55.13567584776939, 25.112566269789895],
+        [55.13567584776939, 25.1145182544451],
+        [55.13443273773737, 25.1145182544451],
+      ],
+    ],
+    type: "Polygon",
+  },
+} as GeoJSON.Feature;
+
 export const polygonSolarPannel = {
   type: "Feature",
   properties: {},
