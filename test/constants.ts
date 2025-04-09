@@ -43,6 +43,32 @@ export const geobaseParamsCar: ProviderParams = {
     "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/cars_7cm.tif",
 };
 
+export const geobaseParamsWetLand: ProviderParams = {
+  provider: "geobase",
+  projectRef: "wmrosdnjsecywfkvxtrw",
+  apikey:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4OTY1NDU4MjUsImlhdCI6MTczODc2MTQyNSwiaXNzIjoic3VwYWJhc2UiLCJyb2xlIjoiYW5vbiJ9.M8jeru5dbHe4tGh52xe2E2HlUiGCAPbZ8-JrfbxiRk0",
+  cogImagery:
+    "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/naip/m_4609932_nw_14_1_20100629.tif",
+};
+
+export const polygonWetLand = {
+  type: "Feature",
+  properties: {},
+  geometry: {
+    coordinates: [
+      [
+        [-99.0983079371952, 46.60892272965549],
+        [-99.0983079371952, 46.5949877901148],
+        [-99.07778265091567, 46.5949877901148],
+        [-99.07778265091567, 46.60892272965549],
+        [-99.0983079371952, 46.60892272965549],
+      ],
+    ],
+    type: "Polygon",
+  },
+} as GeoJSON.Feature;
+
 export const polygonCar = {
   type: "Feature",
   properties: {},

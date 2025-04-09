@@ -7,6 +7,7 @@ import {
   SolarPanelDetection,
   ShipDetection,
   CarDetection,
+  WetLandSegmentation,
 } from "./models/geoai_models";
 import { LandCoverClassification } from "./models/land_cover_classification";
 import { ObjectDetection } from "./models/object_detection";
@@ -51,7 +52,8 @@ type GeobaseAiModelTasks =
   | "land-use-change-detection"
   | "solar-panel-detection"
   | "ship-detection"
-  | "car-detection";
+  | "car-detection"
+  | "wetland-segmentation";
 
 type GeobaseAiModelMetadata = {
   task: HuggingFaceModelTasks | GeobaseAiModelTasks;
@@ -71,7 +73,8 @@ type GeobaseAiModelMetadata = {
       | LandCoverClassification
       | SolarPanelDetection
       | ShipDetection
-      | CarDetection;
+      | CarDetection
+      | WetLandSegmentation;
   }>;
 };
 
@@ -139,7 +142,8 @@ const model_metadata: GeobaseAiModelMetadata[] = [
   {
     task: "land-cover-classification",
     library: "geobase-ai",
-    model: "geobase/sparsemask",
+    model:
+      "https://huggingface.co/geobase/sparsemask/resolve/main/onnx/sparsemask_model.onnx",
     description: "Land Cover Classification model.",
     geobase_ai_pipeline: (
       params: ProviderParams,
@@ -154,7 +158,8 @@ const model_metadata: GeobaseAiModelMetadata[] = [
   {
     task: "solar-panel-detection",
     library: "geobase-ai",
-    model: "geobase/geoai_models",
+    model:
+      "https://huggingface.co/geobase/geoai_models/resolve/main/solarPanelDetection_quantized.onnx",
     description: "Land Cover Classification model.",
     geobase_ai_pipeline: (
       params: ProviderParams,
@@ -169,7 +174,8 @@ const model_metadata: GeobaseAiModelMetadata[] = [
   {
     task: "ship-detection",
     library: "geobase-ai",
-    model: "geobase/geoai_models",
+    model:
+      "https://huggingface.co/geobase/geoai_models/resolve/main/shipDetection_quantized.onnx",
     description: "Land Cover Classification model.",
     geobase_ai_pipeline: (
       params: ProviderParams,
@@ -184,7 +190,8 @@ const model_metadata: GeobaseAiModelMetadata[] = [
   {
     task: "car-detection",
     library: "geobase-ai",
-    model: "geobase/geoai_models",
+    model:
+      "https://huggingface.co/geobase/geoai_models/resolve/main/carDetectionUSA_quantized.onnx",
     description: "Land Cover Classification model.",
     geobase_ai_pipeline: (
       params: ProviderParams,
@@ -194,6 +201,22 @@ const model_metadata: GeobaseAiModelMetadata[] = [
       instance: CarDetection;
     }> => {
       return CarDetection.getInstance(modelId, params, modelParams);
+    },
+  },
+  {
+    task: "wetland-segmentation",
+    library: "geobase-ai",
+    model:
+      "https://huggingface.co/geobase/geoai_models/resolve/main/wetland_detection_quantized.onnx",
+    description: "Land Cover Classification model.",
+    geobase_ai_pipeline: (
+      params: ProviderParams,
+      modelId: string = "https://huggingface.co/geobase/geoai_models/resolve/main/wetland_detection_quantized.onnx",
+      modelParams?: PretrainedOptions
+    ): Promise<{
+      instance: WetLandSegmentation;
+    }> => {
+      return WetLandSegmentation.getInstance(modelId, params, modelParams);
     },
   },
 ];
