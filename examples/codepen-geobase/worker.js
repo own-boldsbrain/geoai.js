@@ -48,7 +48,8 @@ async function callPipeline(task, instance_id, input) {
     }
     case "solar-panel-detection":
     case "ship-detection":
-    case "car-detection": {
+    case "car-detection":
+    case "building-detection": {
       const output = await instance.inference(input.polygon);
       const output_geojson = output.detections;
       console.log("output", output);

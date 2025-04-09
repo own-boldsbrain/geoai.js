@@ -2,7 +2,6 @@ import maplibregl from "./maplibre-gl.js";
 import { callPipeline, initializePipeline } from "./pipeline.js";
 
 const geobaseConfig = document.querySelector("config").dataset;
-console.log({ geobaseConfig });
 
 const map = new maplibregl.Map({
   container: "map", // container id
@@ -43,7 +42,7 @@ const map = new maplibregl.Map({
       },
     ],
   },
-  center: [114.85100984573364, -3.435287336176773], // starting position
+  center: [-117.59169738016323, 47.6528427477742], // starting position
   zoom: 18, // starting zoom
 });
 
@@ -53,8 +52,9 @@ const map = new maplibregl.Map({
 // const task = "oriented-object-detection";
 // const task = "land-cover-classification";
 // const task = "solar-panel-detection";
-const task = "ship-detection";
+// const task = "ship-detection";
 // const task = "car-detection";
+const task = "building-detection";
 
 let polygon = {
   type: "Feature",
@@ -105,11 +105,11 @@ map.on("load", async () => {
     geometry: {
       coordinates: [
         [
-          [55.13452909846484, 25.113936913196113],
-          [55.13452909846484, 25.11357075780853],
-          [55.135160503410304, 25.11357075780853],
-          [55.135160503410304, 25.113936913196113],
-          [55.13452909846484, 25.113936913196113],
+          [-117.59296583303752, 47.65404422995658],
+          [-117.59296583303752, 47.6522039738382],
+          [-117.59050486430851, 47.6522039738382],
+          [-117.59050486430851, 47.65404422995658],
+          [-117.59296583303752, 47.65404422995658],
         ],
       ],
       type: "Polygon",
@@ -203,6 +203,7 @@ map.on("load", async () => {
     case "solar-panel-detection":
     case "ship-detection":
     case "car-detection":
+    case "building-detection":
       await solarPanelDetection();
       break;
     default:

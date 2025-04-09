@@ -52,6 +52,32 @@ export const geobaseParamsWetLand: ProviderParams = {
     "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/naip/m_4609932_nw_14_1_20100629.tif",
 };
 
+export const geobaseParamsBuilding: ProviderParams = {
+  provider: "geobase",
+  projectRef: "wmrosdnjsecywfkvxtrw",
+  apikey:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4OTY1NDU4MjUsImlhdCI6MTczODc2MTQyNSwiaXNzIjoic3VwYWJhc2UiLCJyb2xlIjoiYW5vbiJ9.M8jeru5dbHe4tGh52xe2E2HlUiGCAPbZ8-JrfbxiRk0",
+  cogImagery:
+    "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/naip_train.tif",
+};
+
+export const polygonBuilding = {
+  type: "Feature",
+  properties: {},
+  geometry: {
+    coordinates: [
+      [
+        [-117.59296583303752, 47.65404422995658],
+        [-117.59296583303752, 47.6522039738382],
+        [-117.59050486430851, 47.6522039738382],
+        [-117.59050486430851, 47.65404422995658],
+        [-117.59296583303752, 47.65404422995658],
+      ],
+    ],
+    type: "Polygon",
+  },
+} as GeoJSON.Feature;
+
 export const polygonWetLand = {
   type: "Feature",
   properties: {},

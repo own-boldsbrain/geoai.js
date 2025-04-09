@@ -8,6 +8,7 @@ import {
   ShipDetection,
   CarDetection,
   WetLandSegmentation,
+  BuildingDetection,
 } from "./models/geoai_models";
 import { LandCoverClassification } from "./models/land_cover_classification";
 import { ObjectDetection } from "./models/object_detection";
@@ -53,7 +54,8 @@ type GeobaseAiModelTasks =
   | "solar-panel-detection"
   | "ship-detection"
   | "car-detection"
-  | "wetland-segmentation";
+  | "wetland-segmentation"
+  | "building-detection";
 
 type GeobaseAiModelMetadata = {
   task: HuggingFaceModelTasks | GeobaseAiModelTasks;
@@ -74,7 +76,8 @@ type GeobaseAiModelMetadata = {
       | SolarPanelDetection
       | ShipDetection
       | CarDetection
-      | WetLandSegmentation;
+      | WetLandSegmentation
+      | BuildingDetection;
   }>;
 };
 
@@ -217,6 +220,22 @@ const model_metadata: GeobaseAiModelMetadata[] = [
       instance: WetLandSegmentation;
     }> => {
       return WetLandSegmentation.getInstance(modelId, params, modelParams);
+    },
+  },
+  {
+    task: "building-detection",
+    library: "geobase-ai",
+    model:
+      "https://huggingface.co/geobase/geoai_models/resolve/main/buildingDetection_quantized.onnx",
+    description: "Land Cover Classification model.",
+    geobase_ai_pipeline: (
+      params: ProviderParams,
+      modelId: string = "https://huggingface.co/geobase/geoai_models/resolve/main/buildingDetection_quantized.onnx",
+      modelParams?: PretrainedOptions
+    ): Promise<{
+      instance: BuildingDetection;
+    }> => {
+      return BuildingDetection.getInstance(modelId, params, modelParams);
     },
   },
 ];
