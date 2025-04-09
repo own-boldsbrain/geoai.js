@@ -3,7 +3,11 @@
 // https://huggingface.co/models?pipeline_tag=zero-shot-image-classification&library=transformers.js
 
 import { GenericSegmentation } from "./models/generic_segmentation";
-import { SolarPanelDetection, ShipDetection } from "./models/geoai_models";
+import {
+  SolarPanelDetection,
+  ShipDetection,
+  CarDetection,
+} from "./models/geoai_models";
 import { LandCoverClassification } from "./models/land_cover_classification";
 import { ObjectDetection } from "./models/object_detection";
 import { OrientedObjectDetection } from "./models/oriented_object_detection";
@@ -46,7 +50,8 @@ type GeobaseAiModelTasks =
   | "land-cover-change-detection"
   | "land-use-change-detection"
   | "solar-panel-detection"
-  | "ship-detection";
+  | "ship-detection"
+  | "car-detection";
 
 type GeobaseAiModelMetadata = {
   task: HuggingFaceModelTasks | GeobaseAiModelTasks;
@@ -65,7 +70,8 @@ type GeobaseAiModelMetadata = {
       | OrientedObjectDetection
       | LandCoverClassification
       | SolarPanelDetection
-      | ShipDetection;
+      | ShipDetection
+      | CarDetection;
   }>;
 };
 
@@ -167,12 +173,27 @@ const model_metadata: GeobaseAiModelMetadata[] = [
     description: "Land Cover Classification model.",
     geobase_ai_pipeline: (
       params: ProviderParams,
-      modelId: string = "https://huggingface.co/geobase/geoai_models/resolve/main/solarPanelDetection_quantized.onnx",
+      modelId: string = "https://huggingface.co/geobase/geoai_models/resolve/main/shipDetection_quantized.onnx",
       modelParams?: PretrainedOptions
     ): Promise<{
       instance: ShipDetection;
     }> => {
       return ShipDetection.getInstance(modelId, params, modelParams);
+    },
+  },
+  {
+    task: "car-detection",
+    library: "geobase-ai",
+    model: "geobase/geoai_models",
+    description: "Land Cover Classification model.",
+    geobase_ai_pipeline: (
+      params: ProviderParams,
+      modelId: string = "https://huggingface.co/geobase/geoai_models/resolve/main/carDetectionUSA_quantized.onnx",
+      modelParams?: PretrainedOptions
+    ): Promise<{
+      instance: CarDetection;
+    }> => {
+      return CarDetection.getInstance(modelId, params, modelParams);
     },
   },
 ];

@@ -2,6 +2,7 @@ import maplibregl from "./maplibre-gl.js";
 import { callPipeline, initializePipeline } from "./pipeline.js";
 
 const geobaseConfig = document.querySelector("config").dataset;
+console.log({ geobaseConfig });
 
 const map = new maplibregl.Map({
   container: "map", // container id
@@ -50,7 +51,10 @@ const map = new maplibregl.Map({
 // const task = "object-detection";
 // const task = "mask-generation";
 // const task = "oriented-object-detection";
-const task = "land-cover-classification";
+// const task = "land-cover-classification";
+// const task = "solar-panel-detection";
+const task = "ship-detection";
+// const task = "car-detection";
 
 let polygon = {
   type: "Feature",
@@ -77,7 +81,7 @@ let point = {
     name: "input point",
   },
   geometry: {
-    coordinates: [114.84866438996494, -3.449790763843808],
+    coordinates: [-121.7741175795054, 38.553084201622795],
     type: "Point",
   },
 };
@@ -87,6 +91,7 @@ map.on("load", async () => {
     `https://${geobaseConfig.projectRef}.geobase.app/titiler/v1/cog/bounds?url=${encodeURIComponent(geobaseConfig.cogImagery)}&apikey=${geobaseConfig.apikey}`
   );
   const boundsData = await boundsResponse.json();
+  console.log("boundsData:", { boundsData });
   const bounds = new maplibregl.LngLatBounds(
     [boundsData.bounds[0], boundsData.bounds[1]],
     [boundsData.bounds[2], boundsData.bounds[3]]
@@ -100,11 +105,11 @@ map.on("load", async () => {
     geometry: {
       coordinates: [
         [
-          [114.84807353432808, -3.449255329675921],
-          [114.84807353432808, -3.4502955104658923],
-          [114.84870049348092, -3.4502955104658923],
-          [114.84870049348092, -3.449255329675921],
-          [114.84807353432808, -3.449255329675921],
+          [55.13452909846484, 25.113936913196113],
+          [55.13452909846484, 25.11357075780853],
+          [55.135160503410304, 25.11357075780853],
+          [55.135160503410304, 25.113936913196113],
+          [55.13452909846484, 25.113936913196113],
         ],
       ],
       type: "Polygon",
@@ -194,6 +199,11 @@ map.on("load", async () => {
       break;
     case "land-cover-classification":
       await runLandCoverClassification();
+      break;
+    case "solar-panel-detection":
+    case "ship-detection":
+    case "car-detection":
+      await solarPanelDetection();
       break;
     default:
       throw new Error(`Unknown task: ${task}`);
@@ -684,6 +694,115 @@ async function runLandCoverClassification() {
     // Update loading indicator with error
     if (loadingElement) {
       loadingElement.innerHTML = "Error during land cover classification.";
+      setTimeout(() => {
+        loadingElement.style.display = "none";
+      }, 5000);
+    }
+  } finally {
+    isProcessing = false;
+  }
+}
+
+async function solarPanelDetection() {
+  if (!instance_id || isProcessing) return;
+
+  isProcessing = true;
+
+  // Add a loading indicator for oriented object detection
+  const loadingElement =
+    document.getElementById("loading-indicator") ||
+    document.createElement("div");
+
+  if (!document.getElementById("loading-indicator")) {
+    loadingElement.id = "loading-indicator";
+    loadingElement.style.position = "absolute";
+    loadingElement.style.top = "10px";
+    loadingElement.style.left = "10px";
+    loadingElement.style.backgroundColor = "white";
+    loadingElement.style.padding = "10px";
+    loadingElement.style.borderRadius = "4px";
+    loadingElement.style.zIndex = "1000";
+    document.body.appendChild(loadingElement);
+  }
+
+  loadingElement.innerHTML = "Processing oriented object detection...";
+
+  try {
+    const output = await callPipeline(task, instance_id, {
+      polygon,
+    });
+
+    console.log("Oriented object detection result:", output);
+
+    // Verify that output is a valid GeoJSON
+    if (!output || !output.type || !output.features) {
+      console.error("Invalid GeoJSON output:", output);
+      throw new Error("Invalid output format");
+    }
+
+    // Ensure we have the map and source before updating
+    if (map && map.loaded()) {
+      // Check if source exists
+      if (map.getSource("detected-objects")) {
+        console.log("Updating detected-objects source with new data");
+        map.getSource("detected-objects").setData(output);
+      } else {
+        console.error("Source 'detected-objects' not found in map");
+        // Create the source if it doesn't exist (fallback)
+        if (!map.getSource("detected-objects")) {
+          console.log("Adding missing source 'detected-objects'");
+          map.addSource("detected-objects", {
+            type: "geojson",
+            data: { type: "FeatureCollection", features: [] },
+          });
+
+          // Add layers for this source if they don't exist
+          if (!map.getLayer("detected-objects-fill")) {
+            map.addLayer({
+              id: "detected-objects-fill",
+              type: "fill",
+              source: "detected-objects",
+              paint: {
+                "fill-color": "#ff0000",
+                "fill-opacity": 0.3,
+              },
+            });
+          }
+
+          if (!map.getLayer("detected-objects-outline")) {
+            map.addLayer({
+              id: "detected-objects-outline",
+              type: "line",
+              source: "detected-objects",
+              paint: {
+                "line-color": "#ff0000",
+                "line-width": 2,
+              },
+            });
+          }
+
+          // Now update the source with our data
+          map.getSource("detected-objects").setData(output);
+        }
+      }
+    } else {
+      console.error("Map not fully loaded when trying to update source");
+    }
+
+    // Update loading indicator
+    if (loadingElement) {
+      loadingElement.innerHTML = "solar panel detection completed";
+      // Hide the indicator after 5 seconds (changed from 300000ms/5min)
+      setTimeout(() => {
+        loadingElement.style.display = "none";
+      }, 5000);
+    }
+  } catch (error) {
+    console.error("Error during oriented object detection:", error);
+
+    // Update loading indicator with error
+    if (loadingElement) {
+      loadingElement.innerHTML = "Error during oriented object detection.";
       setTimeout(() => {
         loadingElement.style.display = "none";
       }, 5000);

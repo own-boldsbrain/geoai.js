@@ -34,17 +34,43 @@ export const geobaseParamsShip: ProviderParams = {
     "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/ships_dubai.tif",
 };
 
+export const geobaseParamsCar: ProviderParams = {
+  provider: "geobase",
+  projectRef: "wmrosdnjsecywfkvxtrw",
+  apikey:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4OTY1NDU4MjUsImlhdCI6MTczODc2MTQyNSwiaXNzIjoic3VwYWJhc2UiLCJyb2xlIjoiYW5vbiJ9.M8jeru5dbHe4tGh52xe2E2HlUiGCAPbZ8-JrfbxiRk0",
+  cogImagery:
+    "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/cars_7cm.tif",
+};
+
+export const polygonCar = {
+  type: "Feature",
+  properties: {},
+  geometry: {
+    coordinates: [
+      [
+        [-95.42148774154262, 29.67906487977089],
+        [-95.42148774154262, 29.678781807220446],
+        [-95.4210323139897, 29.678781807220446],
+        [-95.4210323139897, 29.67906487977089],
+        [-95.42148774154262, 29.67906487977089],
+      ],
+    ],
+    type: "Polygon",
+  },
+} as GeoJSON.Feature;
+
 export const polygonShip = {
   type: "Feature",
   properties: {},
   geometry: {
     coordinates: [
       [
-        [55.13443273773737, 25.1145182544451],
-        [55.13443273773737, 25.112566269789895],
-        [55.13567584776939, 25.112566269789895],
-        [55.13567584776939, 25.1145182544451],
-        [55.13443273773737, 25.1145182544451],
+        [55.13452909846484, 25.113936913196113],
+        [55.13452909846484, 25.11357075780853],
+        [55.135160503410304, 25.11357075780853],
+        [55.135160503410304, 25.113936913196113],
+        [55.13452909846484, 25.113936913196113],
       ],
     ],
     type: "Polygon",

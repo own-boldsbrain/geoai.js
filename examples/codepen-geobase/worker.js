@@ -46,6 +46,14 @@ async function callPipeline(task, instance_id, input) {
       const outputImage = output.outputImage;
       return { output_geojson, binaryMasks, outputImage };
     }
+    case "solar-panel-detection":
+    case "ship-detection":
+    case "car-detection": {
+      const output = await instance.inference(input.polygon);
+      const output_geojson = output.detections;
+      console.log("output", output);
+      return output_geojson;
+    }
     default: {
       throw new Error(`Unknown task: ${task}`);
     }
