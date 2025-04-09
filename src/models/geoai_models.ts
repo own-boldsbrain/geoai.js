@@ -839,5 +839,9 @@ export class WetLandSegmentation {
   private async postProcessor(
     outputs: any,
     geoRawImage: GeoRawImage
-  ): Promise<any> {}
+  ): Promise<any> {
+    //code for postprocessing the output
+    // create a binary mask from the output and convert it to a polygon
+    console.log({ outputs, geoRawImage });
+  }
 }
