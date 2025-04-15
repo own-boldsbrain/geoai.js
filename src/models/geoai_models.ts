@@ -105,7 +105,12 @@ abstract class BaseDetectionModel {
     if (!this.dataProvider) {
       throw new Error("Data provider not initialized");
     }
-    return await this.dataProvider.getImage(polygon, this.zoom);
+    return await this.dataProvider.getImage(
+      polygon,
+      undefined,
+      undefined,
+      this.zoom
+    );
   }
 
   async inference(polygon: GeoJSON.Feature): Promise<ObjectDetectionResults> {
@@ -146,12 +151,6 @@ abstract class BaseDetectionModel {
     geoRawImage: GeoRawImage
   ): Promise<GeoJSON.FeatureCollection> {
     const { masks } = outputs;
-    console.log({
-      boxes: outputs.boxes.dims,
-      scores: outputs.scores.dims,
-      labels: outputs.labels.dims,
-      masks,
-    });
 
     const maskData = masks.data as Float32Array;
     const maskDims = masks.dims;
@@ -366,32 +365,6 @@ export class WetLandSegmentation {
   private async preProcessor(
     image: GeoRawImage
   ): Promise<{ input: ort.Tensor }> {
-    const image_tensor = image.toTensor();
-    console.log({ image_tensor: image_tensor.dims });
-    console.log({ image: image.toTensor() });
-    // Create RawImage instance and resize it
-    // let rawImage = new RawImage(
-    //   image.data,
-    //   image.height,
-    //   image.width,
-    //   image.channels
-    // );
-    // await rawImage.save("solarpanelinput.png");
-    // console.log("rawImage", image);
-
-    // If image has 4 channels, convert it to 3 channels (e.g., remove alpha channel)
-    // if (image.channels > 3) {
-    //   const newData = new Uint8Array(image.width * image.height * 3);
-    //   for (let i = 0, j = 0; i < image.data.length; i += 4, j += 3) {
-    //     newData[j] = image.data[i]; // R
-    //     newData[j + 1] = image.data[i + 1]; // G
-    //     newData[j + 2] = image.data[i + 2]; // B
-    //   }
-    //   rawImage = new RawImage(newData, image.height, image.width, 3);
-    // }
-
-    // rawImage.resize(512, 512);
-
     // Convert RawImage to a tensor in CHW format
     const tensor = image.toTensor("CHW"); // Transpose to CHW format, it is equal in python transpose(2, 0, 1)
 
@@ -486,7 +459,7 @@ export class WetLandSegmentation {
       if (!this.model) {
         throw new Error("Model or processor not initialized");
       }
-      outputs = await this.model.run({ image: inputs.input });
+      outputs = await this.model.run({ input: inputs.input });
     } catch (error) {
       console.debug("error", error);
       throw error;
@@ -503,9 +476,76 @@ export class WetLandSegmentation {
   private async postProcessor(
     outputs: any,
     geoRawImage: GeoRawImage
-  ): Promise<any> {
-    //code for postprocessing the output
-    // create a binary mask from the output and convert it to a polygon
-    console.log({ outputs, geoRawImage });
+  ): Promise<GeoJSON.FeatureCollection> {
+    outputs = Object.values(outputs);
+    const masks = outputs[1];
+    const labels = outputs[3];
+    const scores = outputs[0].data as Float32Array;
+    const threshold = 0.5;
+
+    const maskData = masks.data as Float32Array;
+    const maskDims = masks.dims; // [masknumber, 1, height, width]
+    const maskHeight = maskDims[2];
+    const maskWidth = maskDims[3];
+
+    const features: GeoJSON.Feature[] = [];
+
+    // Process each mask separately
+    for (let idx = 0; idx < maskDims[0]; idx++) {
+      if (scores[idx] > threshold) {
+        const maskArray = new Uint8Array(maskHeight * maskWidth);
+        const startIdx = idx * maskHeight * maskWidth;
+
+        // Extract single mask
+        for (let i = 0; i < maskHeight * maskWidth; i++) {
+          maskArray[i] = maskData[startIdx + i] > 0.5 ? 1 : 0;
+        }
+
+        // Convert to 2D binary mask
+        const binaryMask2D: number[][] = [];
+        for (let i = 0; i < maskHeight; i++) {
+          const row: number[] = [];
+          for (let j = 0; j < maskWidth; j++) {
+            const index = i * maskWidth + j;
+            row.push(maskArray[index]);
+          }
+          binaryMask2D.push(row);
+        }
+
+        // //save binaryMask2D as png
+        // const visualMaskArray = new Uint8Array(maskArray.length);
+        // for (let i = 0; i < maskArray.length; i++) {
+        //   visualMaskArray[i] = maskArray[i] * 255;
+        // }
+        // const binaryMaskImage = new RawImage(
+        //   visualMaskArray,
+        //   maskHeight,
+        //   maskWidth,
+        //   1
+        // );
+        // binaryMaskImage.save(`mask_wetland_${idx}.png`);
+
+        // Convert mask to polygon
+        const polygon = getPolygonFromMask(binaryMask2D, geoRawImage);
+        if (polygon) {
+          features.push({
+            type: "Feature",
+            geometry: {
+              type: "Polygon",
+              coordinates: [polygon],
+            },
+            properties: {
+              score: scores[idx],
+              label: labels ? labels.data[idx] : undefined,
+            },
+          });
+        }
+      }
+    }
+
+    return {
+      type: "FeatureCollection",
+      features,
+    };
   }
 }

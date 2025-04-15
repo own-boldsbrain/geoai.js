@@ -9,7 +9,7 @@ import {
 import { GeoRawImage } from "../src/types/images/GeoRawImage";
 import { WetLandSegmentation } from "../src/models/geoai_models";
 
-describe.skip("test model geobase/wetland-detection", () => {
+describe("test model geobase/wetland-detection", () => {
   it("should initialize a wetland detection pipeline", async () => {
     const result = await geobaseAi.pipeline(
       "wetland-segmentation",
@@ -41,7 +41,9 @@ describe.skip("test model geobase/wetland-detection", () => {
       polygonWetLand
     );
 
-    const geoJsonString = JSON.stringify(results.detections);
+    const geoJsonString = JSON.stringify(results.detections, (_, value) =>
+      typeof value === "bigint" ? value.toString() : value
+    );
     const encodedGeoJson = encodeURIComponent(geoJsonString);
     const geojsonIoUrl = `https://geojson.io/#data=data:application/json,${encodedGeoJson}`;
 

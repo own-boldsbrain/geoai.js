@@ -49,7 +49,8 @@ async function callPipeline(task, instance_id, input) {
     case "solar-panel-detection":
     case "ship-detection":
     case "car-detection":
-    case "building-detection": {
+    case "building-detection":
+    case "wetland-segmentation": {
       const output = await instance.inference(input.polygon);
       const output_geojson = output.detections;
       console.log("output", output);
@@ -95,12 +96,15 @@ self.onmessage = async function (event) {
     }
 
     self.postMessage(
-      JSON.stringify({
-        id,
-        type,
-        payload: responsePayload,
-        success: true,
-      })
+      JSON.stringify(
+        {
+          id,
+          type,
+          payload: responsePayload,
+          success: true,
+        },
+        (_, value) => (typeof value === "bigint" ? value.toString() : value)
+      )
     );
   } catch (error) {
     // Handle any errors and send them back to the main thread

@@ -42,7 +42,7 @@ const map = new maplibregl.Map({
       },
     ],
   },
-  center: [-117.59169738016323, 47.6528427477742], // starting position
+  center: [-99.09174002069761, 46.59496082832683], // starting position
   zoom: 18, // starting zoom
 });
 
@@ -54,7 +54,8 @@ const map = new maplibregl.Map({
 // const task = "solar-panel-detection";
 // const task = "ship-detection";
 // const task = "car-detection";
-const task = "building-detection";
+// const task = "building-detection";
+const task = "wetland-segmentation";
 
 let polygon = {
   type: "Feature",
@@ -105,11 +106,11 @@ map.on("load", async () => {
     geometry: {
       coordinates: [
         [
-          [-117.59296583303752, 47.65404422995658],
-          [-117.59296583303752, 47.6522039738382],
-          [-117.59050486430851, 47.6522039738382],
-          [-117.59050486430851, 47.65404422995658],
-          [-117.59296583303752, 47.65404422995658],
+          [-99.10507239146537, 46.5974915809696],
+          [-99.10507239146537, 46.58180703418273],
+          [-99.08245294726746, 46.58180703418273],
+          [-99.08245294726746, 46.5974915809696],
+          [-99.10507239146537, 46.5974915809696],
         ],
       ],
       type: "Polygon",
@@ -204,6 +205,7 @@ map.on("load", async () => {
     case "ship-detection":
     case "car-detection":
     case "building-detection":
+    case "wetland-segmentation":
       await solarPanelDetection();
       break;
     default:
