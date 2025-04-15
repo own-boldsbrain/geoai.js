@@ -10,7 +10,7 @@ import { GeoRawImage } from "../src/types/images/GeoRawImage";
 import { SolarPanelDetection } from "../src/models/geoai_models";
 
 describe("test model solar pannel detection", () => {
-  it.skip("should initialize a solar panel detection pipeline", async () => {
+  it("should initialize a solar panel detection pipeline", async () => {
     const result = await geobaseAi.pipeline(
       "solar-panel-detection",
       mapboxParams
@@ -19,7 +19,7 @@ describe("test model solar pannel detection", () => {
     expect(result.instance).toBeInstanceOf(SolarPanelDetection);
   });
 
-  it.skip("should reuse the same instance for the same model", async () => {
+  it("should reuse the same instance for the same model", async () => {
     const result1 = await geobaseAi.pipeline(
       "solar-panel-detection",
       mapboxParams

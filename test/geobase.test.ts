@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Geobase } from "../src/data_providers/geobase";
 import { GeoRawImage } from "../src/types/images/GeoRawImage";
+import { geobaseParamsWetLand, polygonWetLand } from "./constants";
 
 describe("Geobase", () => {
   const geobase = new Geobase({
@@ -37,7 +38,6 @@ describe("Geobase", () => {
     const image = await geobase.getImage(testPolygon);
     expect(image.width).toBeGreaterThan(0);
     expect(image.height).toBeGreaterThan(0);
-    expect(image.channels).toBe(3); // RGB image
   });
 
   it("should return image with bounds matching input polygon", async () => {
@@ -67,12 +67,87 @@ describe("Geobase", () => {
 
     // Create a bound function to maintain 'this' context
     const getTileUrl = testGeobase.getTileUrlFromTileCoords.bind(testGeobase);
-    console.log({ getTileUrl });
     const url = getTileUrl([123, 456, 18], testGeobase);
 
     expect(url).toBe(
       "https://wmrosdnjsecywfkvxtrw.geobase.app/titiler/v1/cog/tiles/WebMercatorQuad/18/123/456" +
         "?url=test-imagery&apikey=test-key"
     );
+  });
+  it("should generate correct tile URL with bands parameter", async () => {
+    const testGeobase = new Geobase({
+      projectRef: "wmrosdnjsecywfkvxtrw",
+      apikey: "test-key",
+      cogImagery: "test-imagery",
+    });
+
+    const getTileUrl = testGeobase.getTileUrlFromTileCoords.bind(testGeobase);
+    const url = getTileUrl([123, 456, 18], testGeobase, [1, 2, 3]);
+
+    expect(url).toBe(
+      "https://wmrosdnjsecywfkvxtrw.geobase.app/titiler/v1/cog/tiles/WebMercatorQuad/18/123/456" +
+        "?url=test-imagery&apikey=test-key&bidx=1&bidx=2&bidx=3"
+    );
+  });
+
+  it("should generate correct tile URL with expression parameter", async () => {
+    const testGeobase = new Geobase({
+      projectRef: "wmrosdnjsecywfkvxtrw",
+      apikey: "test-key",
+      cogImagery: "test-imagery",
+    });
+
+    const getTileUrl = testGeobase.getTileUrlFromTileCoords.bind(testGeobase);
+    const expression = "(b3-b2)/(b3+b2)";
+    const url = getTileUrl([123, 456, 18], testGeobase, undefined, expression);
+
+    expect(url).toBe(
+      "https://wmrosdnjsecywfkvxtrw.geobase.app/titiler/v1/cog/tiles/WebMercatorQuad/18/123/456" +
+        `?url=test-imagery&apikey=test-key&expression=${encodeURIComponent(expression)}`
+    );
+  });
+
+  it("should generate correct tile URL with both bands and expression", async () => {
+    const testGeobase = new Geobase({
+      projectRef: "wmrosdnjsecywfkvxtrw",
+      apikey: "test-key",
+      cogImagery: "test-imagery",
+    });
+
+    const getTileUrl = testGeobase.getTileUrlFromTileCoords.bind(testGeobase);
+    const expression = "(b3-b2)/(b3+b2)";
+    const url = getTileUrl([123, 456, 18], testGeobase, [3, 2], expression);
+
+    expect(url).toBe(
+      "https://wmrosdnjsecywfkvxtrw.geobase.app/titiler/v1/cog/tiles/WebMercatorQuad/18/123/456" +
+        `?url=test-imagery&apikey=test-key&bidx=3&bidx=2&expression=${encodeURIComponent(expression)}`
+    );
+  });
+
+  it("should get image with specific bands", async () => {
+    const geobase = new Geobase({
+      projectRef: geobaseParamsWetLand.projectRef,
+      apikey: geobaseParamsWetLand.apikey,
+      cogImagery: geobaseParamsWetLand.cogImagery,
+    });
+    const image = await geobase.getImage(polygonWetLand, [1, 2, 3]);
+    image.save("bands_image.png");
+    expect(image).toBeInstanceOf(GeoRawImage);
+    expect(image.channels).toBe(3);
+  });
+
+  it("should get image with expression", async () => {
+    const geobase = new Geobase({
+      projectRef: geobaseParamsWetLand.projectRef,
+      apikey: geobaseParamsWetLand.apikey,
+      cogImagery: geobaseParamsWetLand.cogImagery,
+    });
+    const image = await geobase.getImage(
+      polygonWetLand,
+      undefined,
+      "(b3-b2)/(b3+b2)"
+    );
+    expect(image).toBeInstanceOf(GeoRawImage);
+    expect(image.channels).toBe(1);
   });
 });

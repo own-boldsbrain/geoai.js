@@ -30,10 +30,14 @@ export const calculateTilesForBbox = (
   bbox: number[],
   mercatorTileURLGetter: (
     tileCoords: [number, number, number],
-    instance: any
+    instance: any,
+    bands?: number[],
+    expression?: string
   ) => string,
   zoom: number,
-  instance?: any
+  instance?: any,
+  bands?: number[],
+  expression?: string
 ): any => {
   const [minLng, minLat, maxLng, maxLat] = bbox;
 
@@ -46,7 +50,12 @@ export const calculateTilesForBbox = (
     for (let x = topLeft.x; x <= bottomRight.x; x++) {
       row.push({
         tile: [x, y, zoom],
-        tileUrl: mercatorTileURLGetter([x, y, zoom], instance),
+        tileUrl: mercatorTileURLGetter(
+          [x, y, zoom],
+          instance,
+          bands,
+          expression
+        ),
         tileGeoJson: turfBboxPolygon(tileToBBox([x, y, zoom])),
       });
     }
@@ -93,18 +102,11 @@ const rawImageToMat = async (rawImage: RawImage): Promise<any> => {
   const { width, height } = rawImage;
   let data = rawImage.data;
 
-  if (rawImage.channels > 3) {
-    const newData = new Uint8Array(width * height * 3);
-    for (let i = 0, j = 0; i < data.length; i += 4, j += 3) {
-      newData[j] = data[i]; // R
-      newData[j + 1] = data[i + 1]; // G
-      newData[j + 2] = data[i + 2]; // B
-    }
-    data = newData;
-  }
-
   // Convert Uint8Array to OpenCV.js Mat
-  const mat = new cv.Mat(height, width, cv.CV_8UC3); // Assuming RGB
+  const channels = rawImage.channels;
+  const matType =
+    channels === 1 ? cv.CV_8UC1 : channels === 3 ? cv.CV_8UC3 : cv.CV_8UC4;
+  const mat = new cv.Mat(height, width, matType);
   mat.data.set(new Uint8Array(data)); // Directly set the data
 
   return mat;
@@ -212,6 +214,9 @@ export const getImageFromTiles = async (
   //       tilesGrid[tilesGrid.length - 1][0].tileGeoJson.bbox[0] // Bottom-left
   //     ),
   //   };
+
+  //save the stitched image to a file
+  // await stitchedImage.save("stitched_image_wetland.png");
 
   return GeoRawImage.fromRawImage(stitchedImage, bounds, "EPSG:4326");
 };

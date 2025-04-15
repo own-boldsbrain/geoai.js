@@ -36,13 +36,28 @@ export class Geobase {
 
   private getTileUrlFromTileCoords(
     tileCoords: [number, number, number],
-    instance: Geobase
+    instance: Geobase,
+    bands?: number[],
+    expression?: string
   ): string {
     const [x, y, z] = tileCoords;
-    return `https://${instance.projectRef}.geobase.app/titiler/v1/cog/tiles/WebMercatorQuad/${z}/${x}/${y}?url=${instance.cogImagery}&apikey=${instance.apikey}`;
+    let baseUrl = `https://${instance.projectRef}.geobase.app/titiler/v1/cog/tiles/WebMercatorQuad/${z}/${x}/${y}?url=${instance.cogImagery}&apikey=${instance.apikey}`;
+    if (bands && Array.isArray(bands) && bands.length > 0) {
+      baseUrl += bands.map(b => `&bidx=${b}`).join("");
+    }
+    if (expression && typeof expression === "string") {
+      expression = encodeURIComponent(expression);
+      baseUrl += `&expression=${expression}`;
+    }
+    return baseUrl;
   }
 
-  async getImage(polygon: any, zoomLevel?: number): Promise<GeoRawImage> {
+  async getImage(
+    polygon: any,
+    bands?: number[],
+    expression?: string,
+    zoomLevel?: number
+  ): Promise<GeoRawImage> {
     const bbox = turfBbox(polygon);
 
     let zoom = 22;
@@ -52,7 +67,9 @@ export class Geobase {
         bbox,
         this.getTileUrlFromTileCoords,
         zoomLevel,
-        this
+        this,
+        bands,
+        expression
       );
       return await getImageFromTiles(tilesGrid);
     }
@@ -61,7 +78,9 @@ export class Geobase {
       bbox,
       this.getTileUrlFromTileCoords,
       zoom,
-      this
+      this,
+      bands,
+      expression
     );
 
     let xTileNum = tilesGrid[0].length;
@@ -79,7 +98,9 @@ export class Geobase {
         bbox,
         this.getTileUrlFromTileCoords,
         zoom,
-        this
+        this,
+        bands,
+        expression
       );
       xTileNum = tilesGrid[0].length;
       yTileNum = tilesGrid.length;
