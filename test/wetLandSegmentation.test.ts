@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeAll } from "vitest";
 
 import { geobaseAi } from "../src/geobase-ai";
 import {
@@ -8,54 +8,83 @@ import {
 } from "./constants";
 import { GeoRawImage } from "../src/types/images/GeoRawImage";
 import { WetLandSegmentation } from "../src/models/geoai_models";
+import { geoJsonToGist } from "./utils/saveToGist";
 
-describe("test model geobase/wetland-detection", () => {
+describe("test model geobase/wetland-segmentation", () => {
+  let wetlandInstance: WetLandSegmentation;
+
+  beforeAll(async () => {
+    // Initialize instance for reuse across tests
+    wetlandInstance = await geobaseAi.pipeline(
+      [{ task: "wetland-segmentation" }],
+      geobaseParamsWetLand
+    );
+  });
+
   it("should initialize a wetland detection pipeline", async () => {
-    const result = await geobaseAi.pipeline(
-      "wetland-segmentation",
+    const instance = await geobaseAi.pipeline(
+      [{ task: "wetland-segmentation" }],
       mapboxParams
     );
 
-    expect(result.instance).toBeInstanceOf(WetLandSegmentation);
+    expect(instance).toBeInstanceOf(WetLandSegmentation);
+    expect(instance).toBeDefined();
+    expect(instance).not.toBeNull();
   });
 
   it("should reuse the same instance for the same model", async () => {
-    const result1 = await geobaseAi.pipeline(
-      "wetland-segmentation",
+    const instance1 = await geobaseAi.pipeline(
+      [{ task: "wetland-segmentation" }],
       mapboxParams
     );
-    const result2 = await geobaseAi.pipeline(
-      "wetland-segmentation",
+    const instance2 = await geobaseAi.pipeline(
+      [{ task: "wetland-segmentation" }],
       mapboxParams
     );
 
-    expect(result1.instance).toBe(result2.instance);
+    expect(instance1).toBe(instance2);
   });
-  it("should process a polygon for wetland detection for polygon for source geobase", async () => {
-    const { instance } = await geobaseAi.pipeline(
-      "wetland-segmentation",
+
+  it("should create new instances for different configurations", async () => {
+    const instance1 = await geobaseAi.pipeline(
+      [{ task: "wetland-segmentation" }],
+      mapboxParams
+    );
+    const instance2 = await geobaseAi.pipeline(
+      [{ task: "wetland-segmentation" }],
       geobaseParamsWetLand
     );
+    expect(instance1).not.toBe(instance2);
+  });
 
-    const results: any = await (instance as WetLandSegmentation).inference(
-      polygonWetLand
-    );
+  it("should process a polygon for wetland detection", async () => {
+    const results = await wetlandInstance.inference({
+      inputs: {
+        polygon: polygonWetLand,
+      },
+    });
 
+    // Validate GeoJSON structure
+    expect(results.detections).toBeDefined();
+    expect(results.detections.type).toBe("FeatureCollection");
+    expect(Array.isArray(results.detections.features)).toBe(true);
+
+    // Validate image data
+    expect(results.geoRawImage).toBeInstanceOf(GeoRawImage);
+    expect(results.geoRawImage.data).toBeDefined();
+    expect(results.geoRawImage.width).toBeGreaterThan(0);
+    expect(results.geoRawImage.height).toBeGreaterThan(0);
+
+    // Log visualization URL
     const geoJsonString = JSON.stringify(results.detections, (_, value) =>
       typeof value === "bigint" ? value.toString() : value
     );
-    const encodedGeoJson = encodeURIComponent(geoJsonString);
-    const geojsonIoUrl = `https://geojson.io/#data=data:application/json,${encodedGeoJson}`;
-
-    console.log(`View GeoJSON here: ${geojsonIoUrl}`);
-
-    // Check basic properties
-    expect(results).toHaveProperty("detections");
-    expect(results).toHaveProperty("geoRawImage");
-
-    // Check result types
-    expect(results.detections.type).toBe("FeatureCollection");
-    expect(Array.isArray(results.detections.features)).toBe(true);
-    expect(results.geoRawImage).toBeInstanceOf(GeoRawImage);
+    // Save output to gist
+    await geoJsonToGist({
+      content: geoJsonString,
+      fileName: "wetLandSegmentation.geojson",
+      description:
+        "result wetLandSegmentation - should process a polygon for wetland detection",
+    });
   });
 });

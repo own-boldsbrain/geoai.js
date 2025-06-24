@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeAll } from "vitest";
 
 import { geobaseAi } from "../src/geobase-ai";
 import {
@@ -8,52 +8,79 @@ import {
 } from "./constants";
 import { GeoRawImage } from "../src/types/images/GeoRawImage";
 import { SolarPanelDetection } from "../src/models/geoai_models";
+import { geoJsonToGist } from "./utils/saveToGist";
 
 describe("test model solar pannel detection", () => {
+  let solarPanelInstance: SolarPanelDetection;
+
+  beforeAll(async () => {
+    // Initialize instance for reuse across tests
+    solarPanelInstance = await geobaseAi.pipeline(
+      [{ task: "solar-panel-detection" }],
+      mapboxParams
+    );
+  });
+
   it("should initialize a solar panel detection pipeline", async () => {
-    const result = await geobaseAi.pipeline(
-      "solar-panel-detection",
+    const instance = await geobaseAi.pipeline(
+      [{ task: "solar-panel-detection" }],
       mapboxParams
     );
 
-    expect(result.instance).toBeInstanceOf(SolarPanelDetection);
+    expect(instance).toBeInstanceOf(SolarPanelDetection);
+    expect(instance).toBeDefined();
+    expect(instance).not.toBeNull();
   });
 
   it("should reuse the same instance for the same model", async () => {
-    const result1 = await geobaseAi.pipeline(
-      "solar-panel-detection",
+    const instance1 = await geobaseAi.pipeline(
+      [{ task: "solar-panel-detection" }],
       mapboxParams
     );
-    const result2 = await geobaseAi.pipeline(
-      "solar-panel-detection",
+    const instance2 = await geobaseAi.pipeline(
+      [{ task: "solar-panel-detection" }],
       mapboxParams
     );
 
-    expect(result1.instance).toBe(result2.instance);
+    expect(instance1).toBe(instance2);
   });
-  it("should process a polygon for solar pannel detection for polygon for source geobase", async () => {
-    const { instance } = await geobaseAi.pipeline(
-      "solar-panel-detection",
+
+  it("should create new instances for different configurations", async () => {
+    const instance1 = await geobaseAi.pipeline(
+      [{ task: "solar-panel-detection" }],
+      mapboxParams
+    );
+    const instance2 = await geobaseAi.pipeline(
+      [{ task: "solar-panel-detection" }],
       geobaseParamsSolarPanel
     );
+    expect(instance1).not.toBe(instance2);
+  });
 
-    const results: any = await (instance as SolarPanelDetection).inference(
-      polygonSolarPannel
-    );
+  it("should process a polygon for solar panel detection", async () => {
+    const results = await solarPanelInstance.inference({
+      inputs: {
+        polygon: polygonSolarPannel,
+      },
+    });
 
-    const geoJsonString = JSON.stringify(results.detections);
-    const encodedGeoJson = encodeURIComponent(geoJsonString);
-    const geojsonIoUrl = `https://geojson.io/#data=data:application/json,${encodedGeoJson}`;
-
-    console.log(`View GeoJSON here: ${geojsonIoUrl}`);
-
-    // Check basic properties
-    expect(results).toHaveProperty("detections");
-    expect(results).toHaveProperty("geoRawImage");
-
-    // Check result types
+    // Validate GeoJSON structure
+    expect(results.detections).toBeDefined();
     expect(results.detections.type).toBe("FeatureCollection");
     expect(Array.isArray(results.detections.features)).toBe(true);
+
+    // Validate image data
     expect(results.geoRawImage).toBeInstanceOf(GeoRawImage);
+    expect(results.geoRawImage.data).toBeDefined();
+    expect(results.geoRawImage.width).toBeGreaterThan(0);
+    expect(results.geoRawImage.height).toBeGreaterThan(0);
+
+    // Save output to gist
+    await geoJsonToGist({
+      content: results.detections,
+      fileName: "solarPanelDetection.geojson",
+      description:
+        "result solarPanelDetection - should process a polygon for solar panel detection",
+    });
   });
 });

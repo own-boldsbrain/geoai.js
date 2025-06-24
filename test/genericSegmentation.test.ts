@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeAll } from "vitest";
+import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import { geobaseAi } from "../src/geobase-ai";
 import {
   GenericSegmentation,
@@ -15,32 +15,97 @@ import {
   quadrants,
   quadrants_points,
 } from "./constants";
-import { maskToGeoJSON } from "../src/utils/utils";
+import { geoJsonToGist } from "./utils/saveToGist";
 
 describe("geobaseAi.genericSegmentation", () => {
+  let mapboxInstance: GenericSegmentation | undefined;
+  let geobaseInstance: GenericSegmentation | undefined;
+  let geobaseBuildingInstance: GenericSegmentation | undefined;
+
+  beforeAll(async () => {
+    try {
+      // Initialize instances for reuse across tests
+      mapboxInstance = await geobaseAi.pipeline(
+        [{ task: "mask-generation" }],
+        mapboxParams
+      );
+
+      geobaseInstance = await geobaseAi.pipeline(
+        [{ task: "mask-generation" }],
+        geobaseParams
+      );
+
+      geobaseBuildingInstance = await geobaseAi.pipeline(
+        [
+          {
+            task: "mask-generation",
+            modelId: "Xenova/slimsam-77-uniform",
+            modelParams: { revision: "boxes" },
+          },
+        ],
+        geobaseParamsBuilding
+      );
+    } catch (error) {
+      console.error("Error initializing test instances:", error);
+      throw error;
+    }
+  });
+
+  afterAll(async () => {
+    // Cleanup any resources if needed
+    if (mapboxInstance) {
+      mapboxInstance = undefined;
+    }
+    if (geobaseInstance) {
+      geobaseInstance = undefined;
+    }
+    if (geobaseBuildingInstance) {
+      geobaseBuildingInstance = undefined;
+    }
+  });
+
   it("should initialize a segmentation pipeline", async () => {
-    const result = await geobaseAi.pipeline("mask-generation", mapboxParams);
-    expect(result.instance).toBeInstanceOf(GenericSegmentation);
+    const instance = await geobaseAi.pipeline(
+      [{ task: "mask-generation" }],
+      mapboxParams
+    );
+    expect(instance).toBeInstanceOf(GenericSegmentation);
+    expect(instance).toBeDefined();
+    expect(instance).not.toBeNull();
   });
 
   it("should reuse the same instance for the same model", async () => {
-    const result1 = await geobaseAi.pipeline("mask-generation", mapboxParams);
-    const result2 = await geobaseAi.pipeline("mask-generation", mapboxParams);
-    expect(result1.instance).toBe(result2.instance);
+    const instance1 = await geobaseAi.pipeline(
+      [{ task: "mask-generation" }],
+      mapboxParams
+    );
+    const instance2 = await geobaseAi.pipeline(
+      [{ task: "mask-generation" }],
+      mapboxParams
+    );
+    expect(instance1).toBe(instance2);
   });
 
   it("should create a new instance for different configurations of the model", async () => {
-    const result1 = await geobaseAi.pipeline("mask-generation", mapboxParams);
-    const result2 = await geobaseAi.pipeline(
-      "mask-generation",
-      mapboxParams,
-      "Xenova/slimsam-77-uniform",
-      {
-        revision: "boxes",
-        cache_dir: "./cache",
-      }
+    const instance1 = await geobaseAi.pipeline(
+      [{ task: "mask-generation" }],
+      mapboxParams
     );
-    expect(result1.instance.model).not.toBe(result2.instance.model);
+    const instance2 = await geobaseAi.pipeline(
+      [
+        {
+          task: "mask-generation",
+          modelId: "Xenova/slimsam-77-uniform",
+          modelParams: {
+            revision: "boxes",
+            cache_dir: "./cache",
+          },
+        },
+      ],
+      mapboxParams
+    );
+    expect(instance1.model).not.toBe(instance2.model);
+    expect(instance1).not.toBe(instance2);
   });
 
   it("should throw exception for invalid model parameters", async () => {
@@ -55,10 +120,14 @@ describe("geobaseAi.genericSegmentation", () => {
     for (const options of invalidOptions) {
       try {
         await geobaseAi.pipeline(
-          "mask-generation",
-          mapboxParams,
-          "Xenova/slimsam-77-uniform",
-          options
+          [
+            {
+              task: "mask-generation",
+              modelId: "Xenova/slimsam-77-uniform",
+              modelParams: options,
+            },
+          ],
+          mapboxParams
         );
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
@@ -70,138 +139,190 @@ describe("geobaseAi.genericSegmentation", () => {
   });
 
   it("should process a polygon for segmentation and generate valid GeoJSON", async () => {
-    const { instance } = await geobaseAi.pipeline(
-      "mask-generation",
-      mapboxParams
-    );
-
+    if (!mapboxInstance) {
+      throw new Error("Mapbox instance not initialized");
+    }
     for (const [quadrant, polygon] of Object.entries(quadrants)) {
-      const input_points = quadrants_points[quadrant];
-      const pointInput: SegmentationInput = {
-        type: "points",
-        coordinates: input_points,
-      };
-      const result = await (instance as GenericSegmentation).segment(
-        polygon,
-        pointInput
-      );
+      try {
+        const input_points = quadrants_points[quadrant];
+        const pointInput: SegmentationInput = {
+          type: "points",
+          coordinates: input_points,
+        };
+        const result = await mapboxInstance.inference({
+          inputs: {
+            polygon,
+            input: pointInput,
+          },
+        });
 
-      // Check basic properties
-      ["geoRawImage", "masks"].forEach(prop => {
-        expect(result).toHaveProperty(prop);
-      });
+        // Check basic properties
+        expect(result).toHaveProperty("geoRawImage");
+        expect(result).toHaveProperty("masks");
+        expect(result.geoRawImage).toBeDefined();
+        expect(result.geoRawImage).not.toBeNull();
 
-      const { masks } = result;
-      expect(masks).toHaveProperty("type", "FeatureCollection");
-      expect(masks).toHaveProperty("features");
-      expect(masks.features).toBeInstanceOf(Array);
+        const { masks } = result;
+        expect(masks).toHaveProperty("type", "FeatureCollection");
+        expect(masks).toHaveProperty("features");
+        expect(masks.features).toBeInstanceOf(Array);
+        expect(masks.features.length).toBeGreaterThan(0);
 
-      const geoJsonString = JSON.stringify(masks);
-      const encodedGeoJson = encodeURIComponent(geoJsonString);
-      const geojsonIoUrl = `https://geojson.io/#data=data:application/json,${encodedGeoJson}`;
-
-      console.log(`View GeoJSON here:`);
-      console.log(geojsonIoUrl);
+        // Save output to gist
+        await geoJsonToGist({
+          content: masks,
+          fileName: "genericSegmentationMapbox.geojson",
+          description:
+            "result genericSegmentation - should process a polygon for segmentation and generate valid GeoJSON",
+        });
+      } catch (error) {
+        console.error(`Error processing quadrant ${quadrant}:`, error);
+        throw error;
+      }
     }
   });
-  it("should process a polygon for segmentation and generate valid GeoJSON for source geobase with point", async () => {
-    const { instance } = await geobaseAi.pipeline(
-      "mask-generation",
-      geobaseParams
-    );
 
-    const input_points = input_point;
+  it("should process a polygon for segmentation and generate valid GeoJSON for source geobase with point", async () => {
+    if (!geobaseInstance) {
+      throw new Error("Geobase instance not initialized");
+    }
     const pointInput: SegmentationInput = {
       type: "points",
-      coordinates: input_points,
+      coordinates: input_point,
     };
-    const result = await (instance as GenericSegmentation).segment(
-      polygon,
-      pointInput
-    );
+    const result = await geobaseInstance.inference({
+      inputs: {
+        polygon,
+        input: pointInput,
+      },
+    });
 
     // Check basic properties
-    ["geoRawImage", "masks"].forEach(prop => {
-      expect(result).toHaveProperty(prop);
-    });
+    expect(result).toHaveProperty("geoRawImage");
+    expect(result).toHaveProperty("masks");
+    expect(result.geoRawImage).toBeDefined();
+    expect(result.geoRawImage).not.toBeNull();
 
     const { masks } = result;
     expect(masks).toHaveProperty("type", "FeatureCollection");
     expect(masks).toHaveProperty("features");
     expect(masks.features).toBeInstanceOf(Array);
+    expect(masks.features.length).toBeGreaterThan(0);
 
-    const geoJsonString = JSON.stringify(masks);
-    const encodedGeoJson = encodeURIComponent(geoJsonString);
-    const geojsonIoUrl = `https://geojson.io/#data=data:application/json,${encodedGeoJson}`;
-
-    console.log(`View GeoJSON here:`);
-    console.log(geojsonIoUrl);
+    // Save output to gist
+    await geoJsonToGist({
+      content: masks,
+      fileName: "genericSegmentationGeobase.geojson",
+      description:
+        "result genericSegmentation - should process a polygon for segmentation and generate valid GeoJSON for source geobase with point",
+    });
   });
+
   it("should process a polygon for segmentation and generate valid GeoJSON for source geobase with boxes", async () => {
-    const { instance } = await geobaseAi.pipeline(
-      "mask-generation",
-      geobaseParamsBuilding,
-      "Xenova/slimsam-77-uniform",
-      {
-        revision: "boxes",
-      }
-    );
-
-    const input_box = input_bbox;
-    const boxInput: SegmentationInput = {
-      type: "boxes",
-      coordinates: input_box,
-    };
-    const result = await (instance as GenericSegmentation).segment(
-      polygonBuilding,
-      boxInput
-    );
-
-    // Check basic properties
-    ["geoRawImage", "masks"].forEach(prop => {
-      expect(result).toHaveProperty(prop);
-    });
-
-    const { masks } = result;
-    expect(masks).toHaveProperty("type", "FeatureCollection");
-    expect(masks).toHaveProperty("features");
-    expect(masks.features).toBeInstanceOf(Array);
-
-    const geoJsonString = JSON.stringify(masks);
-    const encodedGeoJson = encodeURIComponent(geoJsonString);
-    const geojsonIoUrl = `https://geojson.io/#data=data:application/json,${encodedGeoJson}`;
-
-    console.log(`View GeoJSON here:`);
-    console.log(geojsonIoUrl);
-  });
-});
-
-// describe thresholds parameters
-describe("boxes pipeline with thresholds parameter", () => {
-  let boxesInstance: GenericSegmentation;
-
-  beforeAll(async () => {
-    const { instance } = await geobaseAi.pipeline(
-      "mask-generation",
-      geobaseParamsBuilding,
-      "Xenova/slimsam-77-uniform",
-      {
-        revision: "boxes",
-      }
-    );
-    boxesInstance = instance as GenericSegmentation;
-  });
-
-  it("should set the maxMasks to the requested value", async () => {
+    if (!geobaseBuildingInstance) {
+      throw new Error("Geobase building instance not initialized");
+    }
     const boxInput: SegmentationInput = {
       type: "boxes",
       coordinates: input_bbox,
     };
-    // Request 2 masks
-    const result2 = await boxesInstance.segment(polygonBuilding, boxInput, 2);
-    expect(result2.masks.features.length).toEqual(2);
-    // Request 1 mask
-    const result1 = await boxesInstance.segment(polygonBuilding, boxInput, 1);
-    expect(result1.masks.features.length).toEqual(1);
+    const result = await geobaseBuildingInstance.inference({
+      inputs: {
+        polygon: polygonBuilding,
+        input: boxInput,
+      },
+    });
+
+    // Check basic properties
+    expect(result).toHaveProperty("geoRawImage");
+    expect(result).toHaveProperty("masks");
+    expect(result.geoRawImage).toBeDefined();
+    expect(result.geoRawImage).not.toBeNull();
+
+    const { masks } = result;
+    expect(masks).toHaveProperty("type", "FeatureCollection");
+    expect(masks).toHaveProperty("features");
+    expect(masks.features).toBeInstanceOf(Array);
+    expect(masks.features.length).toBeGreaterThan(0);
+
+    // Save output to gist
+    await geoJsonToGist({
+      content: masks,
+      fileName: "genericSegmentationGeobaseBoxes.geojson",
+      description:
+        "result genericSegmentation - should process a polygon for segmentation and generate valid GeoJSON for source geobase with boxes",
+    });
+  });
+});
+
+describe("boxes pipeline with thresholds parameter", () => {
+  let boxesInstance: GenericSegmentation | undefined;
+
+  beforeAll(async () => {
+    try {
+      boxesInstance = await geobaseAi.pipeline(
+        [
+          {
+            task: "mask-generation",
+            modelId: "Xenova/slimsam-77-uniform",
+            modelParams: { revision: "boxes" },
+          },
+        ],
+        geobaseParamsBuilding
+      );
+    } catch (error) {
+      console.error("Error initializing boxes instance:", error);
+      throw error;
+    }
+  }, 10000);
+
+  afterAll(async () => {
+    // Cleanup
+    if (boxesInstance) {
+      boxesInstance = undefined;
+    }
+  });
+
+  it("should set the maxMasks to the requested value", async () => {
+    if (!boxesInstance) {
+      throw new Error("Boxes instance not initialized");
+    }
+    try {
+      const boxInput: SegmentationInput = {
+        type: "boxes",
+        coordinates: input_bbox,
+      };
+
+      // Test with 2 masks
+      const result2 = await boxesInstance.inference({
+        inputs: {
+          polygon: polygonBuilding,
+          input: boxInput,
+        },
+        postProcessingParams: {
+          maxMasks: 2,
+        },
+      });
+      expect(result2.masks.features.length).toEqual(2);
+      expect(result2.masks.features).toBeInstanceOf(Array);
+      expect(result2.masks.type).toBe("FeatureCollection");
+
+      // Test with 1 mask
+      const result1 = await boxesInstance.inference({
+        inputs: {
+          polygon: polygonBuilding,
+          input: boxInput,
+        },
+        postProcessingParams: {
+          maxMasks: 1,
+        },
+      });
+      expect(result1.masks.features.length).toEqual(1);
+      expect(result1.masks.features).toBeInstanceOf(Array);
+      expect(result1.masks.type).toBe("FeatureCollection");
+    } catch (error) {
+      console.error("Error in maxMasks test:", error);
+      throw error;
+    }
   });
 });

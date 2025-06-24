@@ -1,4 +1,4 @@
-import { Mapbox } from "@/data_providers/mapbox";
+import { BaseModel } from "@/models/base_model";
 import { RawImage } from "@huggingface/transformers";
 import { parametersChanged, refineMasks } from "@/utils/utils";
 const cv = require("@techstark/opencv-js");
@@ -6,16 +6,13 @@ const cv = require("@techstark/opencv-js");
 import { ProviderParams } from "@/geobase-ai";
 import { GeoRawImage } from "@/types/images/GeoRawImage";
 import { PretrainedOptions } from "@huggingface/transformers";
-import { Geobase } from "@/data_providers/geobase";
+import { InferenceParams, onnxModel } from "@/core/types";
+import { loadOnnxModel } from "./model_utils";
 import * as ort from "onnxruntime-web";
 
-export class LandCoverClassification {
-  private static instance: LandCoverClassification | null = null;
-  private providerParams: ProviderParams;
-  private dataProvider: Mapbox | Geobase | undefined;
-  private model_id: string; //model name or path
-  private model: ort.InferenceSession | undefined;
-  private initialized: boolean = false;
+export class LandCoverClassification extends BaseModel {
+  protected static instance: LandCoverClassification | null = null;
+  private model: onnxModel | undefined;
   private classes: string[] = [
     "bareland",
     "rangeland",
@@ -37,9 +34,12 @@ export class LandCoverClassification {
     [255, 0, 0],
   ];
 
-  private constructor(model_id: string, providerParams: ProviderParams) {
-    this.model_id = model_id;
-    this.providerParams = providerParams;
+  private constructor(
+    model_id: string,
+    providerParams: ProviderParams,
+    modelParams?: PretrainedOptions
+  ) {
+    super(model_id, providerParams, modelParams);
   }
 
   static async getInstance(
@@ -58,7 +58,8 @@ export class LandCoverClassification {
     ) {
       LandCoverClassification.instance = new LandCoverClassification(
         model_id,
-        providerParams
+        providerParams,
+        modelParams
       );
       await LandCoverClassification.instance.initialize();
     }
@@ -93,8 +94,8 @@ export class LandCoverClassification {
     );
 
     // Resize the image to 1024x1024
-    let resizedMat = new cv.Mat();
-    let newSize = new cv.Size(1024, 1024);
+    const resizedMat = new cv.Mat();
+    const newSize = new cv.Size(1024, 1024);
     cv.resize(mat, resizedMat, newSize, 0, 0, cv.INTER_LINEAR);
 
     // Convert the resized Mat back to a Uint8Array
@@ -103,13 +104,11 @@ export class LandCoverClassification {
     // Create a new RawImage object with resized data
     const resizedRawImage = new RawImage(resizedImageData, 1024, 1024, 3);
 
-    console.log("resizedRawImage", { resizedRawImage });
-
     // Clean up OpenCV Mats
     mat.delete();
     resizedMat.delete();
 
-    let tensor = resizedRawImage.toTensor("CHW");
+    const tensor = resizedRawImage.toTensor("CHW");
     const data = tensor.data as Uint8Array;
 
     // Create a Float32Array to store normalized pixel values
@@ -158,85 +157,42 @@ export class LandCoverClassification {
     return inputs;
   }
 
-  private async initialize(): Promise<void> {
-    if (this.initialized) return;
+  protected async initializeModel(): Promise<void> {
+    // Only load the model if not already loaded
+    if (this.model) return;
 
-    // Initialize data provider first
-    switch (this.providerParams.provider) {
-      case "mapbox":
-        this.dataProvider = new Mapbox(
-          this.providerParams.apiKey,
-          this.providerParams.style
-        );
-        break;
-      case "geobase":
-        this.dataProvider = new Geobase({
-          projectRef: this.providerParams.projectRef,
-          cogImagery: this.providerParams.cogImagery,
-          apikey: this.providerParams.apikey,
-        });
-        break;
-      case "sentinel":
-        throw new Error("Sentinel provider not implemented yet");
-      default:
-        throw new Error(
-          `Unknown provider: ${(this.providerParams as any).provider}`
-        );
-    }
-
-    // Verify data provider was initialized
-    if (!this.dataProvider) {
-      throw new Error("Failed to initialize data provider");
-    }
-
-    const response = await fetch(this.model_id);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch model from URL: ${response.statusText}`);
-    }
-    const arrayBuffer = await response.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-
-    // Load model using ONNX Runtime
-    this.model = await ort.InferenceSession.create(uint8Array);
-    this.initialized = true;
+    this.model = await loadOnnxModel(this.model_id);
   }
 
-  private async polygon_to_image(
-    polygon: GeoJSON.Feature
-  ): Promise<GeoRawImage> {
-    if (!this.dataProvider) {
-      throw new Error("Data provider not initialized");
-    }
-    const image = this.dataProvider.getImage(polygon);
-    return image;
-  }
+  async inference(params: InferenceParams): Promise<any> {
+    const {
+      inputs: { polygon },
+      postProcessingParams: { minArea = 20 } = {},
+      mapSourceParams,
+    } = params;
 
-  /**
-   * Performs inference on a geographic polygon using the initialized model.
-   *
-   * @param polygon - A GeoJSON Feature representing the geographic area to analyze
-   * @param minArea - Minimum area threshold for contour detection (in pixels). Default is 20.
-   * @returns Promise resolving to an object containing:
-   *   - detections: GeoJSON FeatureCollection of detected areas
-   *   - binaryMasks: Array of RawImage binary masks for each class
-   *   - outputImage: GeoRawImage containing the visualization of classifications
-   * @throws Error if model or data provider is not properly initialized
-   */
-  async inference(
-    polygon: GeoJSON.Feature,
-    minArea: number = 20
-  ): Promise<any> {
+    if (!polygon) {
+      throw new Error("Polygon input is required for segmentation");
+    }
+
+    if (!polygon.geometry || polygon.geometry.type !== "Polygon") {
+      throw new Error("Input must be a valid GeoJSON Polygon feature");
+    }
     // Ensure initialization is complete
-    if (!this.initialized) {
-      await this.initialize();
-    }
+    await this.initialize();
 
     // Double-check data provider after initialization
     if (!this.dataProvider) {
       throw new Error("Data provider not initialized");
     }
 
-    const geoRawImage = await this.polygon_to_image(polygon);
+    const geoRawImage = await this.polygonToImage(
+      polygon,
+      mapSourceParams?.zoomLevel,
+      mapSourceParams?.bands,
+      mapSourceParams?.expression,
+      true
+    );
 
     const inputs = await this.preProcessor(geoRawImage);
     let outputs;
@@ -257,7 +213,7 @@ export class LandCoverClassification {
 
     if (batch !== 1) throw new Error("Unexpected batch size");
 
-    // Initialize argmax output (512 x 512)
+    // Initialize argmax output (height x width)
     const argmaxOutput = new Uint8Array(height * width);
 
     // Compute argmax along the channel axis (8 classes)
@@ -301,7 +257,7 @@ export class LandCoverClassification {
       binaryMasks,
       geoRawImage,
       this.classes,
-      minArea
+      minArea as number
     );
     // Assign color to each pixel based on class index
     for (let i = 0; i < height * width; i++) {

@@ -2,6 +2,7 @@ import { GeoRawImage } from "@/types/images/GeoRawImage";
 import { load_image, RawImage } from "@huggingface/transformers";
 import { bboxPolygon as turfBboxPolygon } from "@turf/bbox-polygon";
 import { tileToBBox } from "global-mercator/index";
+import { GeobaseError, ErrorType } from "../errors";
 const cv = require("@techstark/opencv-js");
 
 const latLngToTileXY = (
@@ -37,12 +38,38 @@ export const calculateTilesForBbox = (
   zoom: number,
   instance?: any,
   bands?: number[],
-  expression?: string
+  expression?: string,
+  square: boolean = false // default is false
 ): any => {
   const [minLng, minLat, maxLng, maxLat] = bbox;
 
   const topLeft = latLngToTileXY(maxLat, minLng, zoom);
   const bottomRight = latLngToTileXY(minLat, maxLng, zoom);
+
+  const xTilesCount = bottomRight.x - topLeft.x + 1;
+  const yTilesCount = bottomRight.y - topLeft.y + 1;
+
+  if (square && xTilesCount !== yTilesCount) {
+    if (xTilesCount > yTilesCount) {
+      const yChange = xTilesCount - yTilesCount;
+
+      topLeft.y = topLeft.y - Math.floor(yChange / 2);
+      bottomRight.y = bottomRight.y + Math.floor(yChange / 2);
+
+      if (yChange % 2 !== 0) {
+        bottomRight.y = bottomRight.y + 1;
+      }
+    } else if (yTilesCount > xTilesCount) {
+      const xChange = yTilesCount - xTilesCount;
+
+      topLeft.x = topLeft.x - Math.floor(xChange / 2);
+      bottomRight.x = bottomRight.x + Math.floor(xChange / 2);
+
+      if (xChange % 2 !== 0) {
+        bottomRight.x = bottomRight.x + 1;
+      }
+    }
+  }
 
   const tiles = [];
   for (let y = topLeft.y; y <= bottomRight.y; y++) {
@@ -63,39 +90,6 @@ export const calculateTilesForBbox = (
   }
 
   return tiles;
-
-  //need to test below logic if it works then replace it with above code
-
-  //   const [minLng, minLat, maxLng, maxLat] = bbox;
-
-  //   const topLeft = latLngToTileXY(maxLat, minLng, zoom);
-  //   const bottomRight = latLngToTileXY(minLat, maxLng, zoom);
-
-  //   // Calculate the maximum dimension
-  //   const xTiles = bottomRight.x - topLeft.x + 1;
-  //   const yTiles = bottomRight.y - topLeft.y + 1;
-  //   const maxTiles = Math.max(xTiles, yTiles);
-
-  //   // Adjust x and y ranges to be equal
-  //   const xStart = topLeft.x;
-  //   const yStart = topLeft.y;
-  //   const xEnd = xStart + maxTiles - 1;
-  //   const yEnd = yStart + maxTiles - 1;
-
-  //   const tiles = [];
-  //   for (let y = yStart; y <= yEnd; y++) {
-  //     const row = [];
-  //     for (let x = xStart; x <= xEnd; x++) {
-  //       row.push({
-  //         tile: [x, y, zoom],
-  //         tileUrl: mercatorTileURLGetter([x, y, zoom], instance),
-  //         tileGeoJson: turfBboxPolygon(tileToBBox([x, y, zoom])),
-  //       });
-  //     }
-  //     tiles.push(row);
-  //   }
-
-  //   return tiles;
 };
 
 const rawImageToMat = async (rawImage: RawImage): Promise<any> => {
@@ -156,7 +150,7 @@ const stitchImageGrid = async (imageGrid: RawImage[][]) => {
   );
   // Cleanup memory
   rowMats.forEach(mat => mat.delete());
-  finalImage.delete();
+  // Mat instance already deleted
 
   //   await finalRawImage.save("stitched_image.png");
 
@@ -166,6 +160,14 @@ const stitchImageGrid = async (imageGrid: RawImage[][]) => {
 export const getImageFromTiles = async (
   tilesGrid: any
 ): Promise<GeoRawImage> => {
+  // Throw error if tile count exceeds maximum
+  const MAX_TILE_COUNT = 100; // Set your desired maximum here
+  if (tilesGrid.length * tilesGrid[0].length > MAX_TILE_COUNT) {
+    throw new GeobaseError(
+      ErrorType.MaximumTileCountExceeded,
+      `Requested ${tilesGrid.length * tilesGrid[0].length} tiles, which exceeds the maximum allowed (${MAX_TILE_COUNT}).`
+    );
+  }
   const tileUrlsGrid = tilesGrid.map((row: any) =>
     row.map((tile: any) => tile.tileUrl)
   );

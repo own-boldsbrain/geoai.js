@@ -1,6 +1,4 @@
-import { bbox as turfBbox } from "@turf/bbox";
-import { GeoRawImage } from "../types/images/GeoRawImage";
-import { calculateTilesForBbox, getImageFromTiles } from "./common";
+import { MapSource } from "./mapsource";
 
 const addChain = (receiver: any) =>
   Object.defineProperty(receiver.prototype, "chain", {
@@ -23,18 +21,19 @@ interface GeobaseConfig {
   apikey: string;
 }
 
-export class Geobase {
+export class Geobase extends MapSource {
   projectRef: string;
   cogImagery: string;
   apikey: string;
 
   constructor(config: GeobaseConfig) {
+    super();
     this.projectRef = config.projectRef;
     this.cogImagery = config.cogImagery;
     this.apikey = config.apikey;
   }
 
-  private getTileUrlFromTileCoords(
+  protected getTileUrlFromTileCoords(
     tileCoords: [number, number, number],
     instance: Geobase,
     bands?: number[],
@@ -50,70 +49,5 @@ export class Geobase {
       baseUrl += `&expression=${expression}`;
     }
     return baseUrl;
-  }
-
-  async getImage(
-    polygon: any,
-    bands?: number[],
-    expression?: string,
-    zoomLevel?: number
-  ): Promise<GeoRawImage> {
-    const bbox = turfBbox(polygon);
-
-    let zoom = 22;
-
-    if (zoomLevel) {
-      const tilesGrid = calculateTilesForBbox(
-        bbox,
-        this.getTileUrlFromTileCoords,
-        zoomLevel,
-        this,
-        bands,
-        expression
-      );
-      return await getImageFromTiles(tilesGrid);
-    }
-
-    let tilesGrid = calculateTilesForBbox(
-      bbox,
-      this.getTileUrlFromTileCoords,
-      zoom,
-      this,
-      bands,
-      expression
-    );
-
-    let xTileNum = tilesGrid[0].length;
-    let yTileNum = tilesGrid.length;
-
-    while (
-      xTileNum > 2 &&
-      yTileNum > 2
-      // (xTileNum === 1 && yTileNum === 1 && zoom > 22) ||
-      // (xTileNum > 2 && yTileNum > 1) ||
-      // (xTileNum > 1 && yTileNum > 2)
-    ) {
-      zoom--;
-      tilesGrid = calculateTilesForBbox(
-        bbox,
-        this.getTileUrlFromTileCoords,
-        zoom,
-        this,
-        bands,
-        expression
-      );
-      xTileNum = tilesGrid[0].length;
-      yTileNum = tilesGrid.length;
-    }
-
-    // if require better quality image then un comment this code but it cause problem the resultant grid's columns and rows might not be equal
-
-    // tilesGrid = calculateTilesForBbox(
-    //   bbox,
-    //   this.getTileUrlFromTileCoords,
-    //   zoom + 1,
-    //   this
-    // );
-    return await getImageFromTiles(tilesGrid);
   }
 }

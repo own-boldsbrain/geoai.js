@@ -3,6 +3,11 @@ import path from "path";
 import { defineConfig } from "vite";
 import packageJson from "./package.json";
 import commonjs from "vite-plugin-commonjs";
+import dotenv from "dotenv";
+// @ts-ignore
+import { visualizer } from "rollup-plugin-visualizer";
+
+dotenv.config();
 
 const getPackageName = () => {
   return packageJson.name;
@@ -18,13 +23,25 @@ const getPackageNameCamelCase = () => {
 
 const fileName = {
   es: `${getPackageName()}.js`,
-  iife: `${getPackageName()}.iife.js`,
+  // iife: `${getPackageName()}.iife.js`,
+  // cjs: `${getPackageName()}.common.js`,
 };
 
 const formats = Object.keys(fileName) as Array<keyof typeof fileName>;
 
 export default defineConfig(({ command }) => ({
-  plugins: command === "build" ? [commonjs()] : [],
+  plugins:
+    command === "build"
+      ? [
+          commonjs(),
+          visualizer({
+            filename: "stats.html",
+            open: true,
+            gzipSize: true,
+            brotliSize: true,
+          }),
+        ]
+      : [],
   base: "./",
   build: {
     outDir: "./build/dist",
@@ -33,6 +50,27 @@ export default defineConfig(({ command }) => ({
       name: getPackageNameCamelCase(),
       formats,
       fileName: format => fileName[format],
+    },
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
+    rollupOptions: {
+      external: [
+        "@huggingface/transformers",
+        "onnxruntime-web",
+        // "@techstark/opencv-js",
+      ],
+      output: {
+        globals: {
+          "@huggingface/transformers": "transformers",
+          "onnxruntime-web": "ort",
+          // "@techstark/opencv-js": "cv",
+        },
+      },
     },
   },
   test: {
