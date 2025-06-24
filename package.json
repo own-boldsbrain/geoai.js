@@ -1,19 +1,47 @@
 {
   "name": "@geobase/geoai",
-  "private": true,
-  "version": "0.0.4",
-  "module": "./dist/@geobase/geoai.js",
+  "version": "0.0.1",
+  "description": "A JavaScript library for running Geo AI models in frontend applications",
+  "keywords": [
+    "geoai",
+    "geospatial",
+    "ai",
+    "machine-learning",
+    "satellite-imagery",
+    "object-detection",
+    "segmentation",
+    "javascript",
+    "typescript"
+  ],
+  "author": "Decision Labs",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/decision-labs/geobase-ai.js.git"
+  },
+  "homepage": "https://docs.geobase.app/geoaijs",
+  "bugs": "https://github.com/decision-labs/geobase-ai.js/issues",
+  "files": [
+    "build/dist",
+    "README.md",
+    "LICENSE.md",
+    "CHANGELOG.md"
+  ],
+  "main": "./build/dist/@geobase/geoai.js",
+  "module": "./build/dist/@geobase/geoai.js",
+  "unpkg": "./build/dist/@geobase/geoai.js",
+  "jsdelivr": "./build/dist/@geobase/geoai.js",
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/@geobase/geoai.js",
-      "types": "./dist/index.d.ts"
+      "import": "./build/dist/@geobase/geoai.js",
+      "types": "./build/dist/index.d.ts"
     },
     "./dist": {
-      "import": "./dist/@geobase/geoai.js"
+      "import": "./build/dist/@geobase/geoai.js"
     }
   },
-  "types": "./dist/index.d.ts",
+  "types": "./build/dist/index.d.ts",
   "peerDependencies": {
     "@huggingface/transformers": "^3.3.3",
     "@techstark/opencv-js": "^4.10.0-release.1",
