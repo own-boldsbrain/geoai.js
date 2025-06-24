@@ -2,71 +2,79 @@
 
 ## 🔧 **Pre-Release Configuration**
 
-- [ ] **Update package.json for public release**
-  - [ ] Remove `"private": true` from package.json
-  - [ ] Update version from `"0.0.4"` to `"0.0.1"` (since this is the first public release)
-  - [ ] Add proper `description` field
-  - [ ] Add `keywords` for npm discoverability
-  - [ ] Add `author` and `license` fields
-  - [ ] Add `repository` field pointing to your GitHub repo
-  - [ ] Add `homepage` field
-  - [ ] Add `bugs` field for issue reporting
-  - [ ] Add `files` field to specify what gets published
-  - [ ] Add `main` field for CommonJS compatibility
-  - [ ] Add `unpkg` and `jsdelivr` fields for CDN support
+- [x] **Update package.json for public release**
+  - [x] Remove `"private": true` from package.json
+  - [x] Update version from `"0.0.4"` to `"0.0.1"` (since this is the first public release)
+  - [x] Add proper `description` field
+  - [x] Add `keywords` for npm discoverability
+  - [x] Add `author` and `license` fields
+  - [x] Add `repository` field pointing to your GitHub repo
+  - [x] Add `homepage` field
+  - [x] Add `bugs` field for issue reporting
+  - [x] Add `files` field to specify what gets published
+  - [x] Add `main` field for CommonJS compatibility
+  - [x] Add `unpkg` and `jsdelivr` fields for CDN support
 
-- [ ] **Update README.md**
-  - [ ] Replace template content with actual GeoBase AI documentation
-  - [ ] Add installation instructions
-  - [ ] Add usage examples
-  - [ ] Add API documentation
-  - [ ] Add contributing guidelines
-  - [ ] Add license information
+- [x] **Update README.md**
+  - [x] Replace template content with actual @geobase/geoai documentation
+  - [x] Add installation instructions
+  - [x] Add usage examples
+  - [x] Add API documentation
+  - [x] Add contributing guidelines
+  - [x] Add license information
 
-- [ ] **Update CHANGELOG.md**
-  - [ ] Replace template content with actual GeoBase AI changelog
-  - [ ] Document v0.0.1 as initial release
-  - [ ] List key features and breaking changes
+- [x] **Update CHANGELOG.md**
+  - [x] Replace template content with actual @geobase/geoai changelog
+  - [x] Document v0.0.1 as initial release
+  - [x] List key features and breaking changes
 
 ## 🏗️ **Build & Testing**
 
-- [ ] **Verify build process**
-  - [ ] Run `pnpm run build` and verify output
-  - [ ] Check that all files are generated in `build/` directory
-  - [ ] Verify TypeScript declarations are generated
-  - [ ] Test the built package locally
+- [x] **Verify build process**
+  - [x] Run `pnpm run build` and verify output
+  - [x] Check that all files are generated in `build/` directory
+  - [x] Verify TypeScript declarations are generated
+  - [x] Test the built package locally
+  - [x] Remove unnecessary CSS files (API-only library)
 
 - [ ] **Run comprehensive tests**
   - [ ] Run `pnpm run test` - ensure all tests pass
   - [ ] Run `pnpm run test:coverage` - check coverage
   - [ ] Run `pnpm run test:build` - test built package
   - [ ] Fix any failing tests
+  - [ ] **Note:** Skipped for now, tests are in CI
 
 - [ ] **Code quality checks**
   - [ ] Run `pnpm run lint:scripts` - fix any linting issues
   - [ ] Run `pnpm run lint:styles` - fix any style issues
   - [ ] Run `pnpm run format` - ensure consistent formatting
+  - [ ] **Note:** Skipped for now, can be added to CI later
 
 ## 📦 **Package Preparation**
 
-- [ ] **Verify package contents**
-  - [ ] Check that `build/` directory contains all necessary files
-  - [ ] Verify `dist/` subdirectory structure
-  - [ ] Ensure TypeScript declarations are included
-  - [ ] Test package import in a new project
+- [x] **Verify package contents**
+  - [x] Check that `build/` directory contains all necessary files
+  - [x] Verify `dist/` subdirectory structure
+  - [x] Ensure TypeScript declarations are included
+  - [x] Test package import in a new project
+  - [x] Verify npm pack includes all necessary files (10.6MB bundle + types)
 
-- [ ] **Update .npmignore**
-  - [ ] Create `.npmignore` file to exclude unnecessary files
-  - [ ] Ensure source files, tests, and dev dependencies are excluded
-  - [ ] Include only built files and essential documentation
+- [x] **Update .npmignore**
+  - [x] Create `.npmignore` file to exclude unnecessary files
+  - [x] Ensure source files, tests, and dev dependencies are excluded
+  - [x] Include only built files and essential documentation
 
 ## 🔐 **NPM Account & Publishing**
 
-- [ ] **NPM account setup**
-  - [ ] Create npm account if you don't have one
-  - [ ] Login to npm: `npm login`
+- [x] **NPM account setup**
+  - [x] Create npm account if you don't have one
+  - [x] Login to npm: `npm login` (logged in as `saburq`)
   - [ ] Verify you have access to publish `@geobase/geoai` scope
   - [ ] Check if the package name is available
+  - [ ] **Issue:** No access to `@geobase` scope - need to either:
+    - Create `@geobase` organization on npm, OR
+    - Change to `@saburq/geoai`, OR  
+    - Remove scope entirely (`geoai`)
 
 - [ ] **Publishing**
   - [ ] Run `npm publish --access public` (for scoped packages)
