@@ -269,11 +269,11 @@ class Pipeline {
   }
 }
 
-const geobaseAi = {
+const geoai = {
   pipeline: Pipeline.pipeline,
   tasks: Pipeline.listTasks,
   models: Pipeline.listModels,
   validateChain: Pipeline.findValidChains,
 };
 
-export { geobaseAi, type ProviderParams };
+export { geoai, type ProviderParams };

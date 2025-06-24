@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@geobase/geoai':
+        specifier: file:../../build
+        version: file:../../build(@huggingface/transformers@3.5.1)(@techstark/opencv-js@4.10.0-release.1)(onnxruntime-web@1.22.0)
       '@huggingface/transformers':
         specifier: ^3.5.1
         version: 3.5.1
@@ -20,12 +23,6 @@ importers:
       '@turf/turf':
         specifier: ^7.2.0
         version: 7.2.0
-      '@types/maplibre-gl':
-        specifier: ^1.14.0
-        version: 1.14.0
-      geobase-ai:
-        specifier: file:../../build
-        version: file:../../build(@huggingface/transformers@3.5.1)(@techstark/opencv-js@4.10.0-release.1)(onnxruntime-web@1.22.0)
       maplibre-gl:
         specifier: ^5.5.0
         version: 5.5.0
@@ -145,6 +142,13 @@ packages:
   '@eslint/plugin-kit@0.3.1':
     resolution: {integrity: sha512-0J+zgWxHN+xXONWIyPWKFMgVuJoZuGiIFu8yxk7RJjxkzpGmyja5wRFqZIVtjDVOQpV+Rw0iOAjYPE2eQyjr0w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@geobase/geoai@file:../../build':
+    resolution: {directory: ../../build, type: directory}
+    peerDependencies:
+      '@huggingface/transformers': ^3.3.3
+      '@techstark/opencv-js': ^4.10.0-release.1
+      onnxruntime-web: ^1.21.0
 
   '@huggingface/jinja@0.4.1':
     resolution: {integrity: sha512-3WXbMFaPkk03LRCM0z0sylmn8ddDm4ubjU7X+Hg4M2GOuMklwoGAFXp9V2keq7vltoB/c7McE5aHUVVddAewsw==}
@@ -1317,10 +1321,6 @@ packages:
   '@types/mapbox__vector-tile@1.3.4':
     resolution: {integrity: sha512-bpd8dRn9pr6xKvuEBQup8pwQfD4VUyqO/2deGjfpe6AwC8YRlyEipvefyRJUSiCJTZuCb8Pl1ciVV5ekqJ96Bg==}
 
-  '@types/maplibre-gl@1.14.0':
-    resolution: {integrity: sha512-I6ibscT7UdL1oOqqCz9s1gjcolLaUPkHIIfMLusczTvlsMhjORyS6sE1g4V/NESAOL5KhNQX3/31LJH+OCGjkg==}
-    deprecated: This is a stub types definition. maplibre-gl provides its own type definitions, so you do not need this installed.
-
   '@types/node@20.17.50':
     resolution: {integrity: sha512-Mxiq0ULv/zo1OzOhwPqOA13I81CV/W3nvd3ChtQZRT5Cwz3cr0FKo/wMSsbTqL3EXpaBAEQhva2B8ByRkOIh9A==}
 
@@ -2088,13 +2088,6 @@ packages:
 
   functions-have-names@1.2.3:
     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}
-
-  geobase-ai@file:../../build:
-    resolution: {directory: ../../build, type: directory}
-    peerDependencies:
-      '@huggingface/transformers': ^3.3.3
-      '@techstark/opencv-js': ^4.10.0-release.1
-      onnxruntime-web: ^1.21.0
 
   geojson-equality-ts@1.0.2:
     resolution: {integrity: sha512-h3Ryq+0mCSN/7yLs0eDgrZhvc9af23o/QuC4aTiuuzP/MRCtd6mf5rLsLRY44jX0RPUfM8c4GqERQmlUxPGPoQ==}
@@ -3430,6 +3423,16 @@ snapshots:
     dependencies:
       '@eslint/core': 0.14.0
       levn: 0.4.1
+
+  '@geobase/geoai@file:../../build(@huggingface/transformers@3.5.1)(@techstark/opencv-js@4.10.0-release.1)(onnxruntime-web@1.22.0)':
+    dependencies:
+      '@huggingface/transformers': 3.5.1
+      '@techstark/opencv-js': 4.10.0-release.1
+      '@turf/bbox': 7.2.0
+      '@turf/bbox-polygon': 7.2.0
+      global-mercator: https://codeload.github.com/decision-labs/global-mercator/tar.gz/905ce5c6f8dd66d180abcbb62594f6094cac7878
+      node-fetch: 3.3.2
+      onnxruntime-web: 1.22.0
 
   '@huggingface/jinja@0.4.1': {}
 
@@ -5785,10 +5788,6 @@ snapshots:
       '@types/mapbox__point-geometry': 0.1.4
       '@types/pbf': 3.0.5
 
-  '@types/maplibre-gl@1.14.0':
-    dependencies:
-      maplibre-gl: 5.5.0
-
   '@types/node@20.17.50':
     dependencies:
       undici-types: 6.19.8
@@ -6737,16 +6736,6 @@ snapshots:
       is-callable: 1.2.7
 
   functions-have-names@1.2.3: {}
-
-  geobase-ai@file:../../build(@huggingface/transformers@3.5.1)(@techstark/opencv-js@4.10.0-release.1)(onnxruntime-web@1.22.0):
-    dependencies:
-      '@huggingface/transformers': 3.5.1
-      '@techstark/opencv-js': 4.10.0-release.1
-      '@turf/bbox': 7.2.0
-      '@turf/bbox-polygon': 7.2.0
-      global-mercator: https://codeload.github.com/decision-labs/global-mercator/tar.gz/905ce5c6f8dd66d180abcbb62594f6094cac7878
-      node-fetch: 3.3.2
-      onnxruntime-web: 1.22.0
 
   geojson-equality-ts@1.0.2:
     dependencies:
