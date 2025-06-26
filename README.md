@@ -96,6 +96,7 @@ console.log(result.geoRawImage); // Raw image data
 ### Core Functions
 
 #### geoai.pipeline()
+
 Create a pipeline for AI tasks.
 
 ```javascript
@@ -114,6 +115,7 @@ const pipeline = await geoai.pipeline(
 ```
 
 #### geoai.tasks()
+
 List all available tasks.
 
 ```javascript
@@ -122,6 +124,7 @@ const tasks = geoai.tasks();
 ```
 
 #### geoai.models()
+
 List all available models.
 
 ```javascript
@@ -130,6 +133,7 @@ const models = geoai.models();
 ```
 
 #### geoai.validateChain()
+
 Validate a chain of tasks.
 
 ```javascript
@@ -142,6 +146,7 @@ const validChains = geoai.validateChain([
 ### Pipeline Methods
 
 #### inference()
+
 Run inference on the pipeline.
 
 ```javascript
@@ -177,19 +182,21 @@ const polygon = {
   type: "Feature",
   geometry: {
     type: "Polygon",
-    coordinates: [[
-      [-74.006, 40.7128],
-      [-74.006, 40.7228],
-      [-73.996, 40.7228],
-      [-73.996, 40.7128],
-      [-74.006, 40.7128]
-    ]]
-  }
+    coordinates: [
+      [
+        [-74.006, 40.7128],
+        [-74.006, 40.7228],
+        [-73.996, 40.7228],
+        [-73.996, 40.7128],
+        [-74.006, 40.7128],
+      ],
+    ],
+  },
 };
 
 // Run detection
 const result = await objectDetection.inference({
-  inputs: { polygon }
+  inputs: { polygon },
 });
 
 // Results contain detected objects as GeoJSON
