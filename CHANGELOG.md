@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.1] - 2024-12-19
 
 ### Added
+
 - Initial public release of @geobase-js/geoai
 - Support for multiple Geo AI models:
   - Object Detection
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation and examples
 
 ### Features
+
 - Core GeoAI class for model interaction
 - GeoRawImage class for image data handling
 - Support for various image formats and sources
@@ -34,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Framework-agnostic design for use with any JavaScript framework
 
 ### Technical
+
 - Built with Vite 5.x
 - TypeScript compilation and type generation
 - ESLint and Prettier for code quality

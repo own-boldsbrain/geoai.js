@@ -15,21 +15,25 @@ A JavaScript library for running Geo AI models in frontend applications.
 ## Installation
 
 ### NPM
+
 ```bash
 npm install @geobase-js/geoai
 ```
 
 ### Yarn
+
 ```bash
 yarn add @geobase-js/geoai
 ```
 
 ### PNPM
+
 ```bash
 pnpm add @geobase-js/geoai
 ```
 
 ### CDN
+
 ```html
 <!-- Unpkg -->
 <script src="https://unpkg.com/@geobase-js/geoai@0.0.1/dist/@geobase-js/geoai.js"></script>
@@ -41,7 +45,7 @@ pnpm add @geobase-js/geoai
 ## Quick Start
 
 ```javascript
-import { GeoAI } from '@geobase-js/geoai';
+import { GeoAI } from "@geobase-js/geoai";
 
 // Initialize the library
 const geoai = new GeoAI();
@@ -49,7 +53,7 @@ const geoai = new GeoAI();
 // Run object detection on satellite imagery
 const result = await geoai.detectObjects({
   image: satelliteImage,
-  model: 'object-detection'
+  model: "object-detection",
 });
 
 console.log(result);
@@ -73,6 +77,7 @@ console.log(result);
 ### Core Classes
 
 #### GeoAI
+
 Main class for interacting with Geo AI models.
 
 ```javascript
@@ -80,10 +85,11 @@ const geoai = new GeoAI(options);
 ```
 
 #### GeoRawImage
+
 Class for handling raw image data.
 
 ```javascript
-import { GeoRawImage } from '@geobase-js/geoai';
+import { GeoRawImage } from "@geobase-js/geoai";
 
 const image = new GeoRawImage(imageData);
 ```
@@ -91,33 +97,36 @@ const image = new GeoRawImage(imageData);
 ### Methods
 
 #### detectObjects()
+
 Detect objects in satellite imagery.
 
 ```javascript
 const result = await geoai.detectObjects({
   image: imageData,
-  model: 'object-detection',
-  confidence: 0.5
+  model: "object-detection",
+  confidence: 0.5,
 });
 ```
 
 #### segmentBuildings()
+
 Extract building footprints.
 
 ```javascript
 const result = await geoai.segmentBuildings({
   image: imageData,
-  threshold: 0.3
+  threshold: 0.3,
 });
 ```
 
 #### classifyLandCover()
+
 Classify land cover types.
 
 ```javascript
 const result = await geoai.classifyLandCover({
   image: imageData,
-  classes: ['water', 'forest', 'urban', 'agriculture']
+  classes: ["water", "forest", "urban", "agriculture"],
 });
 ```
 
