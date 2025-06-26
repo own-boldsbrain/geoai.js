@@ -72,6 +72,7 @@
 ## 🔐 **NPM Account & Publishing**
 
 - [x] **NPM account setup**
+
   - [x] Create npm account if you don't have one
   - [x] Login to npm: `npm login` (logged in as `saburq`)
   - [x] Verify you have access to publish `@geobase-js/geoai` scope
@@ -87,6 +88,7 @@
 ## 🌐 **CDN Setup**
 
 - [ ] **Unpkg CDN**
+
   - [ ] Verify package works on unpkg.com
   - [ ] Test direct import: `https://unpkg.com/@geobase-js/geoai@0.0.1/build/dist/@geobase-js/geoai.js`
 
