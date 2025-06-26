@@ -45,18 +45,37 @@ pnpm add @geobase-js/geoai
 ## Quick Start
 
 ```javascript
-import { GeoAI } from "@geobase-js/geoai";
+import { geoai } from "@geobase-js/geoai";
 
-// Initialize the library
-const geoai = new GeoAI();
+// Initialize a pipeline for object detection
+const pipeline = await geoai.pipeline(
+  [
+    {
+      task: "object-detection",
+      modelId: "geobase/WALDO30_yolov8m_640x640",
+    },
+  ],
+  {
+    provider: "mapbox",
+    apiKey: "your-mapbox-api-key",
+  }
+);
 
-// Run object detection on satellite imagery
-const result = await geoai.detectObjects({
-  image: satelliteImage,
-  model: "object-detection",
+// Run inference on a polygon
+const result = await pipeline.inference({
+  inputs: {
+    polygon: {
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [[[longitude, latitude], [longitude, latitude], ...]]
+      }
+    }
+  }
 });
 
-console.log(result);
+console.log(result.detections); // GeoJSON with detected objects
+console.log(result.geoRawImage); // Raw image data
 ```
 
 ## Supported Models
@@ -74,60 +93,136 @@ console.log(result);
 
 ## API Reference
 
-### Core Classes
+### Core Functions
 
-#### GeoAI
-
-Main class for interacting with Geo AI models.
+#### geoai.pipeline()
+Create a pipeline for AI tasks.
 
 ```javascript
-const geoai = new GeoAI(options);
+const pipeline = await geoai.pipeline(
+  [
+    {
+      task: "object-detection",
+      modelId: "geobase/WALDO30_yolov8m_640x640",
+    },
+  ],
+  {
+    provider: "mapbox", // or "geobase"
+    apiKey: "your-api-key",
+  }
+);
 ```
 
-#### GeoRawImage
-
-Class for handling raw image data.
+#### geoai.tasks()
+List all available tasks.
 
 ```javascript
-import { GeoRawImage } from "@geobase-js/geoai";
-
-const image = new GeoRawImage(imageData);
+const tasks = geoai.tasks();
+// Returns: ["object-detection", "zero-shot-object-detection", "mask-generation", ...]
 ```
 
-### Methods
-
-#### detectObjects()
-
-Detect objects in satellite imagery.
+#### geoai.models()
+List all available models.
 
 ```javascript
-const result = await geoai.detectObjects({
-  image: imageData,
-  model: "object-detection",
-  confidence: 0.5,
+const models = geoai.models();
+// Returns array of model configurations
+```
+
+#### geoai.validateChain()
+Validate a chain of tasks.
+
+```javascript
+const validChains = geoai.validateChain([
+  "mask-generation",
+  "zero-shot-object-detection",
+]);
+```
+
+### Pipeline Methods
+
+#### inference()
+Run inference on the pipeline.
+
+```javascript
+const result = await pipeline.inference({
+  inputs: {
+    polygon: geoJsonPolygon,
+    classLabel: "house", // for zero-shot detection
+  },
 });
 ```
 
-#### segmentBuildings()
-
-Extract building footprints.
+### Example: Object Detection
 
 ```javascript
-const result = await geoai.segmentBuildings({
-  image: imageData,
-  threshold: 0.3,
+import { geoai } from "@geobase-js/geoai";
+
+// Create object detection pipeline
+const objectDetection = await geoai.pipeline(
+  [
+    {
+      task: "object-detection",
+      modelId: "geobase/WALDO30_yolov8m_640x640",
+    },
+  ],
+  {
+    provider: "mapbox",
+    apiKey: "your-mapbox-api-key",
+  }
+);
+
+// Define a polygon area to analyze
+const polygon = {
+  type: "Feature",
+  geometry: {
+    type: "Polygon",
+    coordinates: [[
+      [-74.006, 40.7128],
+      [-74.006, 40.7228],
+      [-73.996, 40.7228],
+      [-73.996, 40.7128],
+      [-74.006, 40.7128]
+    ]]
+  }
+};
+
+// Run detection
+const result = await objectDetection.inference({
+  inputs: { polygon }
 });
+
+// Results contain detected objects as GeoJSON
+console.log(result.detections.features); // Array of detected objects
 ```
 
-#### classifyLandCover()
-
-Classify land cover types.
+### Example: Zero-shot Object Detection
 
 ```javascript
-const result = await geoai.classifyLandCover({
-  image: imageData,
-  classes: ["water", "forest", "urban", "agriculture"],
+import { geoai } from "@geobase-js/geoai";
+
+// Create zero-shot detection pipeline
+const zeroShotDetection = await geoai.pipeline(
+  [
+    {
+      task: "zero-shot-object-detection",
+    },
+  ],
+  {
+    provider: "geobase",
+    apiKey: "your-geobase-api-key",
+  }
+);
+
+// Run detection with custom class labels
+const result = await zeroShotDetection.inference({
+  inputs: {
+    polygon: geoJsonPolygon,
+    classLabel: "car, building, tree",
+  },
 });
+
+console.log(result.detections);
 ```
 
 ## Examples
