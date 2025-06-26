@@ -158,11 +158,11 @@ export default function Home() {
         <section className="max-w-3xl mx-auto mb-12">
           <div className="mb-4">
             <SyntaxHighlighter language="shell" style={oneDark} customStyle={{ borderRadius: 8, fontSize: 16, marginBottom: 16 }}>
-              pnpm add @geobase/geoai
+              pnpm add @geobase-js/geoai
             </SyntaxHighlighter>
           </div>
           <SyntaxHighlighter language="javascript" style={oneDark} customStyle={{ borderRadius: 8, fontSize: 16 }}>
-            {`import { geoai } from "@geobase/geoai";
+            {`import { geoai } from "@geobase-js/geoai";
 
 // mapProviderConfig can also accept Mapbox or other image tile endpoints
 const mapProviderConfig = {

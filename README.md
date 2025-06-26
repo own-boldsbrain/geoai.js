@@ -1,6 +1,6 @@
 [![Main](https://github.com/decision-labs/geobase-ai.js/actions/workflows/main.yml/badge.svg)](https://github.com/decision-labs/geobase-ai.js/actions/workflows/main.yml)
 
-# @geobase/geoai
+# @geobase-js/geoai
 
 A JavaScript library for running Geo AI models in frontend applications.
 
@@ -16,32 +16,32 @@ A JavaScript library for running Geo AI models in frontend applications.
 
 ### NPM
 ```bash
-npm install @geobase/geoai
+npm install @geobase-js/geoai
 ```
 
 ### Yarn
 ```bash
-yarn add @geobase/geoai
+yarn add @geobase-js/geoai
 ```
 
 ### PNPM
 ```bash
-pnpm add @geobase/geoai
+pnpm add @geobase-js/geoai
 ```
 
 ### CDN
 ```html
 <!-- Unpkg -->
-<script src="https://unpkg.com/@geobase/geoai@0.0.1/dist/@geobase/geoai.js"></script>
+<script src="https://unpkg.com/@geobase-js/geoai@0.0.1/dist/@geobase-js/geoai.js"></script>
 
 <!-- jsDelivr -->
-<script src="https://cdn.jsdelivr.net/npm/@geobase/geoai@0.0.1/dist/@geobase/geoai.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@geobase-js/geoai@0.0.1/dist/@geobase-js/geoai.js"></script>
 ```
 
 ## Quick Start
 
 ```javascript
-import { GeoAI } from '@geobase/geoai';
+import { GeoAI } from '@geobase-js/geoai';
 
 // Initialize the library
 const geoai = new GeoAI();
@@ -83,7 +83,7 @@ const geoai = new GeoAI(options);
 Class for handling raw image data.
 
 ```javascript
-import { GeoRawImage } from '@geobase/geoai';
+import { GeoRawImage } from '@geobase-js/geoai';
 
 const image = new GeoRawImage(imageData);
 ```

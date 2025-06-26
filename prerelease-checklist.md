@@ -16,7 +16,7 @@
   - [x] Add `unpkg` and `jsdelivr` fields for CDN support
 
 - [x] **Update README.md**
-  - [x] Replace template content with actual @geobase/geoai documentation
+  - [x] Replace template content with actual @geobase-js/geoai documentation
   - [x] Add installation instructions
   - [x] Add usage examples
   - [x] Add API documentation
@@ -24,7 +24,7 @@
   - [x] Add license information
 
 - [x] **Update CHANGELOG.md**
-  - [x] Replace template content with actual @geobase/geoai changelog
+  - [x] Replace template content with actual @geobase-js/geoai changelog
   - [x] Document v0.0.1 as initial release
   - [x] List key features and breaking changes
 
@@ -69,27 +69,27 @@
 - [x] **NPM account setup**
   - [x] Create npm account if you don't have one
   - [x] Login to npm: `npm login` (logged in as `saburq`)
-  - [ ] Verify you have access to publish `@geobase/geoai` scope
+  - [ ] Verify you have access to publish `@geobase-js/geoai` scope
   - [ ] Check if the package name is available
   - [ ] **Issue:** No access to `@geobase` scope - need to either:
-    - Create `@geobase` organization on npm, OR
+    - Create `@geobase-js` organization on npm, OR
     - Change to `@saburq/geoai`, OR  
     - Remove scope entirely (`geoai`)
 
 - [ ] **Publishing**
   - [ ] Run `npm publish --access public` (for scoped packages)
   - [ ] Verify package appears on npm registry
-  - [ ] Test installation: `npm install @geobase/geoai`
+  - [ ] Test installation: `npm install @geobase-js/geoai`
 
 ## 🌐 **CDN Setup**
 
 - [ ] **Unpkg CDN**
   - [ ] Verify package works on unpkg.com
-  - [ ] Test direct import: `https://unpkg.com/@geobase/geoai@0.0.1/dist/@geobase/geoai.js`
+  - [ ] Test direct import: `https://unpkg.com/@geobase-js/geoai@0.0.1/dist/@geobase-js/geoai.js`
 
 - [ ] **jsDelivr CDN**
   - [ ] Verify package works on cdn.jsdelivr.net
-  - [ ] Test direct import: `https://cdn.jsdelivr.net/npm/@geobase/geoai@0.0.1/dist/@geobase/geoai.js`
+  - [ ] Test direct import: `https://cdn.jsdelivr.net/npm/@geobase-js/geoai@0.0.1/dist/@geobase-js/geoai.js`
 
 ## 📝 **Documentation & Marketing**
 

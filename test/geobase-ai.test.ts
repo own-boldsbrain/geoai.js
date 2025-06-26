@@ -6,7 +6,7 @@ import { geobaseParamsBuilding, polygonBuilding } from "./constants";
 import { geoJsonToGist } from "./utils/saveToGist";
 import { InferenceParams } from "../src/core/types";
 
-describe("@geobase/geoai", () => {
+describe("@geobase-js/geoai", () => {
   it("should be an object", () => {
     expect(geoai).toBeInstanceOf(Object);
   });

@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
 
     return config;
   },
-  transpilePackages: ["@geobase/geoai"],
+  transpilePackages: ["@geobase-js/geoai"],
   // Configure headers for WASM files
   async headers() {
     return [

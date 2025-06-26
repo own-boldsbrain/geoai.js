@@ -1,5 +1,5 @@
 {
-  "name": "@geobase/geoai",
+  "name": "@geobase-js/geoai",
   "version": "0.0.1",
   "description": "A JavaScript library for running Geo AI models in frontend applications",
   "keywords": [
@@ -27,18 +27,18 @@
     "LICENSE.md",
     "CHANGELOG.md"
   ],
-  "main": "./build/dist/@geobase/geoai.js",
-  "module": "./build/dist/@geobase/geoai.js",
-  "unpkg": "./build/dist/@geobase/geoai.js",
-  "jsdelivr": "./build/dist/@geobase/geoai.js",
+  "main": "./build/dist/@geobase-js/geoai.js",
+  "module": "./build/dist/@geobase-js/geoai.js",
+  "unpkg": "./build/dist/@geobase-js/geoai.js",
+  "jsdelivr": "./build/dist/@geobase-js/geoai.js",
   "type": "module",
   "exports": {
     ".": {
-      "import": "./build/dist/@geobase/geoai.js",
+      "import": "./build/dist/@geobase-js/geoai.js",
       "types": "./build/dist/index.d.ts"
     },
     "./dist": {
-      "import": "./build/dist/@geobase/geoai.js"
+      "import": "./build/dist/@geobase-js/geoai.js"
     }
   },
   "types": "./build/dist/index.d.ts",
