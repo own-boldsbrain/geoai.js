@@ -111,7 +111,7 @@ describe("test model geobase/car-detection", () => {
     expect(results.geoRawImage.width).toBeGreaterThan(0);
     expect(results.geoRawImage.height).toBeGreaterThan(0);
     // saveimage
-    results.geoRawImage.save("carDetectionFailingBounds.png");
+    // results.geoRawImage.save("carDetectionFailingBounds.png");
     // Save output to gist
     await geoJsonToGist({
       content: results.detections,
@@ -145,7 +145,7 @@ describe("test model geobase/car-detection", () => {
     expect(results.geoRawImage.width).toBeGreaterThan(0);
     expect(results.geoRawImage.height).toBeGreaterThan(0);
     // saveimage
-    results.geoRawImage.save("carDetectionWorkingBounds.png");
+    // results.geoRawImage.save("carDetectionWorkingBounds.png");
     // Save output to gist
     await geoJsonToGist({
       content: results.detections,

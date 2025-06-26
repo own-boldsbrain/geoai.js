@@ -152,7 +152,7 @@ const stitchImageGrid = async (imageGrid: RawImage[][]) => {
   rowMats.forEach(mat => mat.delete());
   // Mat instance already deleted
 
-  //   await finalRawImage.save("stitched_image.png");
+  // await finalRawImage.save("stitched_image.png");
 
   return finalRawImage;
 };
