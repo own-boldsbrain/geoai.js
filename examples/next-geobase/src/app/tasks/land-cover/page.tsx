@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
+import { useOptimizedGeoAI } from "../../../hooks/useGeoAIWorker";
 
 const GEOBASE_CONFIG = {
   provider: "geobase",
@@ -32,11 +33,20 @@ export default function LandCoverClassification() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const draw = useRef<MaplibreDraw | null>(null);
-  const workerRef = useRef<Worker | null>(null);
+  
+  // GeoAI hook
+  const {
+    isInitialized,
+    isProcessing,
+    error,
+    lastResult,
+    initializeModel,
+    runOptimizedInference,
+    clearError,
+    reset: resetWorker
+  } = useOptimizedGeoAI("land-cover-classification");
+
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
-  const [classifying, setClassifying] = useState(false);
-  const [initializing, setInitializing] = useState(false);
-  const [classificationResult, setClassificationResult] = useState<string | null>(null);
   const [classifications, setClassifications] = useState<GeoJSON.FeatureCollection>();
   const [zoomLevel, setZoomLevel] = useState<number>(22);
   const [minArea, setMinArea] = useState<number>(20);
@@ -45,8 +55,6 @@ export default function LandCoverClassification() {
   );
   const [customModelId, setCustomModelId] = useState<string>("");
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
-  const [detecting, setDetecting] = useState(false);
-  const [detectionResult, setDetectionResult] = useState<string | null>(null);
   const models = ["geobase/land-cover-classification"];
 
   const handleReset = () => {
@@ -55,17 +63,23 @@ export default function LandCoverClassification() {
     }
 
     if (map.current) {
-      if (map.current.getSource("classifications")) {
-        map.current.removeLayer("classifications-layer");
-        map.current.removeSource("classifications");
+      // Remove all detection layers
+      for (let i = 0; i < 10; i++) {
+        const layerId = `detections-layer-${i}`;
+        const sourceId = `detections-source-${i}`;
+        if (map.current.getLayer(layerId)) {
+          map.current.removeLayer(layerId);
+        }
+        if (map.current.getSource(sourceId)) {
+          map.current.removeSource(sourceId);
+        }
       }
     }
 
     setPolygon(null);
     setClassifications(undefined);
-    setClassificationResult(null);
-    setClassifying(false);
-    setDetecting(false);
+    clearError();
+    resetWorker();
   };
 
   useEffect(() => {
@@ -149,185 +163,127 @@ export default function LandCoverClassification() {
     };
   }, [mapProvider]);
 
+  // Initialize the model when the map provider changes
   useEffect(() => {
-    workerRef.current = new Worker(
-      new URL("../common.worker.ts", import.meta.url)
-    );
+    initializeModel({
+      task: "land-cover-classification",
+      ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      modelId: customModelId || selectedModel,
+    });
+  }, [mapProvider, initializeModel, customModelId, selectedModel]);
 
-    workerRef.current.onmessage = e => {
-      const { type, payload } = e.data;
-      console.log("Worker message received:", type, payload);
-
-      switch (type) {
-        case "init_complete":
-          setInitializing(false);
-          break;
-        case "inference_complete":
-          if (payload.detections) {
-            console.log("Received detections:", payload.detections);
-            
-            // Validate that we have an array of FeatureCollections
-            if (!Array.isArray(payload.detections)) {
-              console.error("Expected array of FeatureCollections:", payload.detections);
-              setClassificationResult("Error: Invalid detection results format");
-              setClassifying(false);
-              setDetecting(false);
-              break;
-            }
-
-            setClassifications(payload.detections);
-            // Add the detections as a new layer on the map
-            if (map.current) {
-              // Remove existing detection layers if they exist
-              payload.detections.forEach((_: GeoJSON.FeatureCollection, index: number) => {
-                const layerId = `detections-layer-${index}`;
-                const sourceId = `detections-source-${index}`;
-                if (map.current?.getLayer(layerId)) {
-                  map.current.removeLayer(layerId);
-                }
-                if (map.current?.getSource(sourceId)) {
-                  map.current.removeSource(sourceId);
-                }
-              });
-
-              // Generate a color for each feature collection
-              const colors = [
-                '#FF0000', // Red
-                '#00FF00', // Green
-                '#0000FF', // Blue
-                '#FFFF00', // Yellow
-                '#FF00FF', // Magenta
-                '#00FFFF', // Cyan
-                '#FFA500', // Orange
-                '#800080', // Purple
-                '#008000', // Dark Green
-                '#000080', // Navy
-              ];
-
-              // Add each feature collection as a separate layer
-              payload.detections.forEach((featureCollection: GeoJSON.FeatureCollection, index: number) => {
-                const layerId = `detections-layer-${index}`;
-                const sourceId = `detections-source-${index}`;
-                const color = colors[index % colors.length];
-
-                // Add the new detections as a source
-                map.current?.addSource(sourceId, {
-                  type: "geojson",
-                  data: featureCollection,
-                });
-
-                // Add a layer to display the detections
-                map.current?.addLayer({
-                  id: layerId,
-                  type: "fill",
-                  source: sourceId,
-                  paint: {
-                    "fill-color": color,
-                    "fill-opacity": 0.9,
-                    "fill-outline-color": color,
-                  },
-                });
-
-                // Add hover functionality for each layer
-                const popup = new maplibregl.Popup({
-                  closeButton: false,
-                  closeOnClick: false,
-                });
-
-                map.current?.on("mouseenter", layerId, () => {
-                  map.current!.getCanvas().style.cursor = "pointer";
-                });
-
-                map.current?.on("mouseleave", layerId, () => {
-                  map.current!.getCanvas().style.cursor = "";
-                  popup.remove();
-                });
-
-                map.current?.on("mousemove", layerId, e => {
-                  if (e.features && e.features.length > 0) {
-                    const feature = e.features[0];
-                    const properties = feature.properties;
-
-                    // Create HTML content for popup
-                    const content = Object.entries(properties)
-                      .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
-                      .join("<br/>");
-
-                    popup
-                      .setLngLat(e.lngLat)
-                      .setHTML(content)
-                      .addTo(map.current!);
-                  }
-                });
-              });
-            }
-            setClassifying(false);
-            setDetecting(false);
-          }
-          break;
-        case "error":
-          console.error("Worker error:", payload);
-          setClassifying(false);
-          setInitializing(false);
-          setDetecting(false);
-          setClassificationResult(`Error: ${payload}`);
-          break;
-      }
-    };
-
-    return () => {
-      workerRef.current?.terminate();
-    };
-  }, []);
-
-  const handleClassify = async () => {
-    if (!polygon || !workerRef.current) return;
-    
-    setClassifying(true);
-    setInitializing(true);
-    setClassificationResult(null);
-    setDetecting(true);
-
-    try {
-      workerRef.current.postMessage({
-        type: "init",
-        payload: {
-          task: "land-cover-classification",
-          ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
-          modelId: customModelId || selectedModel,
-        },
-      });
-
-      await new Promise<void>((resolve, reject) => {
-        const messageHandler = (e: MessageEvent) => {
-          const { type, payload } = e.data;
-          if (type === "init_complete") {
-            workerRef.current?.removeEventListener("message", messageHandler);
-            resolve();
-          } else if (type === "error") {
-            workerRef.current?.removeEventListener("message", messageHandler);
-            reject(new Error(payload));
-          }
-        };
-        workerRef.current?.addEventListener("message", messageHandler);
-      });
-
-      // Now run inference
-      workerRef.current.postMessage({
-        type: "inference",
-        payload: {
-          task: "land-cover-classification",
-          polygon,
-          minArea,
-          zoomLevel,
-        },
-      });
-    } catch (error) {
-      console.error("Classification error:", error);
-      setDetecting(false);
-      setInitializing(false);
-      setClassificationResult(error instanceof Error ? error.message : "Error during classification. Please try again.");
+  // Handle results from the worker
+  useEffect(() => {
+    if (lastResult?.detections) {
+      displayDetections(lastResult.detections);
     }
+  }, [lastResult]);
+
+  // Function to display detections on the map
+  const displayDetections = (detections: any) => {
+    console.log("Received detections:", detections);
+    
+    // Validate that we have an array of FeatureCollections
+    if (!Array.isArray(detections)) {
+      console.error("Expected array of FeatureCollections:", detections);
+      return;
+    }
+
+    setClassifications(detections);
+    
+    if (!map.current) return;
+
+    // Remove existing detection layers if they exist
+    detections.forEach((_: GeoJSON.FeatureCollection, index: number) => {
+      const layerId = `detections-layer-${index}`;
+      const sourceId = `detections-source-${index}`;
+      if (map.current?.getLayer(layerId)) {
+        map.current.removeLayer(layerId);
+      }
+      if (map.current?.getSource(sourceId)) {
+        map.current.removeSource(sourceId);
+      }
+    });
+
+    // Generate a color for each feature collection
+    const colors = [
+      '#FF0000', // Red
+      '#00FF00', // Green
+      '#0000FF', // Blue
+      '#FFFF00', // Yellow
+      '#FF00FF', // Magenta
+      '#00FFFF', // Cyan
+      '#FFA500', // Orange
+      '#800080', // Purple
+      '#008000', // Dark Green
+      '#000080', // Navy
+    ];
+
+    // Add each feature collection as a separate layer
+    detections.forEach((featureCollection: GeoJSON.FeatureCollection, index: number) => {
+      const layerId = `detections-layer-${index}`;
+      const sourceId = `detections-source-${index}`;
+      const color = colors[index % colors.length];
+
+      // Add the new detections as a source
+      map.current?.addSource(sourceId, {
+        type: "geojson",
+        data: featureCollection,
+      });
+
+      // Add a layer to display the detections
+      map.current?.addLayer({
+        id: layerId,
+        type: "fill",
+        source: sourceId,
+        paint: {
+          "fill-color": color,
+          "fill-opacity": 0.9,
+          "fill-outline-color": color,
+        },
+      });
+
+      // Add hover functionality for each layer
+      const popup = new maplibregl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+      });
+
+      map.current?.on("mouseenter", layerId, () => {
+        map.current!.getCanvas().style.cursor = "pointer";
+      });
+
+      map.current?.on("mouseleave", layerId, () => {
+        map.current!.getCanvas().style.cursor = "";
+        popup.remove();
+      });
+
+      map.current?.on("mousemove", layerId, e => {
+        if (e.features && e.features.length > 0) {
+          const feature = e.features[0];
+          const properties = feature.properties;
+
+          // Create HTML content for popup
+          const content = Object.entries(properties)
+            .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
+            .join("<br/>");
+
+          popup
+            .setLngLat(e.lngLat)
+            .setHTML(content)
+            .addTo(map.current!);
+        }
+      });
+    });
+  };
+
+  const handleClassify = () => {
+    if (!polygon) return;
+    
+    runOptimizedInference(polygon, zoomLevel, {
+      task: "land-cover-classification",
+      minArea,
+    });
   };
 
   const handleStartDrawing = () => {
@@ -394,10 +350,10 @@ export default function LandCoverClassification() {
               </button>
               <button
                 className="bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                disabled={!polygon || classifying || initializing}
+                disabled={!polygon || !isInitialized || isProcessing}
                 onClick={handleClassify}
               >
-                {classifying || initializing ? (
+                {!isInitialized || isProcessing ? (
                   <>
                     <svg
                       className="animate-spin h-5 w-5 text-white"
@@ -419,7 +375,7 @@ export default function LandCoverClassification() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    {initializing ? "Initializing Model..." : "Detecting..."}
+                    {!isInitialized ? "Initializing Model..." : "Detecting..."}
                   </>
                 ) : (
                   <>
@@ -561,9 +517,15 @@ export default function LandCoverClassification() {
             </div>
           </div>
 
-          {classificationResult && (
+          {lastResult && (
             <div className="mt-4 p-3 bg-green-50 border border-green-200 text-green-800 rounded-lg">
-              {classificationResult}
+              Land Cover Classification complete!
+            </div>
+          )}
+          
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg">
+              Error: {error}
             </div>
           )}
           

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
+import { useOptimizedGeoAI } from "../../../hooks/useGeoAIWorker";
 
 const GEOBASE_CONFIG = {
   provider: "geobase",
@@ -31,15 +32,26 @@ if (!GEOBASE_CONFIG.projectRef || !GEOBASE_CONFIG.apikey) {
 
 type MapProvider = "geobase" | "mapbox";
 
-export default function CarDetection() {
+export default function ZeroShotDetection() {
+  // Map refs
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const draw = useRef<MaplibreDraw | null>(null);
-  const workerRef = useRef<Worker | null>(null);
+  
+  // GeoAI hook
+  const {
+    isInitialized,
+    isProcessing,
+    error,
+    lastResult,
+    initializeModel,
+    runInference,
+    clearError,
+    reset: resetWorker
+  } = useOptimizedGeoAI("zero-shot-object-detection");
+
+  // Component state
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
-  const [detecting, setDetecting] = useState(false);
-  const [initializing, setInitializing] = useState(false);
-  const [detectionResult, setDetectionResult] = useState<string | null>(null);
   const [detections, setDetections] = useState<GeoJSON.FeatureCollection>();
   const [zoomLevel, setZoomLevel] = useState<number>(21);
   const [confidenceScore, setConfidenceScore] = useState<number>(0.4);
@@ -188,153 +200,110 @@ export default function CarDetection() {
     };
   }, [mapProvider]);
 
-  // Initialize worker
+  // Initialize AI model when component mounts or provider changes
   useEffect(() => {
-    workerRef.current = new Worker(
-      new URL("../common.worker.ts", import.meta.url)
-    );
-
-    workerRef.current.onmessage = e => {
-      const { type, payload } = e.data;
-
-      switch (type) {
-        case "init_complete":
-          setInitializing(false);
-          break;
-        case "inference_complete":
-          if (payload.detections) {
-            setDetections(payload.detections);
-            // Add the detections as a new layer on the map
-            if (map.current) {
-              // Remove existing detection layer if it exists
-              if (map.current.getSource("detections")) {
-                map.current.removeLayer("detections-layer");
-                map.current.removeSource("detections");
-              }
-
-              // Add the new detections as a source, but use filteredDetections
-              const filtered = {
-                ...payload.detections,
-                features: payload.detections.features.filter((f: GeoJSON.Feature) =>
-                  typeof f.properties?.score === 'number' ? f.properties.score >= postMaxThreshold : true
-                ),
-              };
-              map.current.addSource("detections", {
-                type: "geojson",
-                data: filtered,
-              });
-
-              // Add a layer to display the detections
-              map.current.addLayer({
-                id: "detections-layer",
-                type: "fill",
-                source: "detections",
-                paint: {
-                  "fill-color": "#0000ff",
-                  "fill-opacity": 0.4,
-                  "fill-outline-color": "#0000ff",
-                },
-              });
-
-              // Add hover functionality
-              const popup = new maplibregl.Popup({
-                closeButton: false,
-                closeOnClick: false,
-              });
-
-              map.current.on("mouseenter", "detections-layer", () => {
-                map.current!.getCanvas().style.cursor = "pointer";
-              });
-
-              map.current.on("mouseleave", "detections-layer", () => {
-                map.current!.getCanvas().style.cursor = "";
-                popup.remove();
-              });
-
-              map.current.on("mousemove", "detections-layer", e => {
-                if (e.features && e.features.length > 0) {
-                  const feature = e.features[0];
-                  const properties = feature.properties;
-
-                  // Create HTML content for popup
-                  const content = Object.entries(properties)
-                    .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
-                    .join("<br/>");
-
-                  popup
-                    .setLngLat(e.lngLat)
-                    .setHTML(content)
-                    .addTo(map.current!);
-                }
-              });
-            }
-          }
-          setDetecting(false);
-          setDetectionResult(`Zero Shot Object Detection complete!`);
-          break;
-        case "error":
-          setDetecting(false);
-          setInitializing(false);
-          setDetectionResult(`Error: ${payload}`);
-          break;
-      }
+    const config = {
+      task: "zero-shot-object-detection",
+      ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
     };
+    
+    initializeModel(config);
+  }, [mapProvider, initializeModel]);
 
-    return () => {
-      workerRef.current?.terminate();
-    };
-  }, []);
-
-  const handleDetect = async () => {
-    if (!polygon || !workerRef.current) return;
-    setDetecting(true);
-    setInitializing(true);
-    setDetectionResult(null);
-
-    try {
-      // Initialize model if needed
-      workerRef.current.postMessage({
-        type: "init",
-        payload: {
-            task: "zero-shot-object-detection",
-          ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
-        //   modelId: customModelId || selectedModel,
-        },
-      });
-
-      // Wait for initialization to complete before running inference
-      await new Promise<void>((resolve, reject) => {
-        const messageHandler = (e: MessageEvent) => {
-          const { type, payload } = e.data;
-          if (type === "init_complete") {
-            workerRef.current?.removeEventListener("message", messageHandler);
-            resolve();
-          } else if (type === "error") {
-            workerRef.current?.removeEventListener("message", messageHandler);
-            reject(new Error(payload));
-          }
-        };
-        workerRef.current?.addEventListener("message", messageHandler);
-      });
-
-      // Now run inference
-      workerRef.current.postMessage({
-        type: "inference",
-        payload: {
-          task: "zero-shot-object-detection",
-          polygon,
-          classLabel,
-          confidenceScore,
-          zoomLevel,
-          topk: 4,
-        },
-      });
-    } catch (error) {
-      console.error("Detection error:", error);
-      setDetecting(false);
-      setInitializing(false);
-      setDetectionResult(error instanceof Error ? error.message : "Error during detection. Please try again.");
+  // Handle AI results
+  useEffect(() => {
+    if (lastResult?.detections) {
+      setDetections(lastResult.detections);
+      displayDetections(lastResult.detections);
     }
+  }, [lastResult]);
+
+  const handleDetect = () => {
+    if (!polygon) return;
+    
+    if (!isInitialized) {
+      console.warn("AI model not initialized yet");
+      return;
+    }
+
+    runInference({
+      polygon,
+      zoomLevel,
+      task: "zero-shot-object-detection",
+      classLabel: ensureDot(classLabel),
+      confidenceScore,
+      topk: 4
+    });
+  };
+
+  const displayDetections = (detections: GeoJSON.FeatureCollection) => {
+    if (!map.current) return;
+
+    // Remove existing detection layer if it exists
+    if (map.current.getSource("detections")) {
+      map.current.removeLayer("detections-layer");
+      map.current.removeSource("detections");
+    }
+
+    // Filter detections based on post-processing thresholds
+    const filtered = {
+      ...detections,
+      features: detections.features.filter((f: GeoJSON.Feature) =>
+        typeof f.properties?.score === 'number' ? 
+          f.properties.score >= postMinThreshold && f.properties.score <= postMaxThreshold : 
+          true
+      ),
+    };
+
+    // Add the new detections as a source
+    map.current.addSource("detections", {
+      type: "geojson",
+      data: filtered,
+    });
+
+    // Add a layer to display the detections
+    map.current.addLayer({
+      id: "detections-layer",
+      type: "fill",
+      source: "detections",
+      paint: {
+        "fill-color": "#0000ff",
+        "fill-opacity": 0.4,
+        "fill-outline-color": "#0000ff",
+      },
+    });
+
+    // Add hover functionality
+    const popup = new maplibregl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+    });
+
+    map.current.on("mouseenter", "detections-layer", () => {
+      map.current!.getCanvas().style.cursor = "pointer";
+    });
+
+    map.current.on("mouseleave", "detections-layer", () => {
+      map.current!.getCanvas().style.cursor = "";
+      popup.remove();
+    });
+
+    map.current.on("mousemove", "detections-layer", e => {
+      if (e.features && e.features.length > 0) {
+        const feature = e.features[0];
+        const properties = feature.properties;
+
+        // Create HTML content for popup
+        const content = Object.entries(properties || {})
+          .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
+          .join("<br/>");
+
+        popup
+          .setLngLat(e.lngLat)
+          .setHTML(content)
+          .addTo(map.current!);
+      }
+    });
   };
 
   const handleStartDrawing = () => {
@@ -439,10 +408,10 @@ export default function CarDetection() {
               </div>
               <button
                 className="bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                disabled={!polygon || detecting || initializing}
+                disabled={!polygon || !isInitialized || isProcessing}
                 onClick={handleDetect}
               >
-                {detecting || initializing ? (
+                {isProcessing ? (
                   <>
                     <svg
                       className="animate-spin h-5 w-5 text-white"
@@ -464,7 +433,7 @@ export default function CarDetection() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    {initializing ? "Initializing Model..." : "Detecting..."}
+                    Detecting...
                   </>
                 ) : (
                   <>
@@ -646,9 +615,28 @@ export default function CarDetection() {
             </div>
           </div>
 
-          {detectionResult && (
+          {/* Status Messages */}
+          {!isInitialized && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg text-sm">
+              Initializing AI model...
+            </div>
+          )}
+          
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-sm flex justify-between items-center">
+              <span>Error: {error}</span>
+              <button 
+                onClick={clearError}
+                className="text-red-600 hover:text-red-800 ml-2"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+          
+          {lastResult && !error && (
             <div className="mt-4 p-3 bg-green-50 border border-green-200 text-green-800 rounded-lg">
-              {detectionResult}
+              Zero-shot detection complete! Found {lastResult.detections?.features?.length || 0} objects.
             </div>
           )}
           

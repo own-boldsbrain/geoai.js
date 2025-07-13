@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
+import { useOptimizedGeoAI } from "../../../hooks/useGeoAIWorker";
 
 const GEOBASE_CONFIG = {
   provider: "geobase",
@@ -35,20 +36,25 @@ export default function WetLandSegmentation() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const draw = useRef<MaplibreDraw | null>(null);
-  const workerRef = useRef<Worker | null>(null);
+  
+  // GeoAI hook
+  const {
+    isInitialized,
+    isProcessing,
+    error,
+    lastResult,
+    initializeModel,
+    runOptimizedInference,
+    clearError,
+    reset: resetWorker
+  } = useOptimizedGeoAI("wetland-segmentation");
+
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
-  const [detecting, setDetecting] = useState(false);
-  const [initializing, setInitializing] = useState(false);
-  const [detectionResult, setDetectionResult] = useState<string | null>(null);
   const [detections, setDetections] = useState<GeoJSON.FeatureCollection>();
   const [zoomLevel, setZoomLevel] = useState<number>(17);
   const [confidenceScore, setConfidenceScore] = useState<number>(0.9);
-//   const [selectedModel, setSelectedModel] = useState<string>(
-//     "geobase/WALDO30_yolov8m_640x640"
-//   );
   const [customModelId, setCustomModelId] = useState<string>("");
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
-//   const models = ["geobase/WALDO30_yolov8m_640x640"];
 
   const handleReset = () => {
     // Clear all drawn features
@@ -67,8 +73,8 @@ export default function WetLandSegmentation() {
     // Reset states
     setPolygon(null);
     setDetections(undefined);
-    setDetectionResult(null);
-    setDetecting(false);
+    clearError();
+    resetWorker();
   };
 
   useEffect(() => {
@@ -159,171 +165,117 @@ export default function WetLandSegmentation() {
     };
   }, [mapProvider]);
 
-  // Initialize worker
+  // Initialize the model when the map provider changes
   useEffect(() => {
-    workerRef.current = new Worker(
-      new URL("../common.worker.ts", import.meta.url)
-    );
+    initializeModel({
+      task: "wetland-segmentation",
+      ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+    });
+  }, [mapProvider, initializeModel]);
 
-    workerRef.current.onmessage = e => {
-      const { type, payload } = e.data;
-
-      switch (type) {
-        case "init_complete":
-          setInitializing(false);
-          break;
-        case "inference_complete":
-          if (payload.detections) {
-            setDetections(payload.detections);
-            // Add the detections as a new layer on the map
-            if (map.current) {
-              // Remove existing detection layer if it exists
-              if (map.current.getSource("detections")) {
-                map.current.removeLayer("detections-layer");
-                map.current.removeSource("detections");
-              }
-
-              // Convert BigInt values to regular numbers
-              const convertBigIntToNumber = (obj: any): any => {
-                if (obj === null || obj === undefined) {
-                  return obj;
-                }
-                if (typeof obj === 'bigint') {
-                  return Number(obj);
-                }
-                if (Array.isArray(obj)) {
-                  return obj.map(convertBigIntToNumber);
-                }
-                if (typeof obj === 'object') {
-                  const result: any = {};
-                  for (const key in obj) {
-                    result[key] = convertBigIntToNumber(obj[key]);
-                  }
-                  return result;
-                }
-                return obj;
-              };
-
-              const processedDetections = convertBigIntToNumber(payload.detections);
-
-              // Add the new detections as a source
-              map.current.addSource("detections", {
-                type: "geojson",
-                data: processedDetections,
-              });
-
-              // Add a layer to display the detections
-              map.current.addLayer({
-                id: "detections-layer",
-                type: "fill",
-                source: "detections",
-                layout: {
-                  visibility: "visible"
-                },
-                paint: {
-                  "fill-color": "#ff0000",
-                  "fill-opacity": 0.9,
-                  "fill-outline-color": "#ff0000",
-                },
-              });
-
-              // Add hover functionality
-              const popup = new maplibregl.Popup({
-                closeButton: false,
-                closeOnClick: false,
-              });
-
-              map.current.on("mouseenter", "detections-layer", () => {
-                map.current!.getCanvas().style.cursor = "pointer";
-              });
-
-              map.current.on("mouseleave", "detections-layer", () => {
-                map.current!.getCanvas().style.cursor = "";
-                popup.remove();
-              });
-
-              map.current.on("mousemove", "detections-layer", e => {
-                if (e.features && e.features.length > 0) {
-                  const feature = e.features[0];
-                  const properties = feature.properties;
-
-                  // Create HTML content for popup
-                  const content = Object.entries(properties)
-                    .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
-                    .join("<br/>");
-
-                  popup
-                    .setLngLat(e.lngLat)
-                    .setHTML(content)
-                    .addTo(map.current!);
-                }
-              });
-            }
-          }
-          setDetecting(false);
-          setDetectionResult("WetLand Segmentation complete!");
-          break;
-        case "error":
-          setDetecting(false);
-          setInitializing(false);
-          setDetectionResult(`Error: ${payload}`);
-          break;
-      }
-    };
-
-    return () => {
-      workerRef.current?.terminate();
-    };
-  }, []);
-
-  const handleDetect = async () => {
-    if (!polygon || !workerRef.current) return;
-    setDetecting(true);
-    setInitializing(true);
-    setDetectionResult(null);
-
-    try {
-      // Initialize model if needed
-      workerRef.current.postMessage({
-        type: "init",
-        payload: {
-          task: "wetland-segmentation",
-          ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
-        //   modelId: customModelId || selectedModel,
-        },
-      });
-
-      // Wait for initialization to complete before running inference
-      await new Promise<void>((resolve, reject) => {
-        const messageHandler = (e: MessageEvent) => {
-          const { type, payload } = e.data;
-          if (type === "init_complete") {
-            workerRef.current?.removeEventListener("message", messageHandler);
-            resolve();
-          } else if (type === "error") {
-            workerRef.current?.removeEventListener("message", messageHandler);
-            reject(new Error(payload));
-          }
-        };
-        workerRef.current?.addEventListener("message", messageHandler);
-      });
-
-      // Now run inference
-      workerRef.current.postMessage({
-        type: "inference",
-        payload: {
-          task: "wetland-segmentation",
-          polygon,
-          confidenceScore,
-          zoomLevel,
-        },
-      });
-    } catch (error) {
-      console.error("Detection error:", error);
-      setDetecting(false);
-      setInitializing(false);
-      setDetectionResult(error instanceof Error ? error.message : "Error during detection. Please try again.");
+  // Handle results from the worker
+  useEffect(() => {
+    if (lastResult?.detections) {
+      displayDetections(lastResult.detections);
     }
+  }, [lastResult]);
+
+  // Function to display detections on the map with BigInt conversion
+  const displayDetections = (detections: GeoJSON.FeatureCollection) => {
+    if (!map.current) return;
+
+    // Remove existing detection layer if it exists
+    if (map.current.getSource("detections")) {
+      map.current.removeLayer("detections-layer");
+      map.current.removeSource("detections");
+    }
+
+    // Convert BigInt values to regular numbers
+    const convertBigIntToNumber = (obj: any): any => {
+      if (obj === null || obj === undefined) {
+        return obj;
+      }
+      if (typeof obj === 'bigint') {
+        return Number(obj);
+      }
+      if (Array.isArray(obj)) {
+        return obj.map(convertBigIntToNumber);
+      }
+      if (typeof obj === 'object') {
+        const result: any = {};
+        for (const key in obj) {
+          result[key] = convertBigIntToNumber(obj[key]);
+        }
+        return result;
+      }
+      return obj;
+    };
+
+    const processedDetections = convertBigIntToNumber(detections);
+
+    // Add the new detections as a source
+    map.current.addSource("detections", {
+      type: "geojson",
+      data: processedDetections,
+    });
+
+    // Add a layer to display the detections
+    map.current.addLayer({
+      id: "detections-layer",
+      type: "fill",
+      source: "detections",
+      layout: {
+        visibility: "visible"
+      },
+      paint: {
+        "fill-color": "#ff0000",
+        "fill-opacity": 0.9,
+        "fill-outline-color": "#ff0000",
+      },
+    });
+
+    // Add hover functionality
+    const popup = new maplibregl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+    });
+
+    map.current.on("mouseenter", "detections-layer", () => {
+      map.current!.getCanvas().style.cursor = "pointer";
+    });
+
+    map.current.on("mouseleave", "detections-layer", () => {
+      map.current!.getCanvas().style.cursor = "";
+      popup.remove();
+    });
+
+    map.current.on("mousemove", "detections-layer", e => {
+      if (e.features && e.features.length > 0) {
+        const feature = e.features[0];
+        const properties = feature.properties;
+
+        // Create HTML content for popup
+        const content = Object.entries(properties)
+          .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
+          .join("<br/>");
+
+        popup
+          .setLngLat(e.lngLat)
+          .setHTML(content)
+          .addTo(map.current!);
+      }
+    });
+
+    setDetections(processedDetections);
+  };
+
+  const handleDetect = () => {
+    if (!polygon) return;
+    
+    runOptimizedInference(polygon, zoomLevel, {
+      task: "wetland-segmentation",
+      confidenceScore,
+    });
   };
 
   const handleStartDrawing = () => {
@@ -390,10 +342,10 @@ export default function WetLandSegmentation() {
               </button>
               <button
                 className="bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                disabled={!polygon || detecting || initializing}
+                disabled={!polygon || !isInitialized || isProcessing}
                 onClick={handleDetect}
               >
-                {detecting || initializing ? (
+                {!isInitialized || isProcessing ? (
                   <>
                     <svg
                       className="animate-spin h-5 w-5 text-white"
@@ -415,7 +367,7 @@ export default function WetLandSegmentation() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    {initializing ? "Initializing Model..." : "Detecting..."}
+                    {!isInitialized ? "Initializing Model..." : "Detecting..."}
                   </>
                 ) : (
                   <>
@@ -557,9 +509,15 @@ export default function WetLandSegmentation() {
             </div>
           </div>
 
-          {detectionResult && (
+          {lastResult && (
             <div className="mt-4 p-3 bg-green-50 border border-green-200 text-green-800 rounded-lg">
-              {detectionResult}
+              WetLand Segmentation complete!
+            </div>
+          )}
+          
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg">
+              Error: {error}
             </div>
           )}
           
