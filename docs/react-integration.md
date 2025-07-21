@@ -10,6 +10,7 @@ The library is split into two modules to ensure optimal compatibility:
 - **React Module** (`@geobase-js/geoai/react`): React-specific hooks
 
 This separation ensures:
+
 - ✅ Node.js applications can use the core library without React dependencies
 - ✅ Frontend applications can use React hooks for better UX
 - ✅ No unnecessary React code in backend bundles
@@ -26,23 +27,23 @@ npm install @geobase-js/geoai
 ### Basic React Hook
 
 ```jsx
-import { useGeoAIWorker } from '@geobase-js/geoai/react';
+import { useGeoAIWorker } from "@geobase-js/geoai/react";
 
 function MyComponent() {
-  const { 
-    isInitialized, 
-    isProcessing, 
-    error, 
+  const {
+    isInitialized,
+    isProcessing,
+    error,
     lastResult,
-    initializeModel, 
-    runInference 
+    initializeModel,
+    runInference,
   } = useGeoAIWorker();
 
   useEffect(() => {
     initializeModel({
-      provider: 'geobase',
-      apikey: 'your-api-key',
-      task: 'object-detection'
+      provider: "geobase",
+      apikey: "your-api-key",
+      task: "object-detection",
     });
   }, []);
 
@@ -50,8 +51,8 @@ function MyComponent() {
     runInference({
       polygon: geoJsonFeature,
       zoomLevel: 18,
-      task: 'object-detection',
-      confidenceScore: 0.8
+      task: "object-detection",
+      confidenceScore: 0.8,
     });
   };
 
@@ -68,17 +69,19 @@ function MyComponent() {
 ### Optimized React Hook
 
 ```jsx
-import { useOptimizedGeoAI } from '@geobase-js/geoai/react';
+import { useOptimizedGeoAI } from "@geobase-js/geoai/react";
 
 function OptimizedComponent() {
-  const { runOptimizedInference } = useOptimizedGeoAI('object-detection');
+  const { runOptimizedInference } = useOptimizedGeoAI("object-detection");
 
   const handleOptimizedInference = () => {
     // Automatically optimizes parameters based on task and zoom level
     runOptimizedInference(geoJsonFeature, 18);
   };
 
-  return <button onClick={handleOptimizedInference}>Run Optimized Inference</button>;
+  return (
+    <button onClick={handleOptimizedInference}>Run Optimized Inference</button>
+  );
 }
 ```
 
@@ -89,6 +92,7 @@ function OptimizedComponent() {
 Returns a hook that manages the GeoAI worker lifecycle.
 
 **Returns:**
+
 - `isInitialized: boolean` - Whether the model is initialized
 - `isProcessing: boolean` - Whether inference is currently running
 - `error: string | null` - Current error state
@@ -103,9 +107,11 @@ Returns a hook that manages the GeoAI worker lifecycle.
 Returns a hook with optimized parameters for the specified task.
 
 **Parameters:**
+
 - `task: string` - The AI task to optimize for
 
 **Returns:**
+
 - All properties from `useGeoAIWorker()`
 - `runOptimizedInference: (polygon, zoomLevel, options?) => void` - Run inference with optimized parameters
 
@@ -124,6 +130,7 @@ The React hooks use Web Workers to run AI inference in the background, preventin
 ### Worker Communication
 
 The hooks communicate with a Web Worker that handles:
+
 - Model initialization
 - Inference execution
 - Error handling
@@ -145,19 +152,20 @@ src/
 Full TypeScript definitions are included:
 
 ```typescript
-import type { 
-  InitConfig, 
-  InferenceParams, 
+import type {
+  InitConfig,
+  InferenceParams,
   GeoAIWorkerResult,
-  UseGeoAIWorkerReturn 
-} from '@geobase-js/geoai/react';
+  UseGeoAIWorkerReturn,
+} from "@geobase-js/geoai/react";
 ```
 
 ## Examples
 
 See the [examples directory](../examples/) for complete working examples including:
+
 - Next.js integration
 - Map integration
 - Real-time inference
 - Error handling
-- Loading states 
+- Loading states

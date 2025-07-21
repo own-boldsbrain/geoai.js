@@ -36,6 +36,7 @@ npm install ../path/to/your/geobase-ai.js/build
 ```
 
 Or using a local file reference in package.json:
+
 ```json
 {
   "dependencies": {
@@ -47,6 +48,7 @@ Or using a local file reference in package.json:
 ### 3. Test Core Import
 
 Create `src/test-core.ts`:
+
 ```typescript
 import { geoai } from "@geobase-js/geoai";
 
@@ -58,10 +60,10 @@ export const testCore = () => {
   try {
     const tasks = geoai.tasks();
     const models = geoai.models();
-    
+
     console.log("✅ Core import successful");
     console.log(`Found ${tasks.length} tasks and ${models.length} models`);
-    
+
     return true;
   } catch (error) {
     console.error("❌ Core import failed:", error);
@@ -73,6 +75,7 @@ export const testCore = () => {
 ### 4. Test React Import
 
 Create `src/test-react.tsx`:
+
 ```typescript
 import React from "react";
 import { useGeoAIWorker, useOptimizedGeoAI } from "@geobase-js/geoai/react";
@@ -93,8 +96,8 @@ export const TestReactHooks: React.FC = () => {
       <p>Initialized: {isInitialized ? "Yes" : "No"}</p>
       <p>Error: {error || "None"}</p>
       <p>Optimized Hook: {optimizedHook ? "Loaded" : "Not loaded"}</p>
-      
-      <button 
+
+      <button
         onClick={() => {
           initializeModel({
             provider: "mapbox",
@@ -113,6 +116,7 @@ export const TestReactHooks: React.FC = () => {
 ### 5. Test in App.tsx
 
 Update `src/App.tsx`:
+
 ```typescript
 import React from 'react';
 import { testCore } from './test-core';
@@ -123,7 +127,7 @@ function App() {
   React.useEffect(() => {
     // Test core import
     const coreSuccess = testCore();
-    
+
     if (coreSuccess) {
       console.log("🎉 All imports working!");
     }
@@ -145,16 +149,19 @@ export default App;
 ## What Should Work
 
 ✅ **Core Import**: `import { geoai } from "@geobase-js/geoai"`
+
 - Should work in any JavaScript/TypeScript project
 - No React dependency required
 - Provides `geoai.pipeline()`, `geoai.tasks()`, `geoai.models()`
 
-✅ **React Import**: `import { useGeoAIWorker } from "@geobase-js/geoai/react"`  
+✅ **React Import**: `import { useGeoAIWorker } from "@geobase-js/geoai/react"`
+
 - Should work in React projects only
 - Requires React as peer dependency
 - Provides React hooks for Web Worker management
 
 ✅ **TypeScript Support**:
+
 - Core types available from main import
 - React-specific types available from React import
 - IDE autocomplete should work for both

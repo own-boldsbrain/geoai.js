@@ -15,48 +15,45 @@ npm install @geobase-js/geoai
 ### Core Library (Node.js and Browser)
 
 ```javascript
-import { geoai } from '@geobase-js/geoai';
+import { geoai } from "@geobase-js/geoai";
 
 // Initialize the pipeline
-const pipeline = await geoai.pipeline(
-  [{ task: 'object-detection' }],
-  { 
-    provider: 'geobase',
-    apikey: 'your-api-key'
-  }
-);
+const pipeline = await geoai.pipeline([{ task: "object-detection" }], {
+  provider: "geobase",
+  apikey: "your-api-key",
+});
 
 // Run inference
 const result = await pipeline.inference({
   inputs: {
-    polygon: geoJsonFeature
+    polygon: geoJsonFeature,
   },
   mapSourceParams: {
-    zoomLevel: 18
-  }
+    zoomLevel: 18,
+  },
 });
 ```
 
 ### React Hooks (Browser Only)
 
 ```javascript
-import { useGeoAIWorker, useOptimizedGeoAI } from '@geobase-js/geoai/react';
+import { useGeoAIWorker, useOptimizedGeoAI } from "@geobase-js/geoai/react";
 
 function MyComponent() {
-  const { 
-    isInitialized, 
-    isProcessing, 
-    error, 
+  const {
+    isInitialized,
+    isProcessing,
+    error,
     lastResult,
-    initializeModel, 
-    runInference 
+    initializeModel,
+    runInference,
   } = useGeoAIWorker();
 
   useEffect(() => {
     initializeModel({
-      provider: 'geobase',
-      apikey: 'your-api-key',
-      task: 'object-detection'
+      provider: "geobase",
+      apikey: "your-api-key",
+      task: "object-detection",
     });
   }, []);
 
@@ -64,8 +61,8 @@ function MyComponent() {
     runInference({
       polygon: geoJsonFeature,
       zoomLevel: 18,
-      task: 'object-detection',
-      confidenceScore: 0.8
+      task: "object-detection",
+      confidenceScore: 0.8,
     });
   };
 
@@ -82,17 +79,19 @@ function MyComponent() {
 ### Optimized React Hook
 
 ```javascript
-import { useOptimizedGeoAI } from '@geobase-js/geoai/react';
+import { useOptimizedGeoAI } from "@geobase-js/geoai/react";
 
 function OptimizedComponent() {
-  const { runOptimizedInference } = useOptimizedGeoAI('object-detection');
+  const { runOptimizedInference } = useOptimizedGeoAI("object-detection");
 
   const handleOptimizedInference = () => {
     // Automatically optimizes parameters based on task and zoom level
     runOptimizedInference(geoJsonFeature, 18);
   };
 
-  return <button onClick={handleOptimizedInference}>Run Optimized Inference</button>;
+  return (
+    <button onClick={handleOptimizedInference}>Run Optimized Inference</button>
+  );
 }
 ```
 
@@ -104,6 +103,7 @@ The library is split into two modules:
 - **React Module** (`@geobase-js/geoai/react`): React-specific hooks that depend on the core module
 
 This separation ensures:
+
 - ✅ Node.js applications can use the core library without React dependencies
 - ✅ Frontend applications can use React hooks for better UX
 - ✅ No unnecessary React code in backend bundles

@@ -7,6 +7,7 @@ This guide shows you how to install and test your local `@geobase-js/geoai` pack
 The Next.js example already has convenient scripts set up:
 
 ### Quick Start
+
 ```bash
 # From the root directory
 cd examples/next-geobase
@@ -17,11 +18,12 @@ pnpm run build:geobase-ai
 # Start development server
 pnpm dev
 
-# Or do both in one command  
+# Or do both in one command
 pnpm run build_dev
 ```
 
 ### What This Does
+
 1. Builds the main package (`pnpm run build` in root)
 2. Installs the local package in the example
 3. Starts the Next.js dev server
@@ -29,12 +31,14 @@ pnpm run build_dev
 ## Method 2: Manual Local Installation
 
 ### Step 1: Build Your Package
+
 ```bash
 # From root directory
 pnpm build
 ```
 
 ### Step 2: Install in Example
+
 ```bash
 cd examples/next-geobase
 
@@ -54,18 +58,18 @@ pnpm install ../../geobase-js-geoai-0.0.1.tgz
 ## Method 3: Using pnpm Workspaces (Best for Development)
 
 ### Update Root package.json
+
 Add to the root `package.json`:
+
 ```json
 {
   "name": "@geobase-js/geoai-workspace",
-  "workspaces": [
-    ".",
-    "examples/*"
-  ]
+  "workspaces": [".", "examples/*"]
 }
 ```
 
 ### Update Example package.json
+
 ```json
 {
   "dependencies": {
@@ -75,6 +79,7 @@ Add to the root `package.json`:
 ```
 
 ### Install and Link
+
 ```bash
 # From root directory
 pnpm install
@@ -101,6 +106,7 @@ npm unlink @geobase-js/geoai
 ## Testing Your Installation
 
 ### 1. Check Installation
+
 ```bash
 cd examples/next-geobase
 
@@ -114,12 +120,13 @@ ls -la node_modules/@geobase-js/
 ### 2. Test Imports in Code
 
 Create `test-imports.ts` in the example:
+
 ```typescript
 // Test core import
 import { geoai } from "@geobase-js/geoai";
 console.log("Core API:", geoai.tasks());
 
-// Test React import  
+// Test React import
 import { useGeoAIWorker } from "@geobase-js/geoai/react";
 console.log("React hook:", typeof useGeoAIWorker);
 
@@ -132,6 +139,7 @@ export const testImports = () => {
 ### 3. Test in Next.js Component
 
 Update a component to test the imports:
+
 ```typescript
 // In src/app/test-page/page.tsx
 import { geoai } from "@geobase-js/geoai";
@@ -139,7 +147,7 @@ import { useGeoAIWorker } from "@geobase-js/geoai/react";
 
 export default function TestPage() {
   const { isInitialized } = useGeoAIWorker();
-  
+
   useEffect(() => {
     console.log("Available tasks:", geoai.tasks());
     console.log("Available models:", geoai.models().length);
@@ -152,17 +160,19 @@ export default function TestPage() {
 ## Development Workflow
 
 ### For Active Development
+
 ```bash
 # Terminal 1: Watch mode for package building
 cd /path/to/geobase-ai.js
 pnpm build --watch
 
 # Terminal 2: Next.js dev server
-cd examples/next-geobase  
+cd examples/next-geobase
 pnpm dev
 ```
 
 ### For Testing Changes
+
 ```bash
 # Make changes to src/
 # Then rebuild and test
@@ -175,6 +185,7 @@ pnpm dev
 ## Troubleshooting
 
 ### "Module not found" errors
+
 ```bash
 # Clear node_modules and reinstall
 cd examples/next-geobase
@@ -183,19 +194,22 @@ pnpm install file:../../build
 ```
 
 ### TypeScript errors
+
 ```bash
 # Check if types are installed
 ls -la node_modules/@geobase-js/geoai/
 
 # Should see:
 # - @geobase-js/geoai.js
-# - @geobase-js/geoai-react.js  
+# - @geobase-js/geoai-react.js
 # - index.d.ts
 # - react.d.ts
 ```
 
 ### Import path issues
+
 Make sure you're using the correct import paths:
+
 ```typescript
 // ✅ Correct
 import { geoai } from "@geobase-js/geoai";
@@ -207,6 +221,7 @@ import { useGeoAIWorker } from "@geobase-js/geoai/src/react";
 ```
 
 ### Cache issues
+
 ```bash
 # Clear Next.js cache
 cd examples/next-geobase
@@ -217,7 +232,9 @@ pnpm dev
 ## Testing Different Scenarios
 
 ### Test Core Only (No React)
+
 Create a Node.js script:
+
 ```javascript
 // test-core.mjs
 import { geoai } from "@geobase-js/geoai";
@@ -227,6 +244,7 @@ console.log("Models:", geoai.models().length);
 ```
 
 ### Test React Hooks
+
 ```typescript
 // In a React component
 import { useGeoAIWorker } from "@geobase-js/geoai/react";
@@ -238,13 +256,18 @@ function MyComponent() {
 ```
 
 ### Test TypeScript Declarations
+
 ```typescript
 // Check autocomplete and type checking work
 import { geoai, ProviderParams } from "@geobase-js/geoai";
 import { UseGeoAIWorkerReturn } from "@geobase-js/geoai/react";
 
-const params: ProviderParams = { /* should autocomplete */ };
-const result: UseGeoAIWorkerReturn = { /* should type check */ };
+const params: ProviderParams = {
+  /* should autocomplete */
+};
+const result: UseGeoAIWorkerReturn = {
+  /* should type check */
+};
 ```
 
 ## Quick Commands Reference
