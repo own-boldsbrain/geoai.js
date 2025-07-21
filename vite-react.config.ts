@@ -4,7 +4,7 @@ import { defineConfig } from "vite";
 import packageJson from "./package.json";
 import commonjs from "vite-plugin-commonjs";
 import dotenv from "dotenv";
-// @ts-ignore
+// @ts-expect-error
 import { visualizer } from "rollup-plugin-visualizer";
 
 dotenv.config();
@@ -21,13 +21,13 @@ const getPackageNameCamelCase = () => {
   }
 };
 
-const fileName = {
-  es: `${getPackageName()}.js`,
-  // iife: `${getPackageName()}.iife.js`,
-  // cjs: `${getPackageName()}.common.js`,
+const reactFileName = {
+  es: `${getPackageName()}-react.js`,
 };
 
-const formats = Object.keys(fileName) as Array<keyof typeof fileName>;
+const reactFormats = Object.keys(reactFileName) as Array<
+  keyof typeof reactFileName
+>;
 
 export default defineConfig(({ command }) => ({
   plugins:
@@ -35,7 +35,7 @@ export default defineConfig(({ command }) => ({
       ? [
           commonjs(),
           visualizer({
-            filename: "stats.html",
+            filename: "stats-react.html",
             open: true,
             gzipSize: true,
             brotliSize: true,
@@ -45,11 +45,12 @@ export default defineConfig(({ command }) => ({
   base: "./",
   build: {
     outDir: "./build",
+    emptyOutDir: false,
     lib: {
-      entry: path.resolve(__dirname, "src/index.ts"),
-      name: getPackageNameCamelCase(),
-      formats,
-      fileName: format => fileName[format],
+      entry: path.resolve(__dirname, "src/react/index.ts"),
+      name: `${getPackageNameCamelCase()}React`,
+      formats: reactFormats,
+      fileName: format => reactFileName[format],
     },
     minify: "terser",
     terserOptions: {
@@ -62,12 +63,14 @@ export default defineConfig(({ command }) => ({
       external: [
         "@huggingface/transformers",
         "onnxruntime-web",
+        "react",
         // "@techstark/opencv-js",
       ],
       output: {
         globals: {
           "@huggingface/transformers": "transformers",
           "onnxruntime-web": "ort",
+          react: "React",
           // "@techstark/opencv-js": "cv",
         },
       },

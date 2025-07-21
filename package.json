@@ -22,34 +22,50 @@
   "homepage": "https://docs.geobase.app/geoaijs",
   "bugs": "https://github.com/decision-labs/geobase-ai.js/issues",
   "files": [
-    "build/dist",
+    "@geobase-js",
+    "assets",
+    "*.d.ts",
     "README.md",
     "LICENSE.md",
     "CHANGELOG.md"
   ],
-  "main": "./build/dist/@geobase-js/geoai.js",
-  "module": "./build/dist/@geobase-js/geoai.js",
-  "unpkg": "./build/dist/@geobase-js/geoai.js",
-  "jsdelivr": "./build/dist/@geobase-js/geoai.js",
+  "main": "./@geobase-js/geoai.js",
+  "module": "./@geobase-js/geoai.js",
+  "unpkg": "./@geobase-js/geoai.js",
+  "jsdelivr": "./@geobase-js/geoai.js",
   "type": "module",
   "exports": {
     ".": {
-      "import": "./build/dist/@geobase-js/geoai.js",
-      "types": "./build/dist/index.d.ts"
+      "import": "./@geobase-js/geoai.js",
+      "types": "./index.d.ts"
+    },
+    "./react": {
+      "import": "./@geobase-js/geoai-react.js",
+      "types": "./react.d.ts"
     },
     "./dist": {
-      "import": "./build/dist/@geobase-js/geoai.js"
+      "import": "./@geobase-js/geoai.js"
     }
   },
-  "types": "./build/dist/index.d.ts",
+  "types": "./index.d.ts",
   "peerDependencies": {
     "@huggingface/transformers": "^3.3.3",
     "@techstark/opencv-js": "^4.10.0-release.1",
-    "onnxruntime-web": "^1.21.0"
+    "onnxruntime-web": "^1.21.0",
+    "react": "^18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "scripts": {
     "dev": "vite --host",
-    "build": "rimraf build/**/* && tsc && vite build && dts-bundle-generator --config ./dts-bundle-generator.config.ts && copyfiles ./package.json build",
+    "build": "rimraf build/**/* && pnpm build:core && pnpm build:react && pnpm build:types && pnpm build:package",
+    "build:core": "tsc && vite build",
+    "build:react": "vite build --config vite-react.config.ts",
+    "build:types": "dts-bundle-generator --config ./dts-bundle-generator.config.ts",
+    "build:package": "copyfiles ./package.json build",
     "build:examples": "pnpm build && cp -r ./build ./examples/codepen-geobase",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
