@@ -269,11 +269,18 @@ class Pipeline {
   }
 }
 
+// Import agent functionality
+import { createAgent, listAvailableAgents } from "./agents";
+
 const geoai = {
   pipeline: Pipeline.pipeline,
   tasks: Pipeline.listTasks,
   models: Pipeline.listModels,
   validateChain: Pipeline.findValidChains,
+
+  // Agent functionality
+  agent: createAgent,
+  agents: listAvailableAgents,
 };
 
 export { geoai, type ProviderParams };
