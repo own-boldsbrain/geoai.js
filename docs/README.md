@@ -42,6 +42,7 @@ Complete reference for all APIs, hooks, and configuration options.
 
 - [useGeoAIWorker Hook](./api-reference/useGeoAIWorker.md) - React hook documentation
 - [Supported Models](./api-reference/supported-models.md) - Model registry & capabilities
+- [Individual Task Documentation](./supported-tasks/README.md) - Detailed docs for each AI task
 - [Configuration Options](./api-reference/configuration.md) - Provider configs & parameters
 
 ## 🎯 Examples
