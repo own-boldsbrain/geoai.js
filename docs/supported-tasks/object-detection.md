@@ -4,10 +4,6 @@
 > **Library:** `@geobase-js/geoai`  
 > **Purpose:** General-purpose object detection for common infrastructure and objects
 
-<video width="100%" controls>
-  <source src="https://raw.githubusercontent.com/decision-labs/geobase-ai.js/main/examples/next-geobase/public/video/object-detection.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
 
 ## Quick Start
 
@@ -102,6 +98,8 @@ interface DetectionProperties {
 | `SolarPanels` | Solar panel installations | Renewable energy assessment |
 | `Bus` | Buses and public transportation | Public transit analysis |
 
+<!-- Todo : update the performance metrices -->
+
 ## Performance Metrics
 
 ### Speed & Resources
@@ -140,9 +138,9 @@ postProcessingParams: { confidence: 0.8 } // Higher = fewer false positives
 // Optimal zoom level for your use case
 mapSourceParams: { zoomLevel: 18 } // 18-20 for high detail, 16-17 for broader coverage
 
-// Process large areas in tiles
-const tiles = divideLargePolygon(polygon, maxArea: 2); // 2km² chunks
 ```
+<!-- // Process large areas in tiles
+const tiles = divideLargePolygon(polygon, maxArea: 2); // 2km² chunks -->
 
 ### 🔗 **Pipeline Chaining**
 

@@ -9,7 +9,7 @@ This directory contains comprehensive documentation for each AI task, including 
 | Task | Purpose | Status |
 |-------|---------|--------|
 | [Object Detection](./object-detection.md) | General-purpose object detection | ✅ Complete |
-| [Zero-Shot Object Detection](./zero-shot-object-detection.md) | Custom object class detection | 🚧 Planned |
+| [Zero-Shot Object Detection](./zero-shot-object-detection.md) | Custom object class detection | ✅ Complete |
 | [Oriented Object Detection](./oriented-object-detection.md) | Rotated object detection | 🚧 Planned |
 | [Vehicle Detection](./vehicle-detection.md) | Specialized vehicle detection | 🚧 Planned |
 | [Ship Detection](./ship-detection.md) | Maritime vessel detection | 🚧 Planned |
