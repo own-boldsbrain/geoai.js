@@ -15,7 +15,7 @@ const objectDetectionInstance = await geoai.pipeline(
   [
     {
       task: "object-detection",
-      modelId: "geobase/WALDO30_yolov8m_640x640",
+      modelId: "geobase/WALDO30_yolov8m_640x640", // optional
     },
   ],
   providerParams

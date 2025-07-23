@@ -14,7 +14,7 @@ const zeroShotInstance = await geoai.pipeline(
   [
     {
       task: "zero-shot-object-detection",
-      modelId: "onnx-community/grounding-dino-tiny-ONNX",
+      modelId: "onnx-community/grounding-dino-tiny-ONNX", // optional
     },
   ],
   providerParams
