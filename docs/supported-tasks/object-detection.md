@@ -4,10 +4,7 @@
 > **Library:** `@geobase-js/geoai`  
 > **Purpose:** General-purpose object detection for common infrastructure and objects
 
-<video width="100%" controls>
-  <source src="https://raw.githubusercontent.com/decision-labs/geobase-ai.js/main/examples/next-geobase/public/video/object-detection.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+![Object Detection Demo](../gifs/object-detection.gif)
 
 ## Quick Start
 
