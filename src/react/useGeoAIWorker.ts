@@ -1,3 +1,4 @@
+import { ProviderParams, InferenceParams } from "@/geobase-ai";
 import { useEffect, useRef, useState, useCallback } from "react";
 
 // Worker message types
@@ -17,33 +18,13 @@ export interface WorkerResponse {
   payload?: any;
 }
 
-export interface InitConfig {
-  provider: "geobase" | "mapbox";
-  projectRef?: string;
-  apikey?: string;
-  apiKey?: string;
-  cogImagery?: string;
-  style?: string;
-  task: string;
-  modelId?: string;
-  chain_config?: {
+export interface PipelineInitConfig {
+  tasks: {
     task: string;
     modelId?: string;
     modelParams?: any;
   }[];
-}
-
-export interface InferenceParams {
-  polygon: GeoJSON.Feature;
-  classLabel?: string;
-  confidenceScore: number;
-  zoomLevel: number;
-  topk?: number;
-  nmsThreshold?: number;
-  minArea?: number;
-  inputPoint?: any;
-  maxMasks?: number;
-  task: string;
+  providerParams: ProviderParams;
 }
 
 export interface GeoAIWorkerResult {
@@ -58,9 +39,10 @@ export interface UseGeoAIWorkerReturn {
   isProcessing: boolean;
   error: string | null;
   lastResult: GeoAIWorkerResult | null;
+  initializedTasks: string[];
 
   // Actions
-  initializeModel: (config: InitConfig) => void;
+  initializeModel: (config: PipelineInitConfig) => void;
   runInference: (params: InferenceParams) => void;
   clearError: () => void;
   reset: () => void;
@@ -78,6 +60,7 @@ export function useGeoAIWorker(): UseGeoAIWorkerReturn {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<GeoAIWorkerResult | null>(null);
+  const [initializedTasks, setInitializedTasks] = useState<string[]>([]);
 
   // Initialize worker on mount
   useEffect(() => {
@@ -88,7 +71,10 @@ export function useGeoAIWorker(): UseGeoAIWorkerReturn {
       workerRef.current.onerror = handleWorkerError;
     } catch (err) {
       console.error("Failed to initialize worker:", err);
-      setError("Failed to initialize AI worker");
+      setError(
+        "Failed to initialize AI worker: " +
+          (err instanceof Error ? err.message : "Unknown error")
+      );
     }
 
     // Cleanup on unmount
@@ -103,6 +89,7 @@ export function useGeoAIWorker(): UseGeoAIWorkerReturn {
       setError(null);
       setIsInitialized(false);
       setIsProcessing(false);
+      setInitializedTasks([]);
     };
   }, []);
 
@@ -114,6 +101,7 @@ export function useGeoAIWorker(): UseGeoAIWorkerReturn {
       case "init_complete":
         setIsInitialized(true);
         setError(null);
+        setInitializedTasks(payload?.tasks || []);
         console.log("[Hook] AI model initialized successfully");
         break;
 
@@ -146,7 +134,7 @@ export function useGeoAIWorker(): UseGeoAIWorkerReturn {
 
   // Initialize AI model
   const initializeModel = useCallback(
-    (config: InitConfig) => {
+    (config: PipelineInitConfig) => {
       if (!workerRef.current) {
         setError("Worker not available");
         return;
@@ -220,6 +208,7 @@ export function useGeoAIWorker(): UseGeoAIWorkerReturn {
     setIsProcessing(false);
     setError(null);
     setLastResult(null);
+    setInitializedTasks([]);
   }, [handleWorkerMessage, handleWorkerError]);
 
   return {
@@ -228,6 +217,7 @@ export function useGeoAIWorker(): UseGeoAIWorkerReturn {
     isProcessing,
     error,
     lastResult,
+    initializedTasks,
 
     // Actions
     initializeModel,
@@ -238,29 +228,22 @@ export function useGeoAIWorker(): UseGeoAIWorkerReturn {
 }
 
 // Helper hook for common AI tasks with optimized parameters
-export function useOptimizedGeoAI(task: string) {
+export function useOptimizedGeoAI() {
   const worker = useGeoAIWorker();
 
   const runOptimizedInference = useCallback(
-    (
-      polygon: GeoJSON.Feature,
-      zoomLevel: number,
-      options: Partial<
-        Omit<InferenceParams, "polygon" | "zoomLevel" | "task">
-      > = {}
-    ) => {
+    (params: InferenceParams) => {
       // Optimize parameters based on task and zoom level
-      const optimizedParams = getOptimalParams(task, zoomLevel, options);
+      const optimizedParams = getOptimalParams(
+        worker.initializedTasks,
+        params.mapSourceParams?.zoomLevel,
+        params.postProcessingParams ?? {}
+      );
+      params.postProcessingParams = optimizedParams;
 
-      worker.runInference({
-        polygon,
-        zoomLevel,
-        task,
-        confidenceScore: optimizedParams.confidenceScore || 0.8,
-        ...optimizedParams,
-      });
+      worker.runInference(params);
     },
-    [worker, task]
+    [worker]
   );
 
   return {
@@ -271,52 +254,63 @@ export function useOptimizedGeoAI(task: string) {
 
 // Helper function to get optimal parameters for different tasks
 function getOptimalParams(
-  task: string,
-  zoomLevel: number,
-  options: Partial<Omit<InferenceParams, "polygon" | "zoomLevel" | "task">>
-): Partial<Omit<InferenceParams, "polygon" | "zoomLevel" | "task">> {
-  const baseParams: Partial<
-    Omit<InferenceParams, "polygon" | "zoomLevel" | "task">
-  > = {
-    confidenceScore: 0.8,
-    topk: 10,
-    ...options,
+  tasks: string[],
+  zoomLevel: number | undefined,
+  postProcessingParams: Record<string, unknown>
+): Record<string, unknown> {
+  let basePostProcessingParams: Record<string, unknown> = {
+    ...postProcessingParams,
   };
 
-  switch (task) {
-    case "object-detection":
-      return {
-        ...baseParams,
-        confidenceScore: zoomLevel > 18 ? 0.6 : 0.8,
-      };
-
-    case "building-footprint-segmentation":
-      return {
-        ...baseParams,
-        confidenceScore: 0.7,
-        minArea: zoomLevel > 16 ? 50 : 100,
-      };
-
-    case "zero-shot-object-detection":
-      return {
-        ...baseParams,
-        confidenceScore: 0.8,
-        topk: 15,
-      };
-
-    case "land-cover-classification":
-      return {
-        ...baseParams,
-        minArea: zoomLevel > 15 ? 25 : 50,
-      };
-
-    case "mask-generation":
-      return {
-        ...baseParams,
-        maxMasks: 3,
-      };
-
-    default:
-      return baseParams;
+  if (!tasks || tasks.length === 0 || !zoomLevel) {
+    return basePostProcessingParams;
   }
+  tasks.forEach(task => {
+    console.log("[Hook] Optimizing parameters for task:", task);
+    switch (task) {
+      case "object-detection":
+        basePostProcessingParams = {
+          ...basePostProcessingParams,
+          confidence: zoomLevel > 18 ? 0.6 : 0.8,
+        };
+        break;
+
+      case "building-footprint-segmentation":
+        basePostProcessingParams = {
+          ...basePostProcessingParams,
+          confidenceThreshold: 0.7,
+          minArea: zoomLevel > 16 ? 50 : 100,
+        };
+        break;
+
+      case "zero-shot-object-detection":
+        basePostProcessingParams = {
+          ...basePostProcessingParams,
+          threshold: 0.8,
+          topk: 15,
+        };
+        break;
+
+      case "land-cover-classification":
+        basePostProcessingParams = {
+          ...basePostProcessingParams,
+          minArea: zoomLevel > 15 ? 25 : 50,
+        };
+        break;
+
+      case "mask-generation":
+        basePostProcessingParams = {
+          ...basePostProcessingParams,
+          maxMasks: 3,
+        };
+        break;
+
+      default:
+        break;
+    }
+  });
+
+  return {
+    postProcessingParams: basePostProcessingParams,
+  };
 }

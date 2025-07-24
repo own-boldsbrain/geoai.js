@@ -4,8 +4,6 @@ export type {
   WorkerResponseType,
   WorkerMessage,
   WorkerResponse,
-  InitConfig,
-  InferenceParams,
   GeoAIWorkerResult,
   UseGeoAIWorkerReturn,
 } from "./useGeoAIWorker";

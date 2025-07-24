@@ -276,4 +276,4 @@ const geoai = {
   validateChain: Pipeline.findValidChains,
 };
 
-export { geoai, type ProviderParams };
+export { geoai, type ProviderParams, type InferenceParams };

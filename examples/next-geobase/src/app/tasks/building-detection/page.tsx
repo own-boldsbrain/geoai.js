@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
-import { useOptimizedGeoAI } from "../../../hooks/useGeoAIWorker";
+import { useOptimizedGeoAI, PipelineInitConfig } from "@geobase-js/geoai/react";
+import { InferenceParams } from "@geobase-js/geoai";
 
 const GEOBASE_CONFIG = {
   provider: "geobase",
@@ -47,7 +48,7 @@ export default function BuildingDetection() {
     runOptimizedInference,
     clearError,
     reset: resetWorker
-  } = useOptimizedGeoAI("building-detection");
+  } = useOptimizedGeoAI();
 
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
   const [detections, setDetections] = useState<GeoJSON.FeatureCollection>();
@@ -163,8 +164,10 @@ export default function BuildingDetection() {
   // Initialize the model when the map provider changes
   useEffect(() => {
     initializeModel({
-      task: "building-detection",
-      ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      tasks: [{ task: "building-detection" }],
+      providerParams: { 
+        ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      }
     });
   }, [mapProvider, initializeModel]);
 
@@ -240,11 +243,16 @@ export default function BuildingDetection() {
 
   const handleDetect = () => {
     if (!polygon) return;
-    
-    runOptimizedInference(polygon, zoomLevel, {
-      task: "building-detection",
-      confidenceScore,
-    });
+
+    const inferenceParameters: InferenceParams = {
+      inputs: { polygon },
+      mapSourceParams: { zoomLevel },
+      postProcessingParams: {
+        confidenceScore,
+      },
+    };
+
+    runOptimizedInference(inferenceParameters);
   };
 
   const handleStartDrawing = () => {
