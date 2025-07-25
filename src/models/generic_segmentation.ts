@@ -243,4 +243,43 @@ export class GenericSegmentation extends BaseModel {
       geoRawImage: geoRawImage,
     };
   }
+
+  async getImageEmbeddings(params: InferenceParams): Promise<any> {
+    const { inputs } = params;
+    if (!inputs.polygon) {
+      throw new Error("Polygon input is required for image embeddings");
+    }
+
+    if (
+      !inputs.polygon.geometry ||
+      inputs.polygon.geometry.type !== "Polygon"
+    ) {
+      throw new Error("Input must be a valid GeoJSON Polygon feature");
+    }
+
+    if (!this.dataProvider) {
+      throw new Error("Data provider not initialized");
+    }
+
+    const geoRawImage = await this.polygonToImage(
+      inputs.polygon,
+      params.mapSourceParams?.zoomLevel,
+      params.mapSourceParams?.bands,
+      params.mapSourceParams?.expression
+    );
+
+    if (!geoRawImage) {
+      throw new Error("Failed to convert polygon to image");
+    }
+    if (!this.model || !this.processor) {
+      throw new Error("Model or processor not initialized");
+    }
+
+    const image_inputs = await this.processor(geoRawImage);
+
+    const image_embeddings =
+      await this.model.get_image_embeddings(image_inputs);
+
+    return image_embeddings;
+  }
 }

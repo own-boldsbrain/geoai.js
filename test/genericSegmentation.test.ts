@@ -7,11 +7,13 @@ import {
 import {
   geobaseParams,
   geobaseParamsBuilding,
+  geobaseParamsImageEmbeddings,
   input_bbox,
   input_point,
   mapboxParams,
   polygon,
   polygonBuilding,
+  polygonImageEmbeddings,
   quadrants,
   quadrants_points,
 } from "./constants";
@@ -325,4 +327,78 @@ describe("boxes pipeline with thresholds parameter", () => {
       throw error;
     }
   });
+});
+
+describe("getImageEmbeddings", () => {
+  let imageEmbeddingsInstance: GenericSegmentation | undefined;
+
+  beforeAll(async () => {
+    try {
+      imageEmbeddingsInstance = await geoai.pipeline(
+        [{ task: "mask-generation" }],
+        geobaseParamsImageEmbeddings
+      );
+    } catch (error) {
+      console.error("Error initializing image embeddings instance:", error);
+      throw error;
+    }
+  }, 100000); // Increased timeout for model loading
+
+  afterAll(async () => {
+    if (imageEmbeddingsInstance) {
+      imageEmbeddingsInstance = undefined;
+    }
+  });
+
+  it("should generate image embeddings for a given polygon", async () => {
+    if (!imageEmbeddingsInstance) {
+      throw new Error("Image embeddings instance not initialized");
+    }
+
+    try {
+      const imageEmbeddings = await imageEmbeddingsInstance.getImageEmbeddings({
+        inputs: {
+          polygon: polygonImageEmbeddings,
+        },
+        mapSourceParams: {
+          zoomLevel: 20,
+        },
+      });
+
+      console.log("Image embeddings result:", imageEmbeddings);
+
+      expect(imageEmbeddings).toBeDefined();
+      expect(imageEmbeddings).not.toBeNull();
+
+      // Check if the result has the expected structure
+      // The exact structure depends on the model output, but typically includes:
+      expect(imageEmbeddings).toHaveProperty("image_embeddings");
+      expect(imageEmbeddings.image_embeddings).toBeDefined();
+
+      // Check if it's a Tensor object with the expected properties
+      expect(imageEmbeddings.image_embeddings).toHaveProperty("data");
+      expect(imageEmbeddings.image_embeddings.data).toBeInstanceOf(
+        Float32Array
+      );
+      expect(imageEmbeddings.image_embeddings).toHaveProperty("dims");
+      expect(imageEmbeddings.image_embeddings.dims).toBeInstanceOf(Array);
+      expect(imageEmbeddings.image_embeddings.dims.length).toBeGreaterThan(0);
+
+      console.log(
+        "Image embeddings shape:",
+        imageEmbeddings.image_embeddings.dims
+      );
+      console.log(
+        "Image embeddings data type:",
+        typeof imageEmbeddings.image_embeddings.data
+      );
+      console.log(
+        "Image embeddings data length:",
+        imageEmbeddings.image_embeddings.data.length
+      );
+    } catch (error) {
+      console.error("Error generating image embeddings:", error);
+      throw error;
+    }
+  }, 60000); // Extended timeout for inference
 });
