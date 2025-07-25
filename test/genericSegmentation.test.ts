@@ -356,7 +356,7 @@ describe("getImageEmbeddings", () => {
     }
 
     try {
-      const imageEmbeddings = await imageEmbeddingsInstance.getImageEmbeddings({
+      const result = await imageEmbeddingsInstance.getImageEmbeddings({
         inputs: {
           polygon: polygonImageEmbeddings,
         },
@@ -365,36 +365,40 @@ describe("getImageEmbeddings", () => {
         },
       });
 
-      console.log("Image embeddings result:", imageEmbeddings);
+      const image_embeddings = result.image_embeddings.image_embeddings;
 
-      expect(imageEmbeddings).toBeDefined();
-      expect(imageEmbeddings).not.toBeNull();
+      expect(result).toBeDefined();
+      expect(result).not.toBeNull();
 
       // Check if the result has the expected structure
-      // The exact structure depends on the model output, but typically includes:
-      expect(imageEmbeddings).toHaveProperty("image_embeddings");
-      expect(imageEmbeddings.image_embeddings).toBeDefined();
+      expect(result).toHaveProperty("image_embeddings");
+      expect(result).toHaveProperty("geoRawImage");
 
-      // Check if it's a Tensor object with the expected properties
-      expect(imageEmbeddings.image_embeddings).toHaveProperty("data");
-      expect(imageEmbeddings.image_embeddings.data).toBeInstanceOf(
-        Float32Array
-      );
-      expect(imageEmbeddings.image_embeddings).toHaveProperty("dims");
-      expect(imageEmbeddings.image_embeddings.dims).toBeInstanceOf(Array);
-      expect(imageEmbeddings.image_embeddings.dims.length).toBeGreaterThan(0);
+      // Validate image_embeddings structure
+      expect(image_embeddings).toBeDefined();
+      expect(image_embeddings).toHaveProperty("data");
+      expect(image_embeddings.data).toBeInstanceOf(Float32Array);
+      expect(image_embeddings).toHaveProperty("dims");
+      expect(image_embeddings.dims).toBeInstanceOf(Array);
+      expect(image_embeddings.dims.length).toBeGreaterThan(0);
 
-      console.log(
-        "Image embeddings shape:",
-        imageEmbeddings.image_embeddings.dims
-      );
-      console.log(
-        "Image embeddings data type:",
-        typeof imageEmbeddings.image_embeddings.data
-      );
+      // Validate geoRawImage structure
+      expect(result.geoRawImage).toBeDefined();
+      expect(result.geoRawImage).not.toBeNull();
+      expect(result.geoRawImage).toHaveProperty("width");
+      expect(result.geoRawImage).toHaveProperty("height");
+
+      console.log("Image embeddings shape:", image_embeddings.dims);
+      console.log("Image embeddings data type:", typeof image_embeddings.data);
       console.log(
         "Image embeddings data length:",
-        imageEmbeddings.image_embeddings.data.length
+        image_embeddings.data.length
+      );
+      console.log(
+        "GeoRawImage dimensions:",
+        result.geoRawImage.width,
+        "x",
+        result.geoRawImage.height
       );
     } catch (error) {
       console.error("Error generating image embeddings:", error);

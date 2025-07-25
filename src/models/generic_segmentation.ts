@@ -244,7 +244,9 @@ export class GenericSegmentation extends BaseModel {
     };
   }
 
-  async getImageEmbeddings(params: InferenceParams): Promise<any> {
+  async getImageEmbeddings(
+    params: InferenceParams
+  ): Promise<{ image_embeddings: any; geoRawImage: GeoRawImage }> {
     const { inputs } = params;
     if (!inputs.polygon) {
       throw new Error("Polygon input is required for image embeddings");
@@ -280,6 +282,6 @@ export class GenericSegmentation extends BaseModel {
     const image_embeddings =
       await this.model.get_image_embeddings(image_inputs);
 
-    return image_embeddings;
+    return { image_embeddings, geoRawImage };
   }
 }
