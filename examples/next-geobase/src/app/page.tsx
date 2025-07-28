@@ -476,7 +476,27 @@ const result = await pipeline.inference(polygon);`}
             <p className="text-gray-600 text-lg">
               Detects oil storage tanks in the imagery.
             </p>
-          </a>          
+          </a> 
+          <a
+            href="/tasks/embedding-similarity-search"
+            className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          >
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-48 object-cover rounded-lg mb-6"
+            >
+              <source src="/video/embedding-similarity-search.mp4" type="video/mp4" />
+            </video>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              Embedding Similarity Search
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Finds similar patches in the imagery based on embeddings.
+            </p>
+          </a>   
         </div>
       </main>
     </div>

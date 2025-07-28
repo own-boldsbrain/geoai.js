@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
 // Worker message types
-export type WorkerMessageType = "init" | "inference";
-export type WorkerResponseType = "init_complete" | "inference_complete" | "error";
+export type WorkerMessageType = "init" | "inference" | "getEmbeddings";
+export type WorkerResponseType = "init_complete" | "inference_complete" | "embeddings_complete" | "error";
 
 export interface WorkerMessage {
   type: WorkerMessageType;
@@ -59,6 +59,7 @@ export interface UseGeoAIWorkerReturn {
   // Actions
   initializeModel: (config: InitConfig) => void;
   runInference: (params: InferenceParams) => void;
+  getEmbeddings: (params: InferenceParams) => void;
   clearError: () => void;
   reset: () => void;
 }
@@ -124,11 +125,18 @@ export function useGeoAIWorker(): UseGeoAIWorkerReturn {
         console.log("[Hook] Inference completed successfully");
         break;
 
+      case "embeddings_complete":
+        setIsProcessing(false);
+        setLastResult(payload || null);
+        setError(null);
+        console.log("[Hook] Embeddings extraction completed successfully");
+        break;
+
       case "error":
         setIsProcessing(false);
         setIsInitialized(false);
         setError(payload || "Unknown worker error occurred");
-        console.error("[Hook] Worker error:", payload);
+        console.log("[Hook] Worker error:", payload);
         break;
 
       default:
@@ -196,6 +204,35 @@ export function useGeoAIWorker(): UseGeoAIWorkerReturn {
     workerRef.current.postMessage(message);
   }, [isInitialized, isProcessing]);
 
+  // Get embeddings from AI model
+  const getEmbeddings = useCallback((params: InferenceParams) => {
+    if (!workerRef.current) {
+      setError("Worker not available");
+      return;
+    }
+
+    if (!isInitialized) {
+      setError("AI model not initialized. Please initialize first.");
+      return;
+    }
+
+    if (isProcessing) {
+      console.warn("[Hook] Embeddings extraction already in progress");
+      return;
+    }
+
+    console.log("[Hook] Getting embeddings with params:", params);
+    setIsProcessing(true);
+    setError(null);
+    
+    const message: WorkerMessage = {
+      type: "getEmbeddings",
+      payload: params
+    };
+
+    workerRef.current.postMessage(message);
+  }, [isInitialized, isProcessing]);
+
   // Clear error state
   const clearError = useCallback(() => {
     setError(null);
@@ -228,6 +265,7 @@ export function useGeoAIWorker(): UseGeoAIWorkerReturn {
     // Actions
     initializeModel,
     runInference,
+    getEmbeddings,
     clearError,
     reset
   };
@@ -249,13 +287,32 @@ export function useOptimizedGeoAI(task: string) {
       polygon,
       zoomLevel,
       task,
+      confidenceScore: optimizedParams.confidenceScore || 0.8,
+      ...optimizedParams
+    });
+  }, [worker, task]);
+
+  const runOptimizedEmbeddings = useCallback((
+    polygon: GeoJSON.Feature,
+    zoomLevel: number,
+    options: Partial<InferenceParams> = {}
+  ) => {
+    // Get embeddings with optimized parameters
+    const optimizedParams = getOptimalParams(task, zoomLevel, options);
+    
+    worker.getEmbeddings({
+      polygon,
+      zoomLevel,
+      task,
+      confidenceScore: optimizedParams.confidenceScore || 0.8,
       ...optimizedParams
     });
   }, [worker, task]);
 
   return {
     ...worker,
-    runOptimizedInference
+    runOptimizedInference,
+    runOptimizedEmbeddings
   };
 }
 
@@ -301,7 +358,6 @@ function getOptimalParams(
     case "mask-generation":
       return {
         ...baseParams,
-        maxMasks: 3
       };
       
     default:

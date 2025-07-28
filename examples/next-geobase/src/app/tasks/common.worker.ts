@@ -3,7 +3,7 @@ import { PretrainedOptions } from "@huggingface/transformers";
 
 // Worker message types
 type WorkerMessage = {
-  type: "init" | "inference";
+  type: "init" | "inference" | "getEmbeddings";
   payload: any;
 };
 
@@ -196,9 +196,80 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         console.log("[Worker] Inference completed successfully");
         console.log({ result });
 
+        // Convert any tensors to transferable data
+        const serializedResult = JSON.parse(JSON.stringify(result, (key, value) => {
+          // Handle tensor objects by converting them to plain objects
+          if (value && typeof value === 'object' && value.data && value.dims && value.type) {
+            return {
+              data: Array.from(value.data),
+              dims: value.dims,
+              type: value.type
+            };
+          }
+          return value;
+        }));
+
         self.postMessage({
           type: "inference_complete",
-          payload: result
+          payload: serializedResult
+        });
+        break;
+      }
+
+      case "getEmbeddings": {
+        console.log("[Worker] Received getEmbeddings message");
+        
+        if (!modelInstance) {
+          throw new Error("Model not initialized. Call 'init' first.");
+        }
+
+        // Check if the model has a getImageEmbeddings method
+        if (typeof modelInstance.getImageEmbeddings !== 'function') {
+          throw new Error("Model does not support getImageEmbeddings method");
+        }
+
+        const task = payload.task || "mask-generation";
+        const inferenceArgBuilders: { [key: string]: (payload: InferencePayload) => any } = {
+          "mask-generation": (payload) => ({
+            inputs: {
+              polygon: payload.polygon,
+            },
+            mapSourceParams: {
+              zoomLevel: payload.zoomLevel
+            }
+          })
+        };
+
+        const defaultBuilder = (payload: InferencePayload) => ({
+          inputs: {
+            polygon: payload.polygon,
+          },
+          mapSourceParams: {
+            zoomLevel: payload.zoomLevel
+          }
+        });
+
+        const argBuilder = (task && inferenceArgBuilders[task]) ? inferenceArgBuilders[task] : defaultBuilder;
+        const inferenceArgs = argBuilder(payload);
+        
+        let result: any;
+        result = await modelInstance.getImageEmbeddings(inferenceArgs);
+        console.log("[Worker] getImageEmbeddings completed successfully");
+        console.log("Embeddings result:", result);
+
+        // Convert tensor to transferable data
+        const serializedResult = {
+          ...result,
+          image_embeddings: result.image_embeddings ? {
+            data: Array.from(result.image_embeddings.image_embeddings.data),
+            dims: result.image_embeddings.image_embeddings.dims,
+            type: result.image_embeddings.image_embeddings.type
+          } : null
+        };
+
+        self.postMessage({
+          type: "embeddings_complete",
+          payload: serializedResult
         });
         break;
       }
