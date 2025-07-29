@@ -1,10 +1,10 @@
 import {
   SamModel,
   AutoProcessor,
-  RawImage,
   SamProcessor,
+  Tensor,
 } from "@huggingface/transformers";
-import { maskToGeoJSON, parametersChanged } from "@/utils/utils";
+import { maskToGeoJSON, parametersChanged, polygonsEqual } from "@/utils/utils";
 import { GeoRawImage } from "@/types/images/GeoRawImage";
 import { ProviderParams } from "@/geobase-ai";
 import { PretrainedOptions } from "@huggingface/transformers";
@@ -56,6 +56,11 @@ export class GenericSegmentation extends BaseModel {
   private model: SamModel | undefined;
   private processor: SamProcessor | undefined;
 
+  // Cache for embeddings to avoid recomputation
+  private cachedPolygon: GeoJSON.Feature | null = null;
+  private cachedEmbeddings: any = null;
+  private cachedGeoRawImage: GeoRawImage | null = null;
+
   private constructor(
     model_id: string,
     providerParams: ProviderParams,
@@ -101,6 +106,72 @@ export class GenericSegmentation extends BaseModel {
   }
 
   /**
+   * Gets or computes image embeddings for the given polygon
+   * Uses cached embeddings if polygon hasn't changed
+   */
+  private async getOrComputeEmbeddings(
+    polygon: GeoJSON.Feature,
+    geoRawImage?: GeoRawImage,
+    zoomLevel?: number,
+    bands?: number[],
+    expression?: string
+  ): Promise<{
+    image_embeddings: any;
+    geoRawImage: GeoRawImage;
+    image_inputs: any;
+  }> {
+    // Ensure initialization is complete
+    if (!this.model || !this.processor) {
+      throw new Error("Model or processor not initialized");
+    }
+    if (!this.dataProvider) {
+      throw new Error("Data provider not initialized");
+    }
+
+    let image_inputs = null;
+
+    // Check if we can use cached embeddings
+    if (
+      this.cachedPolygon &&
+      this.cachedEmbeddings &&
+      this.cachedGeoRawImage &&
+      polygonsEqual(this.cachedPolygon, polygon)
+    ) {
+      image_inputs = await this.processor(this.cachedGeoRawImage);
+      console.log("Using cached embeddings for polygon:", polygon);
+      return {
+        image_embeddings: this.cachedEmbeddings,
+        geoRawImage: this.cachedGeoRawImage,
+        image_inputs,
+      };
+    }
+    console.log(
+      "Cached embeddings not found or polygon changed, recomputing..."
+    );
+
+    // Compute new embeddings
+    if (!geoRawImage) {
+      geoRawImage = await this.polygonToImage(
+        polygon,
+        zoomLevel,
+        bands,
+        expression,
+        true
+      );
+    }
+    image_inputs = await this.processor(geoRawImage);
+    const image_embeddings =
+      await this.model.get_image_embeddings(image_inputs);
+
+    // Cache the results
+    this.cachedPolygon = JSON.parse(JSON.stringify(polygon)); // Deep copy
+    this.cachedEmbeddings = image_embeddings;
+    this.cachedGeoRawImage = geoRawImage;
+
+    return { image_embeddings, geoRawImage, image_inputs };
+  }
+
+  /**
    * Performs segmentation on a geographic area based on the provided input parameters.
    *
    * @param params - Inference parameters containing:
@@ -143,14 +214,9 @@ export class GenericSegmentation extends BaseModel {
       throw new Error("Data provider not initialized");
     }
 
-    const geoRawImage: GeoRawImage = isChained
+    let geoRawImage: GeoRawImage | undefined = isChained
       ? (input as ObjectDetectionResults).geoRawImage
-      : await this.polygonToImage(
-          polygon,
-          mapSourceParams?.zoomLevel,
-          mapSourceParams?.bands,
-          mapSourceParams?.expression
-        );
+      : undefined;
 
     const batch_input = isChained
       ? (input as ObjectDetectionResults).detections.features.map(feature => {
@@ -177,23 +243,85 @@ export class GenericSegmentation extends BaseModel {
         })
       : [input];
 
+    let modelInputs;
+    const cachedData = await this.getOrComputeEmbeddings(
+      polygon,
+      geoRawImage,
+      mapSourceParams?.zoomLevel,
+      mapSourceParams?.bands,
+      mapSourceParams?.expression
+    );
+    if (!cachedData) {
+      throw new Error("Failed to get or compute embeddings");
+    }
+    geoRawImage = cachedData.geoRawImage;
+    const reshaped = cachedData.image_inputs.reshaped_input_sizes[0];
+    console.log(`Reshaped input sizes: ${JSON.stringify(reshaped)}`);
+
     // Process each input in the batch
     const processedInputs = await Promise.all(
       batch_input.map(async input => {
-        let processorInput;
         switch ((input as SegmentationInput).type) {
           case "points": {
             const [x, y] = (input as SegmentationInput).coordinates;
-            const processedInput = [[geoRawImage.worldToPixel(x, y)]];
-            processorInput = { input_points: processedInput };
+            const pixelCoord = geoRawImage?.worldToPixel(x, y);
+            const pixelReshaped = [
+              [
+                (pixelCoord[0] / geoRawImage?.width) * reshaped[1],
+                (pixelCoord[1] / geoRawImage?.height) * reshaped[0],
+              ],
+            ];
+            if (!pixelCoord) {
+              throw new Error(
+                "Failed to convert world coordinates to pixel coordinates."
+              );
+            }
+            const input_points = new Tensor("float32", pixelReshaped.flat(), [
+              1,
+              1,
+              pixelReshaped.length,
+              2,
+            ]);
+            const labels = [1];
+            const input_labels = new Tensor(
+              "int64",
+              labels.map(l => BigInt(l)),
+              [1, 1, labels.length]
+            );
+            modelInputs = {
+              ...cachedData.image_embeddings,
+              input_points: input_points,
+              input_labels: input_labels,
+            };
             break;
           }
           case "boxes": {
             const [x1, y1, x2, y2] = (input as SegmentationInput).coordinates;
-            const corner1 = geoRawImage.worldToPixel(x1, y1);
-            const corner2 = geoRawImage.worldToPixel(x2, y2);
-            const processedInput = [[[...corner1, ...corner2]]];
-            processorInput = { input_boxes: processedInput };
+            const corner1 = geoRawImage?.worldToPixel(x1, y1);
+            const corner1Reshaped = [
+              (corner1[0] / geoRawImage?.width) * reshaped[1],
+              (corner1[1] / geoRawImage?.height) * reshaped[0],
+            ];
+            const corner2 = geoRawImage?.worldToPixel(x2, y2);
+            const corner2Reshaped = [
+              (corner2[0] / geoRawImage?.width) * reshaped[1],
+              (corner2[1] / geoRawImage?.height) * reshaped[0],
+            ];
+            if (!corner1 || !corner2) {
+              throw new Error(
+                "Failed to convert world coordinates to pixel coordinates."
+              );
+            }
+            // const processedInput = [[[...corner1, ...corner2]]];
+            const input_boxes = new Tensor(
+              "float32",
+              [...corner1Reshaped, ...corner2Reshaped],
+              [1, 1, 4]
+            );
+            modelInputs = {
+              ...cachedData.image_embeddings,
+              input_boxes: input_boxes,
+            };
             break;
           }
           default:
@@ -201,23 +329,31 @@ export class GenericSegmentation extends BaseModel {
               `Unsupported input type: ${(input as SegmentationInput).type}`
             );
         }
-        // Process the input using the processor
-        return this.processor!(geoRawImage as RawImage, processorInput);
+        return {
+          ...modelInputs,
+        };
       })
     );
     // Run the model on each processed input
-    const outputsArray = await Promise.all(
-      processedInputs.map(inputs => this.model!(inputs))
-    );
+    let outputsArray: any;
+    try {
+      outputsArray = await Promise.all(
+        processedInputs.map(inputs => this.model!(inputs))
+      );
+    } catch (error) {
+      console.error("Error during inference:", error);
+      throw new Error(`Model inference failed: ${error}`);
+    }
+
     // Post-process the masks for each output
     const masksArray = await Promise.all(
-      outputsArray.map((outputs, index) =>
-        this.processor!.post_process_masks(
+      outputsArray.map((outputs: any) => {
+        return this.processor!.post_process_masks(
           outputs.pred_masks,
-          processedInputs[index].original_sizes,
-          processedInputs[index].reshaped_input_sizes
-        )
-      )
+          cachedData.image_inputs.original_sizes,
+          cachedData.image_inputs.reshaped_input_sizes
+        );
+      })
     );
 
     // Convert masks to GeoJSON
