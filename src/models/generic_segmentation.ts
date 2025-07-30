@@ -403,7 +403,8 @@ export class GenericSegmentation extends BaseModel {
       inputs.polygon,
       params.mapSourceParams?.zoomLevel,
       params.mapSourceParams?.bands,
-      params.mapSourceParams?.expression
+      params.mapSourceParams?.expression,
+      true // ensures that image is square
     );
 
     if (!geoRawImage) {
