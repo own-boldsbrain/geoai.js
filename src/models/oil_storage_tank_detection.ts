@@ -143,6 +143,8 @@ export class OilStorageTankDetection extends BaseModel {
     );
 
     const inputs = await this.preProcessor(geoRawImage);
+    const inferenceStartTime = performance.now();
+    console.log("[oriented-object-detection] starting inference...");
     let outputs;
     try {
       if (!this.model) {
@@ -159,6 +161,10 @@ export class OilStorageTankDetection extends BaseModel {
       geoRawImage,
       confidenceThreshold as number,
       nmsThreshold as number
+    );
+    const inferenceEndTime = performance.now();
+    console.log(
+      `[oriented-object-detection] inference completed. Time taken: ${(inferenceEndTime - inferenceStartTime).toFixed(2)}ms`
     );
 
     return {

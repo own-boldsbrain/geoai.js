@@ -193,6 +193,8 @@ export class LandCoverClassification extends BaseModel {
       mapSourceParams?.expression,
       true
     );
+    const inferenceStartTime = performance.now();
+    console.log("[oriented-object-detection] starting inference...");
 
     const inputs = await this.preProcessor(geoRawImage);
     let outputs;
@@ -278,10 +280,15 @@ export class LandCoverClassification extends BaseModel {
       geoRawImage.getBounds()
     );
 
+    const inferenceEndTime = performance.now();
+    console.log(
+      `[oriented-object-detection] inference completed. Time taken: ${(inferenceEndTime - inferenceStartTime).toFixed(2)}ms`
+    );
     return {
       detections: featureCollection,
       binaryMasks,
       outputImage: outputRawImage,
+      geoRawImage,
     };
   }
 }

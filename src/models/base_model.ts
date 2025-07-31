@@ -84,6 +84,7 @@ export abstract class BaseModel {
     if (!this.dataProvider) {
       throw new Error("Data provider not initialized");
     }
+    console.log("Converting polygon to image...");
     return this.dataProvider.getImage(
       polygon,
       bands,

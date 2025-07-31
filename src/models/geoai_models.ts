@@ -156,6 +156,9 @@ abstract class BaseDetectionModel extends BaseModel {
       true // models require square image
     );
 
+    const task = this.model_id.split("/").pop()?.split(".")[0].split("_")[0];
+    const inferenceStartTime = performance.now();
+    console.log(`[${task}] starting inference...`);
     const inputs = await this.preProcessor(geoRawImage);
     let outputs;
     try {
@@ -169,6 +172,10 @@ abstract class BaseDetectionModel extends BaseModel {
     }
 
     outputs = await this.postProcessor(outputs, geoRawImage);
+    const inferenceEndTime = performance.now();
+    console.log(
+      `[${task}] inference completed. Time taken: ${(inferenceEndTime - inferenceStartTime).toFixed(2)}ms`
+    );
 
     return {
       detections: outputs,
@@ -389,6 +396,8 @@ export class WetLandSegmentation extends BaseModel {
       mapSourceParams?.bands,
       mapSourceParams?.expression
     );
+    const inferenceStartTime = performance.now();
+    console.log("[oriented-object-detection] starting inference...");
 
     const inputs = await this.preProcessor(geoRawImage);
     let outputs;
@@ -403,6 +412,10 @@ export class WetLandSegmentation extends BaseModel {
     }
 
     outputs = await this.postProcessor(outputs, geoRawImage);
+    const inferenceEndTime = performance.now();
+    console.log(
+      `[oriented-object-detection] inference completed. Time taken: ${(inferenceEndTime - inferenceStartTime).toFixed(2)}ms`
+    );
 
     return {
       detections: outputs,

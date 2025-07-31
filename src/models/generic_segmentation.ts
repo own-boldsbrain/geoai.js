@@ -256,7 +256,8 @@ export class GenericSegmentation extends BaseModel {
     }
     geoRawImage = cachedData.geoRawImage;
     const reshaped = cachedData.image_inputs.reshaped_input_sizes[0];
-    console.log(`Reshaped input sizes: ${JSON.stringify(reshaped)}`);
+    const inferenceStartTime = performance.now();
+    console.log(`[mask-generation] starting inference...`);
 
     // Process each input in the batch
     const processedInputs = await Promise.all(
@@ -373,6 +374,10 @@ export class GenericSegmentation extends BaseModel {
       type: "FeatureCollection",
       features: geoJsonMasks.flatMap(geoJsonMask => geoJsonMask.features),
     };
+    const inferenceEndTime = performance.now();
+    console.log(
+      `[mask-generation] inference completed. Time taken: ${(inferenceEndTime - inferenceStartTime).toFixed(2)}ms`
+    );
     // Return the combined masks and the raw image
     return {
       masks: combinedMasks,
