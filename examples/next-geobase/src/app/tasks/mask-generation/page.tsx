@@ -11,7 +11,7 @@ const GEOBASE_CONFIG = {
   projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF,
   apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY,
   cogImagery:
-    "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/67ba1d2bec9237a9ebd358a3/0/67ba1d2bec9237a9ebd358a4.tif",
+    "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/686e390615a6768f282b22b3/0/686e390615a6768f282b22b4.tif",
 };
 
 const MAPBOX_CONFIG = {
@@ -293,7 +293,8 @@ export default function MaskGeneration() {
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: mapStyle,
-      center: [114.84857638295142, -3.449805712621256],
+      center: [-13.274357, 8.486711],
+
       zoom: 18,
     });
 

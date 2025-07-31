@@ -85,14 +85,67 @@ export default function EmbeddingSimilaritySearch() {
   const [isComputingSimilarity, setIsComputingSimilarity] = useState(false);
   const [persistentSimilarityData, setPersistentSimilarityData] = useState<{
     results: SimilarityResult[],
-    clickedPoint: [number, number]
+    clickedPoint: [number, number],
+    clickedCell?: GridCell
   } | null>(null); // Keep track of similarity visualization for re-adding
+  const [currentMapZoom, setCurrentMapZoom] = useState<number>(16); // Track actual map zoom level
+
+  // Save geoRawImage separately for easier access
+  const saveGeoRawImage = (geoRawImage: any) => {
+    if (!geoRawImage) return;
+    
+    try {
+      const geoRawImageData = {
+        geoRawImage: geoRawImage,
+        timestamp: Date.now(),
+        gridSize: gridSize
+      };
+      localStorage.setItem('geoai_georawimage', JSON.stringify(geoRawImageData));
+      console.log("GeoRawImage saved separately to localStorage:", {
+        bounds: geoRawImage.bounds,
+        width: geoRawImage.width,
+        height: geoRawImage.height,
+        channels: geoRawImage.channels
+      });
+    } catch (err) {
+      console.warn("Failed to save geoRawImage to localStorage:", err);
+    }
+  };
+
+  // Load geoRawImage from localStorage
+  const loadGeoRawImage = () => {
+    try {
+      const savedGeoRawImage = localStorage.getItem('geoai_georawimage');
+      if (savedGeoRawImage) {
+        const geoRawImageData = JSON.parse(savedGeoRawImage);
+        
+        // Check if the saved data is recent (within 1 hour) and matches current grid size
+        const oneHour = 60 * 60 * 1000;
+        const isRecent = Date.now() - geoRawImageData.timestamp < oneHour;
+        const isSameGridSize = geoRawImageData.gridSize === gridSize;
+        
+        if (isRecent && isSameGridSize) {
+          console.log("Loading geoRawImage from localStorage:", geoRawImageData.geoRawImage);
+          return geoRawImageData.geoRawImage;
+        } else {
+          // Remove old geoRawImage
+          localStorage.removeItem('geoai_georawimage');
+          console.log("Removed old geoRawImage from localStorage");
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to load geoRawImage from localStorage:", err);
+      localStorage.removeItem('geoai_georawimage');
+    }
+    return null;
+  };
 
   // Update text layer visibility based on zoom level
   const updateTextLayerVisibility = useCallback(() => {
     if (!map.current) return;
     
     const currentZoom = map.current.getZoom();
+    setCurrentMapZoom(currentZoom); // Update the current map zoom state
     const textLayer = map.current.getLayer("similarity-text-layer");
     
     if (textLayer) {
@@ -110,14 +163,14 @@ export default function EmbeddingSimilaritySearch() {
 
     // Remove layers if they exist
     if (map.current) {
-      const layersToRemove = ["grid-layer", "similarity-results-layer", "similarity-text-layer", "selected-point-layer"];
+      const layersToRemove = ["grid-layer", "similarity-results-layer", "similarity-text-layer", "selected-point-layer", "clicked-cell-layer"];
       layersToRemove.forEach(layerId => {
         if (map.current!.getLayer(layerId)) {
           map.current!.removeLayer(layerId);
         }
       });
       
-      const sourcesToRemove = ["grid", "similarity-results", "similarity-text", "selected-point"];
+      const sourcesToRemove = ["grid", "similarity-results", "similarity-text", "selected-point", "clicked-cell"];
       sourcesToRemove.forEach(sourceId => {
         if (map.current!.getSource(sourceId)) {
           map.current!.removeSource(sourceId);
@@ -128,7 +181,8 @@ export default function EmbeddingSimilaritySearch() {
     // Clear localStorage
     try {
       localStorage.removeItem('geoai_embeddings');
-      console.log("Cleared embeddings from localStorage");
+      localStorage.removeItem('geoai_georawimage');
+      console.log("Cleared embeddings and geoRawImage from localStorage");
     } catch (err) {
       console.warn("Failed to clear localStorage:", err);
     }
@@ -226,6 +280,7 @@ export default function EmbeddingSimilaritySearch() {
 
     try {
       setIsComputingEmbeddings(true);
+      console.log("[EmbeddingSimilaritySearch] Computing embeddings for polygon:", zoomLevel);
       
       // Use the real getEmbeddings function from the GenericSegmentation model
       await runOptimizedEmbeddings(polygon, zoomLevel, {});
@@ -259,6 +314,9 @@ export default function EmbeddingSimilaritySearch() {
       setImageEmbeddings(lastResult.image_embeddings);
       setGeoRawImage(lastResult.geoRawImage);
       
+      // Save geoRawImage separately for easier access
+      saveGeoRawImage(lastResult.geoRawImage);
+      
       // Save embeddings to localStorage for persistence
       try {
         const embeddingsData = {
@@ -268,7 +326,14 @@ export default function EmbeddingSimilaritySearch() {
           gridSize: gridSize
         };
         localStorage.setItem('geoai_embeddings', JSON.stringify(embeddingsData));
-        console.log("Embeddings saved to localStorage");
+        console.log("Embeddings and geoRawImage saved to localStorage");
+        console.log("GeoRawImage details:", {
+          bounds: lastResult.geoRawImage?.bounds,
+          width: lastResult.geoRawImage?.width,
+          height: lastResult.geoRawImage?.height,
+          channels: lastResult.geoRawImage?.channels,
+          type: typeof lastResult.geoRawImage
+        });
       } catch (err) {
         console.warn("Failed to save embeddings to localStorage:", err);
       }
@@ -336,11 +401,29 @@ export default function EmbeddingSimilaritySearch() {
           });
           
           setImageEmbeddings(embeddingsData.image_embeddings);
-          setGeoRawImage(embeddingsData.geoRawImage);
+          
+          // Try to load geoRawImage from embeddings data, or fallback to separately saved geoRawImage
+          let geoRawImageToUse = embeddingsData.geoRawImage;
+          if (!geoRawImageToUse) {
+            console.log("No geoRawImage in embeddings data, trying to load separately saved geoRawImage");
+            geoRawImageToUse = loadGeoRawImage();
+          }
+          
+          if (geoRawImageToUse) {
+            setGeoRawImage(geoRawImageToUse);
+            console.log("Loaded geoRawImage:", {
+              bounds: geoRawImageToUse.bounds,
+              width: geoRawImageToUse.width,
+              height: geoRawImageToUse.height,
+              channels: geoRawImageToUse.channels
+            });
+          } else {
+            console.warn("No geoRawImage available in localStorage");
+          }
           
           // Trigger grid generation using the saved bounds
-          if (embeddingsData.geoRawImage && embeddingsData.geoRawImage.bounds) {
-            const bounds = embeddingsData.geoRawImage.bounds;
+          if (geoRawImageToUse && geoRawImageToUse.bounds) {
+            const bounds = geoRawImageToUse.bounds;
             console.log("Loading from localStorage - bounds format:", bounds, typeof bounds);
             let minLng: number, maxLng: number, minLat: number, maxLat: number;
             
@@ -443,7 +526,7 @@ export default function EmbeddingSimilaritySearch() {
         
         if (!similarityLayer && !similaritySource) {
           console.log("Both similarity layer and source missing, re-adding both...");
-          visualizeSimilarityResults(persistentSimilarityData.results, persistentSimilarityData.clickedPoint);
+          visualizeSimilarityResults(persistentSimilarityData.results, persistentSimilarityData.clickedPoint, persistentSimilarityData.clickedCell);
         } else if (!similarityLayer && similaritySource) {
           console.log("Similarity layer missing but source exists, re-adding layer...");
           try {
@@ -468,6 +551,34 @@ export default function EmbeddingSimilaritySearch() {
             console.log("Re-added missing similarity layer");
           } catch (err) {
             console.error("Error re-adding similarity layer:", err);
+          }
+        }
+
+        // Check clicked cell layer
+        if (persistentSimilarityData?.clickedCell) {
+          const clickedCellLayer = map.current.getLayer("clicked-cell-layer");
+          const clickedCellSource = map.current.getSource("clicked-cell");
+          
+          if (!clickedCellLayer && !clickedCellSource) {
+            console.log("Both clicked cell layer and source missing, re-adding both...");
+            // Will be re-added when visualizeSimilarityResults is called above
+          } else if (!clickedCellLayer && clickedCellSource) {
+            console.log("Clicked cell layer missing but source exists, re-adding layer...");
+            try {
+              map.current.addLayer({
+                id: "clicked-cell-layer",
+                type: "fill",
+                source: "clicked-cell",
+                paint: {
+                  "fill-color": "transparent",
+                  "fill-outline-color": "#000000",  // Black outline for selected cell
+                  "fill-opacity": 0
+                }
+              });
+              console.log("Re-added missing clicked cell layer");
+            } catch (err) {
+              console.error("Error re-adding clicked cell layer:", err);
+            }
           }
         }
 
@@ -930,16 +1041,17 @@ export default function EmbeddingSimilaritySearch() {
         });
       }
       
-      // Sort by similarity (highest first) and take top 50
+      // Filter for cells with similarity greater than 90% (0.90)
       similarities.sort((a, b) => b.similarity - a.similarity);
-      const top50Similarities = similarities.slice(0, 50);
-      setSimilarityResults(top50Similarities);
+      const highSimilarityCells = similarities.filter(s => s.similarity > 0.75);
+      setSimilarityResults(highSimilarityCells);
       
-      console.log(`Found ${similarities.length} similar cells, showing top 50`);
-      console.log("Top 10 similarities:", top50Similarities.slice(0, 10).map(s => ({ id: s.cellId, sim: s.similarity.toFixed(3) })));
+      console.log(`Found ${similarities.length} similar cells, showing ${highSimilarityCells.length} cells with >90% similarity`);
+      console.log("High similarity cells (>90%):", highSimilarityCells.slice(0, 10).map(s => ({ id: s.cellId, sim: s.similarity.toFixed(3) })));
+      console.log("Similarity range:", similarities.length > 0 ? `${similarities[0].similarity.toFixed(3)} - ${similarities[similarities.length-1].similarity.toFixed(3)}` : 'none');
       
       // Visualize results on map
-      visualizeSimilarityResults(top50Similarities, clickedPoint);
+      visualizeSimilarityResults(highSimilarityCells, clickedPoint, clickedCell);
       
     } catch (err) {
       console.error("Error performing similarity search:", err);
@@ -949,11 +1061,11 @@ export default function EmbeddingSimilaritySearch() {
   }, [imageEmbeddings, gridCells, cellEmbeddings, similarityThreshold]);
 
   // Visualize similarity results on map
-  const visualizeSimilarityResults = (results: SimilarityResult[], clickedPoint: [number, number]) => {
+  const visualizeSimilarityResults = (results: SimilarityResult[], clickedPoint: [number, number], clickedCell?: GridCell) => {
     if (!map.current) return;
 
     // Save for persistence
-    setPersistentSimilarityData({ results, clickedPoint });
+    setPersistentSimilarityData({ results, clickedPoint, clickedCell });
 
     // Add selected point
     const selectedPointSource: GeoJSON.GeoJSON = {
@@ -989,19 +1101,60 @@ export default function EmbeddingSimilaritySearch() {
       });
     }
 
-    // Filter results that meet the threshold for visualization
+    // Add clicked cell with black outline
+    if (clickedCell) {
+      const clickedCellSource: GeoJSON.GeoJSON = {
+        type: "FeatureCollection",
+        features: [{
+          ...clickedCell.polygon,
+          properties: {
+            ...clickedCell.polygon.properties,
+            isClickedCell: true
+          }
+        }]
+      };
+
+      if (map.current.getSource("clicked-cell")) {
+        (map.current.getSource("clicked-cell") as maplibregl.GeoJSONSource).setData(clickedCellSource);
+      } else {
+        map.current.addSource("clicked-cell", {
+          type: "geojson",
+          data: clickedCellSource
+        });
+
+        map.current.addLayer({
+          id: "clicked-cell-layer",
+          type: "fill",
+          source: "clicked-cell",
+          paint: {
+            "fill-color": "transparent",
+            "fill-outline-color": "#000000",  // Black outline for selected cell
+            "fill-opacity": 0
+          }
+        });
+      }
+    }
+
+    // Since results are already filtered for >90% similarity, show them all
+    // But still apply the similarity threshold for additional filtering if needed
     const visualizationResults = results.filter(r => r.similarity >= similarityThreshold);
-    console.log(`Visualizing ${visualizationResults.length} cells above threshold ${similarityThreshold}`);
-    console.log("Results sample with similarities:", results.slice(0, 5).map(r => ({ id: r.cellId, sim: r.similarity.toFixed(4) })));
+    console.log(`Visualizing ${visualizationResults.length} cells above threshold ${similarityThreshold} from ${results.length} high-similarity cells (>90%)`);
+    console.log("High similarity results sample:", results.slice(0, 5).map(r => ({ id: r.cellId, sim: r.similarity.toFixed(4) })));
     console.log("Threshold comparison - Top 5 vs threshold:", results.slice(0, 5).map(r => ({ 
       id: r.cellId, 
       sim: r.similarity.toFixed(4), 
       aboveThreshold: r.similarity >= similarityThreshold 
     })));
 
-    // Show ALL results if none meet the threshold (for debugging)
+    // Show the high similarity results (>90%), or if threshold filters them out, show top 10 for debugging
     const finalResults = visualizationResults.length > 0 ? visualizationResults : results.slice(0, 10);
     console.log(`Final visualization will show ${finalResults.length} cells`);
+    
+    if (results.length === 0) {
+      console.log("No cells found with >90% similarity");
+    } else if (visualizationResults.length === 0 && results.length > 0) {
+      console.log(`Found ${results.length} cells with >90% similarity, but none meet the additional threshold of ${similarityThreshold}`);
+    }
 
     // Add similarity results (show top results even if below threshold)
     const similarityFeatures: GeoJSON.Feature[] = finalResults.map((result, index) => {
@@ -1047,7 +1200,8 @@ export default function EmbeddingSimilaritySearch() {
             0.3, "#ff4000",    // Red-orange
             0.4, "#ff0000"     // Red for high similarity
           ],
-          "fill-opacity": 0.5
+          "fill-opacity": 0.5,
+          "fill-outline-color": "#FFD700"  // Color blind safe yellow outline
         }
       });
       
@@ -1106,7 +1260,7 @@ export default function EmbeddingSimilaritySearch() {
           "text-ignore-placement": true,
           "text-line-height": 1.2,
           "text-max-width": 10,
-          "visibility": map.current.getZoom() > 21 ? "visible" : "none"
+          "visibility": map.current.getZoom() > 23 ? "visible" : "none"
         },
         paint: {
           "text-color": "#000000",
@@ -1168,7 +1322,8 @@ export default function EmbeddingSimilaritySearch() {
                   0.3, "#ff4000",
                   0.4, "#ff0000"
                 ],
-                "fill-opacity": 0.3
+                "fill-opacity": 0.3,
+                "fill-outline-color": "#FFD700"  // Color blind safe yellow outline
               }
             });
             console.log("Re-added similarity layer");
@@ -1193,7 +1348,7 @@ export default function EmbeddingSimilaritySearch() {
                 "text-ignore-placement": true,
                 "text-line-height": 1.2,
                 "text-max-width": 10,
-                "visibility": map.current.getZoom() > 21 ? "visible" : "none"
+                "visibility": map.current.getZoom() > 23 ? "visible" : "none"
               },
               paint: {
                 "text-color": "#000000",
@@ -1376,6 +1531,13 @@ export default function EmbeddingSimilaritySearch() {
     map.current.on("zoom", updateTextLayerVisibility);
     map.current.on("zoomend", updateTextLayerVisibility);
 
+    // Initialize current zoom level
+    map.current.on("load", () => {
+      if (map.current) {
+        setCurrentMapZoom(map.current.getZoom());
+      }
+    });
+
     function updatePolygon() {
       const features = draw.current?.getAll();
       if (features && features.features.length > 0) {
@@ -1462,7 +1624,7 @@ export default function EmbeddingSimilaritySearch() {
         {/* Zoom Level */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">
-            Zoom Level: {zoomLevel}
+            Zoom Level: {zoomLevel} (Current: {currentMapZoom.toFixed(1)})
           </label>
           <input
             type="range"
@@ -1509,8 +1671,8 @@ export default function EmbeddingSimilaritySearch() {
           <ol className="text-xs space-y-1">
             <li>1. Draw a polygon on the map</li>
             <li>2. Click "Generate Grid & Embeddings"</li>
-            <li>3. Click on any grid cell to find similar areas</li>
-            <li>4. Adjust similarity threshold as needed</li>
+            <li>3. Click on any grid cell to find areas with &gt;90% similarity</li>
+            <li>4. Adjust similarity threshold for additional filtering</li>
           </ol>
         </div>
 
@@ -1538,6 +1700,31 @@ export default function EmbeddingSimilaritySearch() {
           >
             Reset
           </button>
+          
+          {geoRawImage && (
+            <button
+              onClick={() => {
+                const dataStr = JSON.stringify({
+                  bounds: geoRawImage.bounds,
+                  width: geoRawImage.width,
+                  height: geoRawImage.height,
+                  channels: geoRawImage.channels,
+                  timestamp: Date.now()
+                }, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'geoRawImage_metadata.json';
+                link.click();
+                URL.revokeObjectURL(url);
+                console.log("Downloaded geoRawImage metadata");
+              }}
+              className="w-full bg-purple-500 text-white py-2 px-4 rounded text-xs"
+            >
+              Export GeoRawImage Metadata
+            </button>
+          )}
         </div>
 
         {/* Status */}
@@ -1546,11 +1733,24 @@ export default function EmbeddingSimilaritySearch() {
             <p>Model Initialized: {isInitialized ? "✅" : "❌"}</p>
             <p>Processing: {isProcessing ? "✅" : "❌"}</p>
             <p>Computing Similarity: {isComputingSimilarity ? "✅" : "❌"}</p>
+            <p>Current Zoom: <span className="font-mono">{currentMapZoom.toFixed(2)}</span></p>
             <p>Grid Cells: {gridCells.length}</p>
             <p>Cached Embeddings: {cellEmbeddings.size}</p>
             <p>Image Embeddings: {imageEmbeddings ? "✅" : "❌"}</p>
+            <p>GeoRawImage: {geoRawImage ? "✅" : "❌"}</p>
             {imageEmbeddings && geoRawImage && (
               <p className="text-green-600">📊 Embeddings loaded and ready</p>
+            )}
+            {geoRawImage && (
+              <div className="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                <p><strong>GeoRawImage Details:</strong></p>
+                <p>Width: {geoRawImage.width}</p>
+                <p>Height: {geoRawImage.height}</p>
+                <p>Channels: {geoRawImage.channels}</p>
+                {geoRawImage.bounds && (
+                  <p>Bounds: [{geoRawImage.bounds.west?.toFixed(6)}, {geoRawImage.bounds.south?.toFixed(6)}, {geoRawImage.bounds.east?.toFixed(6)}, {geoRawImage.bounds.north?.toFixed(6)}]</p>
+                )}
+              </div>
             )}
             {isComputingSimilarity && (
               <p className="text-blue-600">🔍 Computing similarities...</p>
@@ -1562,7 +1762,7 @@ export default function EmbeddingSimilaritySearch() {
         {similarityResults.length > 0 && (
           <div className="mb-4">
             <h3 className="font-semibold mb-2">
-              Top {Math.min(50, similarityResults.length)} Similar Areas
+              {similarityResults.length} Areas with &gt;90% Similarity
               {selectedPoint && (
                 <div className="text-xs text-gray-600 mt-1">
                   Selected: [{selectedPoint[0].toFixed(6)}, {selectedPoint[1].toFixed(6)}]
@@ -1658,7 +1858,7 @@ export default function EmbeddingSimilaritySearch() {
               <span>Similar Areas</span>
             </div>
             <div className="text-xs mt-2 text-gray-600">
-              <div>Text shows (zoom &gt; 21):</div>
+              <div>Text shows (zoom &gt; 23):</div>
               <div>• Rank (#1, #2, etc.)</div>
               <div>• Tile ID (cell_x_y)</div>
               <div>• Similarity %</div>

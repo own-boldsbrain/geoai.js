@@ -5,17 +5,27 @@ import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
 import { useOptimizedGeoAI } from "../../../hooks/useGeoAIWorker";
+import { 
+  DetectionControls, 
+  BackgroundEffects,
+  ExportButton
+} from "../../../components";
+import { MapUtils } from "../../../utils/mapUtils";
+
+type MapProvider = "geobase" | "mapbox";
 
 const GEOBASE_CONFIG = {
-  provider: "geobase",
+  provider: "geobase" as const,
   projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF,
   apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY,
   cogImagery:
     "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/67ba1d2bec9237a9ebd358a3/0/67ba1d2bec9237a9ebd358a4.tif",
+  center: [114.84857638295142, -3.449805712621256] as [number, number],
+  zoom: 18,
 };
 
 const MAPBOX_CONFIG = {
-  provider: "mapbox",
+  provider: "mapbox" as const,
   apiKey: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "test",
   style: "mapbox://styles/mapbox/satellite-v9",
 };
@@ -26,8 +36,6 @@ if (!GEOBASE_CONFIG.projectRef || !GEOBASE_CONFIG.apikey) {
     "Missing required environment variables: NEXT_PUBLIC_GEOBASE_PROJECT_REF and/or NEXT_PUBLIC_GEOBASE_API_KEY"
   );
 }
-
-type MapProvider = "geobase" | "mapbox";
 
 export default function LandCoverClassification() {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -43,27 +51,23 @@ export default function LandCoverClassification() {
     initializeModel,
     runOptimizedInference,
     clearError,
-    reset: resetWorker
   } = useOptimizedGeoAI("land-cover-classification");
 
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
-  const [classifications, setClassifications] = useState<GeoJSON.FeatureCollection>();
-  const [zoomLevel, setZoomLevel] = useState<number>(22);
-  const [minArea, setMinArea] = useState<number>(20);
-  const [selectedModel, setSelectedModel] = useState<string>(
-    "geobase/land-cover-classification"
-  );
-  const [customModelId, setCustomModelId] = useState<string>("");
+  const [classifications, setClassifications] = useState<any>();
+  const [zoomLevel, setZoomLevel] = useState<number>(18);
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
-  const models = ["geobase/land-cover-classification"];
 
   const handleReset = () => {
+    // Clear all drawn features
     if (draw.current) {
       draw.current.deleteAll();
     }
 
+    // Clear map layers using utility function
     if (map.current) {
-      // Remove all detection layers
+      MapUtils.clearAllLayers(map.current);
+      // Also clear land cover specific layers
       for (let i = 0; i < 10; i++) {
         const layerId = `detections-layer-${i}`;
         const sourceId = `detections-source-${i}`;
@@ -76,10 +80,32 @@ export default function LandCoverClassification() {
       }
     }
 
+    // Reset states
     setPolygon(null);
     setClassifications(undefined);
     clearError();
-    resetWorker();
+  };
+
+  const handleZoomChange = (newZoom: number) => {
+    setZoomLevel(newZoom);
+    // Also update the map zoom to match the slider
+    if (map.current) {
+      MapUtils.setZoom(map.current, newZoom);
+    }
+  };
+
+  const handleDetect = () => {
+    if (!polygon) return;
+    
+    runOptimizedInference(polygon, zoomLevel, {
+      task: "land-cover-classification",
+    });
+  };
+
+  const handleStartDrawing = () => {
+    if (draw.current) {
+      draw.current.changeMode("draw_polygon");
+    }
   };
 
   useEffect(() => {
@@ -88,6 +114,13 @@ export default function LandCoverClassification() {
     const mapStyle: StyleSpecification = {
       version: 8 as const,
       sources: {
+        "mapbox-base": {
+          type: "raster",
+          tiles: [
+            `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${MAPBOX_CONFIG.apiKey}`,
+          ],
+          tileSize: 512,
+        },
         "geobase-tiles": {
           type: "raster",
           tiles: [
@@ -98,18 +131,28 @@ export default function LandCoverClassification() {
         "mapbox-tiles": {
           type: "raster",
           tiles: [
-            `https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg90?access_token=${MAPBOX_CONFIG.apiKey}`,
+            `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=${MAPBOX_CONFIG.apiKey}`,
           ],
-          tileSize: 256,
+          tileSize: 512,
         },
       },
       layers: [
+        {
+          id: "mapbox-base-layer",
+          type: "raster",
+          source: "mapbox-base",
+          minzoom: 0,
+          maxzoom: 23,
+          layout: {
+            visibility: mapProvider === "geobase" ? "visible" : "none",
+          },
+        },
         {
           id: "geobase-layer",
           type: "raster",
           source: "geobase-tiles",
           minzoom: 0,
-          maxzoom: 22,
+          maxzoom: 23,
           layout: {
             visibility: mapProvider === "geobase" ? "visible" : "none",
           },
@@ -119,7 +162,7 @@ export default function LandCoverClassification() {
           type: "raster",
           source: "mapbox-tiles",
           minzoom: 0,
-          maxzoom: 22,
+          maxzoom: 23,
           layout: {
             visibility: mapProvider === "mapbox" ? "visible" : "none",
           },
@@ -130,22 +173,35 @@ export default function LandCoverClassification() {
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: mapStyle,
-      center: [114.84857638295142, -3.449805712621256],
-      zoom: 18,
+      center: GEOBASE_CONFIG.center,
+      zoom: GEOBASE_CONFIG.zoom,
     });
 
+    // Add draw control
     draw.current = new MaplibreDraw({
       displayControlsDefault: false,
       controls: {
         polygon: true,
         trash: true,
       },
-    }) as unknown as MaplibreDraw;
-    map.current.addControl(draw.current, "top-left");
+    });
+    map.current.addControl(draw.current as any, "top-left");
 
+    // Listen for polygon creation
     map.current.on("draw.create", updatePolygon);
     map.current.on("draw.update", updatePolygon);
     map.current.on("draw.delete", () => setPolygon(null));
+
+    // Listen for zoom changes to sync with slider
+    map.current.on("zoom", () => {
+      if (map.current) {
+        const currentZoom = Math.round(map.current.getZoom());
+        setZoomLevel(currentZoom);
+      }
+    });
+
+    // Initialize zoom level with current map zoom
+    setZoomLevel(Math.round(map.current.getZoom()));
 
     function updatePolygon() {
       const features = draw.current?.getAll();
@@ -168,14 +224,17 @@ export default function LandCoverClassification() {
     initializeModel({
       task: "land-cover-classification",
       ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
-      modelId: customModelId || selectedModel,
     });
-  }, [mapProvider, initializeModel, customModelId, selectedModel]);
+  }, [mapProvider, initializeModel]);
 
   // Handle results from the worker
   useEffect(() => {
-    if (lastResult?.detections) {
+    if (lastResult?.detections && map.current) {
       displayDetections(lastResult.detections);
+      setClassifications(lastResult.detections);
+    }
+    if (lastResult?.geoRawImage?.bounds && map.current) {
+      MapUtils.displayInferenceBounds(map.current, lastResult.geoRawImage.bounds);
     }
   }, [lastResult]);
 
@@ -282,258 +341,64 @@ export default function LandCoverClassification() {
     
     runOptimizedInference(polygon, zoomLevel, {
       task: "land-cover-classification",
-      minArea,
     });
   };
 
-  const handleStartDrawing = () => {
-    if (draw.current) {
-      draw.current.changeMode("draw_polygon");
-    }
-  };
-
   return (
-    <main className="w-full h-screen flex overflow-hidden">
+    <main className="w-full h-screen flex overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100 relative">
+      <BackgroundEffects />
+
       {/* Sidebar */}
-      <aside className="w-96 bg-white border-r border-gray-200 h-full flex flex-col overflow-hidden">
-        <div className="p-6 flex flex-col gap-6 text-black shadow-lg overflow-y-auto">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-gray-800">Land Cover Classification</h2>
-            <p className="text-sm text-gray-600">
-              Draw a polygon on the map and run Land Cover Classification within the
-              selected area.
-            </p>
-          </div>
-
-          {!polygon && (
-            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-sm">
-              Draw a polygon on the map to enable detection.
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-              <h3 className="font-semibold text-gray-800">Map Provider</h3>
-              <div className="space-y-4">
-                <div>
-                  <select
-                    id="mapProvider"
-                    value={mapProvider}
-                    onChange={(e) => setMapProvider(e.target.value as MapProvider)}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm text-gray-900"
-                  >
-                    <option value="geobase">Geobase</option>
-                    <option value="mapbox">Mapbox</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <button
-                className="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium flex items-center justify-center gap-2 cursor-pointer"
-                onClick={handleStartDrawing}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Draw Area of Interest
-              </button>
-              <button
-                className="bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                disabled={!polygon || !isInitialized || isProcessing}
-                onClick={handleClassify}
-              >
-                {!isInitialized || isProcessing ? (
-                  <>
-                    <svg
-                      className="animate-spin h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    {!isInitialized ? "Initializing Model..." : "Detecting..."}
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    Run Detection
-                  </>
-                )}
-              </button>
-              <button
-                className="bg-red-600 text-white px-4 py-2.5 rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium flex items-center justify-center gap-2 cursor-pointer"
-                onClick={handleReset}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Reset
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-              <h3 className="font-semibold text-gray-800">Model Settings</h3>
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="modelSelect"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Select Model
-                  </label>
-                  <select
-                    id="modelSelect"
-                    value={selectedModel}
-                    onChange={e => {
-                      setSelectedModel(e.target.value);
-                      setCustomModelId("");
-                    }}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm text-gray-900"
-                  >
-                    {models.map(model => (
-                      <option key={model} value={model}>
-                        {model}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="customModel"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Or Enter Custom Model ID
-                  </label>
-                  <input
-                    type="text"
-                    id="customModel"
-                    value={customModelId}
-                    onChange={e => {
-                      setCustomModelId(e.target.value);
-                      setSelectedModel("");
-                    }}
-                    placeholder="Enter Hugging Face model ID"
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm text-gray-900"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-              <h3 className="font-semibold text-gray-800">Detection Settings</h3>
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="zoomLevel"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Zoom Level (0-22)
-                  </label>
-                  <input
-                    type="number"
-                    id="zoomLevel"
-                    min="0"
-                    max="22"
-                    value={zoomLevel}
-                    onChange={e =>
-                      setZoomLevel(
-                        Math.min(22, Math.max(0, Number(e.target.value)))
-                      )
-                    }
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm text-gray-900"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="minArea"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Min Area
-                  </label>
-                  <input
-                    type="number"
-                    id="minArea"
-                    min="0"
-                    max="1"
-                    step="1"
-                    value={minArea}
-                    onChange={e =>
-                      setMinArea(
-                        e.target.value ? Number(e.target.value) : 0
-                      )
-                    }
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm text-gray-900"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {lastResult && (
-            <div className="mt-4 p-3 bg-green-50 border border-green-200 text-green-800 rounded-lg">
-              Land Cover Classification complete!
-            </div>
-          )}
-          
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg">
-              Error: {error}
-            </div>
-          )}
-          
+      <aside className="w-96 h-full flex flex-col overflow-hidden relative">
+        {/* Glassmorphism sidebar */}
+        <div className="backdrop-blur-xl bg-white/80 border-r border-gray-200/30 h-full shadow-2xl">
+          <DetectionControls
+            polygon={polygon}
+            isInitialized={isInitialized}
+            isProcessing={isProcessing}
+            zoomLevel={zoomLevel}
+            mapProvider={mapProvider}
+            lastResult={lastResult}
+            error={error}
+            title="Land Cover Classification"
+            description="Advanced geospatial AI powered land cover classification system"
+            onStartDrawing={handleStartDrawing}
+            onDetect={handleClassify}
+            onReset={handleReset}
+            onZoomChange={handleZoomChange}
+            onMapProviderChange={setMapProvider}
+          />
         </div>
       </aside>
-      {/* Map */}
+
+      {/* Map Container */}
       <div className="flex-1 h-full relative">
-        <div ref={mapContainer} className="w-full h-full" />
+        {/* Map overlay with subtle border */}
+        <div className="absolute inset-2 rounded-lg overflow-hidden border border-gray-200/50 shadow-2xl">
+          <div ref={mapContainer} className="w-full h-full" />
+        </div>
+        
+        {/* Export Button - Floating in top right corner */}
+        <div className="absolute top-6 right-6 z-10">
+          <ExportButton
+            detections={classifications && Array.isArray(classifications) && classifications.length > 0 
+              ? {
+                  type: "FeatureCollection" as const,
+                  features: classifications.flatMap((fc: GeoJSON.FeatureCollection) => fc.features)
+                }
+              : undefined
+            }
+            geoRawImage={lastResult?.geoRawImage}
+            task="land-cover-classification"
+            provider={mapProvider}
+            disabled={(!classifications || !Array.isArray(classifications) || classifications.length === 0) && !lastResult?.geoRawImage}
+            className="shadow-2xl backdrop-blur-lg"
+          />
+        </div>
+        
+        {/* Corner decorations */}
+        <div className="absolute top-4 right-4 w-20 h-20 border-t-2 border-r-2 border-green-400/40 rounded-tr-lg"></div>
+        <div className="absolute bottom-4 left-4 w-20 h-20 border-b-2 border-l-2 border-emerald-400/40 rounded-bl-lg"></div>
       </div>
     </main>
   );

@@ -196,8 +196,12 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         console.log("[Worker] Inference completed successfully");
         console.log({ result });
 
-        // Convert any tensors to transferable data
+        // Convert any tensors and BigInt values to transferable data
         const serializedResult = JSON.parse(JSON.stringify(result, (key, value) => {
+          // Handle BigInt values
+          if (typeof value === 'bigint') {
+            return value.toString();
+          }
           // Handle tensor objects by converting them to plain objects
           if (value && typeof value === 'object' && value.data && value.dims && value.type) {
             return {
@@ -257,15 +261,22 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         console.log("[Worker] getImageEmbeddings completed successfully");
         console.log("Embeddings result:", result);
 
-        // Convert tensor to transferable data
-        const serializedResult = {
-          ...result,
-          image_embeddings: result.image_embeddings ? {
-            data: Array.from(result.image_embeddings.image_embeddings.data),
-            dims: result.image_embeddings.image_embeddings.dims,
-            type: result.image_embeddings.image_embeddings.type
-          } : null
-        };
+        // Convert tensor and BigInt values to transferable data
+        const serializedResult = JSON.parse(JSON.stringify(result, (key, value) => {
+          // Handle BigInt values
+          if (typeof value === 'bigint') {
+            return value.toString();
+          }
+          // Handle tensor objects
+          if (value && typeof value === 'object' && value.data && value.dims && value.type) {
+            return {
+              data: Array.from(value.data),
+              dims: value.dims,
+              type: value.type
+            };
+          }
+          return value;
+        }));
 
         self.postMessage({
           type: "embeddings_complete",
