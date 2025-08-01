@@ -253,90 +253,6 @@ const result = await pipeline.inference(polygon);`}
             </p>
           </a>
           <a
-            href="/tasks/building-footprint"
-            className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-          >
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-48 object-cover rounded-lg mb-6"
-            >
-              <source src="/video/building-footprint.mp4" type="video/mp4" />
-            </video>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              Building Footprint Segmentation
-            </h2>
-            <p className="text-gray-600 text-lg">
-              Generates segmentation masks for building footprints
-              in satellite imagery.
-            </p>
-          </a>
-          <a
-            href="/tasks/land-cover"
-            className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-          >
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-48 object-cover rounded-lg mb-6"
-            >
-              <source src="/video/land-cover-classification.mp4" type="video/mp4" />
-            </video>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              Land Cover Classification
-            </h2>
-            <p className="text-gray-600 text-lg">
-              Classifies terrain and land cover types such as water, forest, or
-              urban areas.
-            </p>
-          </a>
-          <a
-            href="/tasks/zero-shot"
-            className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-          >
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-48 object-cover rounded-lg mb-6"
-            >
-              <source src="/video/zero-shot-object-detection.mp4" type="video/mp4" />
-            </video>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              Zero Shot Object Detection
-            </h2>
-            <p className="text-gray-600 text-lg">
-              Detects objects without prior training on specific classes using
-              advanced AI.
-            </p>
-          </a>
-          <a
-            href="/tasks/zero-shot-segmentation"
-            className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-          >
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-48 object-cover rounded-lg mb-6"
-            >
-              <source src="/video/zero-shot-segmentation.mp4" type="video/mp4" />
-            </video>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              Zero Shot Segmentation
-            </h2>
-            <p className="text-gray-600 text-lg">
-              Segment objects without prior training on specific classes using
-              advanced AI.
-            </p>
-          </a>          
-          <a
             href="/tasks/building-detection"
             className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
@@ -376,6 +292,26 @@ const result = await pipeline.inference(polygon);`}
               Detects and marks cars and vehicles in the image.
             </p>
           </a>
+          <a
+            href="/tasks/oil-storage-tank"
+            className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          >
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-48 object-cover rounded-lg mb-6"
+            >
+              <source src="/video/oil-storage-tank.mp4" type="video/mp4" />
+            </video>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              Oil Storage Tank Detection
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Detects oil storage tanks in the imagery.
+            </p>
+          </a> 
           <a
             href="/tasks/wetland-segmentation"
             className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
@@ -458,7 +394,7 @@ const result = await pipeline.inference(polygon);`}
             </p>
           </a>
           <a
-            href="/tasks/oil-storage-tank"
+            href="/tasks/building-footprint"
             className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
             <video
@@ -468,15 +404,79 @@ const result = await pipeline.inference(polygon);`}
               playsInline
               className="w-full h-48 object-cover rounded-lg mb-6"
             >
-              <source src="/video/oil-storage-tank.mp4" type="video/mp4" />
+              <source src="/video/building-footprint.mp4" type="video/mp4" />
             </video>
             <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              Oil Storage Tank Detection
+              Building Footprint Segmentation
             </h2>
             <p className="text-gray-600 text-lg">
-              Detects oil storage tanks in the imagery.
+              Generates segmentation masks for building footprints
+              in satellite imagery.
             </p>
-          </a> 
+          </a>
+          <a
+            href="/tasks/land-cover"
+            className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          >
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-48 object-cover rounded-lg mb-6"
+            >
+              <source src="/video/land-cover-classification.mp4" type="video/mp4" />
+            </video>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              Land Cover Classification
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Classifies terrain and land cover types such as water, forest, or
+              urban areas.
+            </p>
+          </a>
+          <a
+            href="/tasks/zero-shot"
+            className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          >
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-48 object-cover rounded-lg mb-6"
+            >
+              <source src="/video/zero-shot-object-detection.mp4" type="video/mp4" />
+            </video>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              Zero Shot Object Detection
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Detects objects without prior training on specific classes using
+              advanced AI.
+            </p>
+          </a>
+          <a
+            href="/tasks/zero-shot-segmentation"
+            className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          >
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-48 object-cover rounded-lg mb-6"
+            >
+              <source src="/video/zero-shot-segmentation.mp4" type="video/mp4" />
+            </video>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              Zero Shot Segmentation
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Segment objects without prior training on specific classes using
+              advanced AI.
+            </p>
+          </a>
           <a
             href="/tasks/embedding-similarity-search"
             className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
