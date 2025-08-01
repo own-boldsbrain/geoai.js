@@ -236,7 +236,7 @@ export default function ZeroShotSegmentation() {
     initializeModel({
       tasks: [
         {
-        task: "wetland-segmentation"
+        task: "zero-shot-object-detection",
         },
         {
           task: "mask-generation",
