@@ -400,7 +400,7 @@ export default function MaskGeneration() {
   useEffect(() => {
     initializeModel({
       tasks: [{
-        task: "building-footprint-segmentation",
+        task: "mask-generation",
         modelId: customModelId || selectedModel,
       }],
       providerParams: {

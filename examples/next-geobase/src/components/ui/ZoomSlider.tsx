@@ -109,15 +109,6 @@ export const ZoomSlider: React.FC<ZoomSliderProps> = ({
           <span className="text-xs text-gray-400">{max}</span>
         </div>
 
-        {/* Resolution description */}
-        <div className="mt-3 p-2 bg-gradient-to-r from-teal-50/50 to-emerald-50/50 rounded-lg border border-teal-200/30">
-          <p className="text-xs text-gray-600 text-center">
-            {getResolutionDescription(value)}
-          </p>
-          <p className="text-xs text-gray-500 text-center mt-1">
-            Synced with map zoom level
-          </p>
-        </div>
       </div>
     </div>
   );
