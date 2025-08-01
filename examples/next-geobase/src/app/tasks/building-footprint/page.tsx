@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
-import { useOptimizedGeoAI } from "../../../hooks/useGeoAIWorker";
+import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { 
   DetectionControls, 
   BackgroundEffects,
@@ -14,8 +14,8 @@ import { MapUtils } from "../../../utils/mapUtils";
 
 const GEOBASE_CONFIG = {
   provider: "geobase" as const,
-  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF,
-  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY,
+  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF ?? "",
+  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY ?? "",
   cogImagery:
     "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/naip_train.tif",
   center: [-117.41857614409385, 47.656774236160146] as [number, number],
@@ -50,10 +50,9 @@ export default function BuildingFootPrintSegmentation() {
     error,
     lastResult,
     initializeModel,
-    runOptimizedInference,
+    runInference,
     clearError,
-    reset: resetWorker
-  } = useOptimizedGeoAI("building-footprint-segmentation");
+  } = useGeoAIWorker();
 
   // Component state
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
@@ -89,9 +88,17 @@ export default function BuildingFootPrintSegmentation() {
   const handleDetect = () => {
     if (!polygon) return;
     
-    runOptimizedInference(polygon, zoomLevel, {
-      task: "building-footprint-segmentation",
-    });
+    runInference(
+      {
+        inputs: {
+          polygon,
+        },
+        mapSourceParams: {
+          zoomLevel,
+        },
+        postProcessingParams: { confidenceThreshold: 0.5, minArea: 20 }
+      }
+    );
   };
 
   const handleStartDrawing = () => {
@@ -214,8 +221,12 @@ export default function BuildingFootPrintSegmentation() {
   // Initialize the model when the map provider changes
   useEffect(() => {
     initializeModel({
-      task: "building-footprint-segmentation",
-      ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      tasks: [{
+        task: "building-footprint-segmentation"
+      }],
+      providerParams: {
+        ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      },
     });
   }, [mapProvider, initializeModel]);
 

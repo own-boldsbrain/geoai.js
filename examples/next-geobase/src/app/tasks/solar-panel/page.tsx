@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
-import { useOptimizedGeoAI } from "../../../hooks/useGeoAIWorker";
+import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { 
   DetectionControls, 
   BackgroundEffects,
@@ -16,8 +16,8 @@ type MapProvider = "geobase" | "mapbox";
 
 const GEOBASE_CONFIG = {
   provider: "geobase" as const,
-  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF,
-  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY,
+  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF ?? "",
+  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY ?? "",
   cogImagery:
     "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/solar_panels_davis_ca.tif",
   center: [-121.7743491, 38.5533061] as [number, number],
@@ -50,14 +50,13 @@ export default function SolarPanelDetection() {
     error,
     lastResult,
     initializeModel,
-    runOptimizedInference,
+    runInference,
     clearError,
-  } = useOptimizedGeoAI("solar-panel-detection");
+  } = useGeoAIWorker();
 
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
   const [detections, setDetections] = useState<GeoJSON.FeatureCollection>();
   const [zoomLevel, setZoomLevel] = useState<number>(20);
-  const [confidenceScore, setConfidenceScore] = useState<number>(0.9);
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
 
   const handleReset = () => {
@@ -199,8 +198,12 @@ export default function SolarPanelDetection() {
   // Initialize the model when the map provider changes
   useEffect(() => {
     initializeModel({
-      task: "solar-panel-detection",
-      ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      tasks: [{
+        task: "solar-panel-detection"
+      }],
+      providerParams: {
+        ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      },
     });
   }, [mapProvider, initializeModel]);
 
@@ -218,10 +221,16 @@ export default function SolarPanelDetection() {
   const handleDetect = () => {
     if (!polygon) return;
     
-    runOptimizedInference(polygon, zoomLevel, {
-      task: "solar-panel-detection",
-      confidenceScore,
-    });
+    runInference(
+      {
+        inputs: {
+          polygon,
+        },
+        mapSourceParams: {
+          zoomLevel,
+        },
+      }
+    );
   };
 
   const handleStartDrawing = () => {

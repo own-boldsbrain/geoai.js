@@ -4,18 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
-import { useOptimizedGeoAI } from "../../../hooks/useGeoAIWorker";
+import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 
 const GEOBASE_CONFIG = {
-  provider: "geobase",
-  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF,
-  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY,
+  provider: "geobase" as const,
+  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF ?? "",
+  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY ?? "",
   cogImagery:
     "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/686e390615a6768f282b22b3/0/686e390615a6768f282b22b4.tif",
 };
 
 const MAPBOX_CONFIG = {
-  provider: "mapbox",
+  provider: "mapbox" as const,
   apiKey: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "test",
   style: "mapbox://styles/mapbox/satellite-v9",
 };
@@ -41,10 +41,10 @@ export default function MaskGeneration() {
     error,
     lastResult,
     initializeModel,
-    runOptimizedInference,
+    runInference,
     clearError,
     reset: resetWorker
-  } = useOptimizedGeoAI("mask-generation");
+  } = useGeoAIWorker();
 
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
   const [input, setInput] = useState<{
@@ -306,7 +306,7 @@ export default function MaskGeneration() {
         trash: true,
       },
     });
-    map.current.addControl(draw.current, "top-left");
+    map.current.addControl(draw.current as any, "top-left");
 
     // Listen for polygon creation
     map.current.on("draw.create", updatePolygon);
@@ -399,9 +399,13 @@ export default function MaskGeneration() {
   // Initialize the model when the map provider changes
   useEffect(() => {
     initializeModel({
-      task: "mask-generation",
-      ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
-      modelId: customModelId || selectedModel,
+      tasks: [{
+        task: "building-footprint-segmentation",
+        modelId: customModelId || selectedModel,
+      }],
+      providerParams: {
+        ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      },
     });
   }, [mapProvider, initializeModel, customModelId, selectedModel]);
 
@@ -495,11 +499,18 @@ export default function MaskGeneration() {
       coordinates: selectedPoint.coordinates
     } : input;
     
-    runOptimizedInference(polygon, zoomLevel, {
-      task: "mask-generation",
-      inputPoint,
-      maxMasks,
-    });
+    runInference({
+      inputs : {
+        polygon: polygon,
+        input: inputPoint,
+      },
+      mapSourceParams : {
+        zoomLevel
+      },
+      postProcessingParams:{
+        maxMasks
+      }
+    })
   };
 
   const handleStartDrawing = () => {

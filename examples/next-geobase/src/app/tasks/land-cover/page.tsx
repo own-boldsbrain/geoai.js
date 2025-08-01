@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
-import { useOptimizedGeoAI } from "../../../hooks/useGeoAIWorker";
+import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { 
   DetectionControls, 
   BackgroundEffects,
@@ -16,8 +16,8 @@ type MapProvider = "geobase" | "mapbox";
 
 const GEOBASE_CONFIG = {
   provider: "geobase" as const,
-  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF,
-  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY,
+  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF ?? "",
+  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY ?? "",
   cogImagery:
     "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/67ba1d2bec9237a9ebd358a3/0/67ba1d2bec9237a9ebd358a4.tif",
   center: [114.84857638295142, -3.449805712621256] as [number, number],
@@ -49,9 +49,9 @@ export default function LandCoverClassification() {
     error,
     lastResult,
     initializeModel,
-    runOptimizedInference,
+    runInference,
     clearError,
-  } = useOptimizedGeoAI("land-cover-classification");
+  } = useGeoAIWorker();
 
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
   const [classifications, setClassifications] = useState<any>();
@@ -92,14 +92,6 @@ export default function LandCoverClassification() {
     if (map.current) {
       MapUtils.setZoom(map.current, newZoom);
     }
-  };
-
-  const handleDetect = () => {
-    if (!polygon) return;
-    
-    runOptimizedInference(polygon, zoomLevel, {
-      task: "land-cover-classification",
-    });
   };
 
   const handleStartDrawing = () => {
@@ -222,8 +214,12 @@ export default function LandCoverClassification() {
   // Initialize the model when the map provider changes
   useEffect(() => {
     initializeModel({
-      task: "land-cover-classification",
-      ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      tasks: [{
+        task: "land-cover-classification"
+      }],
+      providerParams: {
+        ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      },
     });
   }, [mapProvider, initializeModel]);
 
@@ -338,10 +334,20 @@ export default function LandCoverClassification() {
 
   const handleClassify = () => {
     if (!polygon) return;
-    
-    runOptimizedInference(polygon, zoomLevel, {
-      task: "land-cover-classification",
-    });
+
+    runInference(
+      {
+        inputs: {
+          polygon,
+        },
+        mapSourceParams: {
+          zoomLevel,
+        },
+        postProcessingParams: {
+          minArea: 20
+        }
+      }
+    );
   };
 
   return (

@@ -5,12 +5,12 @@ import maplibregl, { StyleSpecification } from "maplibre-gl";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
-import { useOptimizedGeoAI } from "../../../hooks/useGeoAIWorker";
+import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 
 const GEOBASE_CONFIG = {
   provider: "geobase" as const,
-  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF,
-  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY,
+  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF ?? "",
+  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY ?? "",
   cogImagery:
     "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/686e390615a6768f282b22b3/0/686e390615a6768f282b22b4.tif",
 };
@@ -63,10 +63,10 @@ export default function EmbeddingSimilaritySearch() {
     error,
     lastResult,
     initializeModel,
-    runOptimizedEmbeddings,
+    getEmbeddings,
     clearError,
     reset: resetWorker
-  } = useOptimizedGeoAI("mask-generation"); // Use mask-generation as it supports the SAM model
+  } = useGeoAIWorker(); // Use mask-generation as it supports the SAM model
 
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(16);
@@ -283,7 +283,14 @@ export default function EmbeddingSimilaritySearch() {
       console.log("[EmbeddingSimilaritySearch] Computing embeddings for polygon:", zoomLevel);
       
       // Use the real getEmbeddings function from the GenericSegmentation model
-      await runOptimizedEmbeddings(polygon, zoomLevel, {});
+      await getEmbeddings({
+        inputs: {
+          polygon: polygon
+        },
+        mapSourceParams: {
+          zoomLevel,
+        },
+      });
       
     } catch (err) {
       console.error("Error computing embeddings:", err);
@@ -1555,8 +1562,12 @@ export default function EmbeddingSimilaritySearch() {
   // Initialize model when component mounts
   useEffect(() => {
     initializeModel({
-      task: "mask-generation",
-      ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      tasks: [{
+        task: "mask-generation"
+      }],
+      providerParams: {
+        ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      },
     });
   }, [mapProvider, initializeModel]);
 

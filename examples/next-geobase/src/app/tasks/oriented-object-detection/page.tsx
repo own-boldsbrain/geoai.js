@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
-import { useOptimizedGeoAI } from "../../../hooks/useGeoAIWorker";
+import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { 
   DetectionControls, 
   BackgroundEffects,
@@ -16,8 +16,8 @@ type MapProvider = "geobase" | "mapbox";
 
 const GEOBASE_CONFIG = {
   provider: "geobase" as const,
-  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF,
-  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY,
+  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF ?? "",
+  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY ?? "",
   cogImagery:
     "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/67ba1d2bec9237a9ebd358a3/0/67ba1d2bec9237a9ebd358a4.tif",
   center: [114.84857638295142, -3.449805712621256] as [number, number],
@@ -49,9 +49,9 @@ export default function OrientedObjectDetection() {
     error,
     lastResult,
     initializeModel,
-    runOptimizedInference,
+    runInference,
     clearError,
-  } = useOptimizedGeoAI("oriented-object-detection");
+  } = useGeoAIWorker();
 
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
   const [detections, setDetections] = useState<GeoJSON.FeatureCollection>();
@@ -86,9 +86,20 @@ export default function OrientedObjectDetection() {
   const handleDetect = () => {
     if (!polygon) return;
     
-    runOptimizedInference(polygon, zoomLevel, {
-      task: "oriented-object-detection",
-    });
+    runInference(
+      {
+        inputs : {
+          polygon
+        },
+        mapSourceParams : {
+          zoomLevel
+        },
+        postProcessingParams: {
+          conf_thres: 0.5, // Default confidence threshold,
+          iou_thres: 0.45, // Default IoU threshold
+        }
+      }
+    );
   };
 
   const handleStartDrawing = () => {
@@ -211,8 +222,12 @@ export default function OrientedObjectDetection() {
   // Initialize the model when the map provider changes
   useEffect(() => {
     initializeModel({
-      task: "oriented-object-detection",
-      ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      tasks: [{
+        task: "oriented-object-detection"
+      }],
+      providerParams: {
+        ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      },
     });
   }, [mapProvider, initializeModel]);
 

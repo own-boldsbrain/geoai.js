@@ -491,7 +491,7 @@ export class OrientedObjectDetection extends BaseModel {
       pred_bbox,
       org_img_shape: [geoRawImage.width, geoRawImage.height],
       valid_scale,
-      conf_thresh: options.conf_thres || 0.5,
+      conf_thresh: options.conf_thres || 0.4,
     });
 
     if (predbboxes.length === 0) {

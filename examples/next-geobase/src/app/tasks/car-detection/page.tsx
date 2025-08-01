@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
-import { useOptimizedGeoAI } from "../../../hooks/useGeoAIWorker";
+import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { 
   DetectionControls, 
   BackgroundEffects,
@@ -16,8 +16,8 @@ type MapProvider = "geobase" | "mapbox";
 
 const GEOBASE_CONFIG = {
   provider: "geobase" as const,
-  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF,
-  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY,
+  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF ?? "",
+  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY ?? "",
   cogImagery:
     "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/cars_7cm.tif",
   center: [-95.4210323139897, 29.678781807220446] as [number, number],
@@ -56,9 +56,9 @@ export default function CarDetection() {
     error,
     lastResult,
     initializeModel,
-    runOptimizedInference,
+    runInference,
     clearError,
-  } = useOptimizedGeoAI("car-detection");
+  } = useGeoAIWorker();
 
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
   const [detections, setDetections] = useState<GeoJSON.FeatureCollection>();
@@ -93,9 +93,16 @@ export default function CarDetection() {
   const handleDetect = () => {
     if (!polygon) return;
     
-    runOptimizedInference(polygon, zoomLevel, {
-      task: "car-detection",
-    });
+    runInference(
+      {
+        inputs: {
+          polygon,
+        },
+        mapSourceParams: {
+          zoomLevel,
+        },
+      }
+    );
   };
 
   const handleStartDrawing = () => {
@@ -218,8 +225,12 @@ export default function CarDetection() {
   // Initialize the model when the map provider changes
   useEffect(() => {
     initializeModel({
-      task: "car-detection",
-      ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      tasks: [{
+        task: "car-detection"
+      }],
+      providerParams: {
+        ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
+      },
     });
   }, [mapProvider, initializeModel]);
 
