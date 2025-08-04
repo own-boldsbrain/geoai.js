@@ -6,22 +6,22 @@ This directory contains comprehensive documentation for integrating various map 
 
 ## Supported Providers
 
-| Provider | Status | Tile Formats | Authentication | Performance |
-|----------|--------|--------------|---------------|-------------|
-| [GeoBase](./geobase.md) | ✅ Complete | RGB, Multispectral | API Key | High |
-| [Mapbox](./mapbox.md) | ✅ Complete | RGB, Satellite | Access Token | High |
-| Google Maps | 🚧 Coming Soon | RGB, Satellite | API Key | High |
-| Esri ArcGIS | 🚧 Coming Soon | RGB, Multispectral | Token | Medium |
+| Provider | Status | Tile Formats | Authentication |
+|----------|--------|--------------|---------------|
+| [GeoBase](./geobase.md) | ✅ Complete | RGB, Multispectral | API Key |
+| [Mapbox](./mapbox.md) | ✅ Complete | RGB, Satellite | Access Token |
+| Google Maps | 🚧 Coming Soon | RGB, Satellite | API Key |
+| Esri ArcGIS | 🚧 Coming Soon | RGB, Multispectral | Token |
 
 
 ## Quick Comparison
 
 ### Image Quality & Resolution
-- **GeoBase**: High resolution, multispectral
+- **GeoBase**: Any CoG imagery including multi-spectral
 - **Mapbox**: High resolution, RGB satellite imagery
 
 ### Pricing
-- **GeoBase**: Check pricing at [geobase.app/pricing](https://geobase.app/pricing) or consult GeoBase team on [Discord](https://discord.com/invite/4susZSj4bd). See [tile server docs](https://docs.geobase.app/tileserver) for setup.
+- **GeoBase**: Check pricing at [geobase.app/pricing](https://geobase.app/pricing) or consult GeoBase team on [Discord](https://geobase.app/discord). 
 - **Mapbox**: Check pricing at [mapbox.com/pricing](https://www.mapbox.com/pricing)
 
 ### AI Model Compatibility
@@ -65,29 +65,16 @@ const pipeline = await geoai.pipeline(
 
 ## Performance Considerations
 
-### Tile Caching
-- Enable caching for frequently accessed areas
-- Use appropriate cache sizes based on your use case
-- Consider offline scenarios for mobile applications
-
-### Cost Optimization
-- Monitor tile usage and costs
-- Use appropriate zoom levels for your models
-- Implement smart caching strategies
-
 ## Contributing
 
 When adding support for new map providers:
 
 1. Create a new `.md` file following the established template
 2. Include authentication setup, tile configuration, and examples
-3. Add performance benchmarks and cost considerations
-4. Update this README with the new provider entry
+3. Update this README with the new provider entry
 5. Ensure compatibility with existing AI tasks
 
 ## Support
 
 For provider-specific issues:
 - Check the individual provider documentation
-- Review authentication and quota settings
-- Consult the troubleshooting sections in each guide
