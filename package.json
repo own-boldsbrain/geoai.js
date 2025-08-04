@@ -61,9 +61,8 @@
   },
   "scripts": {
     "dev": "vite --host",
-    "build": "rimraf build/**/* && pnpm build:core && pnpm build:react && pnpm build:types && pnpm build:package",
+    "build": "rimraf build/**/* && pnpm build:core && pnpm build:types && pnpm build:package",
     "build:core": "tsc && vite build",
-    "build:react": "vite build --config vite-react.config.ts",
     "build:types": "dts-bundle-generator --config ./dts-bundle-generator.config.ts",
     "build:package": "copyfiles ./package.json build",
     "build:examples": "pnpm build && cp -r ./build ./examples/codepen-geobase",
