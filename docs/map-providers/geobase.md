@@ -34,7 +34,6 @@ const results = await pipeline.inference({
 ### High-Performance COG Serving
 - **Your imagery**: Serves your own Cloud Optimized GeoTIFF (COG) files
 - **Ultra-fast delivery**: Optimized tile server for rapid image access
-- **Scalable infrastructure**: Handles high-volume requests efficiently
 
 ### Flexible Image Support
 - **Any resolution**: Supports imagery from 10cm to 10m+ resolution
@@ -52,7 +51,7 @@ const results = await pipeline.inference({
 
 ### API Key Setup
 
-1. **Get your project reference and API key** from the [GeoBase setup guide](https://docs.geobase.app/blueprints/shareable-maps-nextjs#environment-variables)
+1. **Get your project reference and API key** from the [GeoBase](https://geobase.app/) under settings
 2. **Set environment variables**:
    ```bash
    export GEOBASE_PROJECT_REF="your-project-ref"
