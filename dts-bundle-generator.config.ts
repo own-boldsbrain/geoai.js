@@ -8,11 +8,6 @@ const config = {
       outFile: "./build/index.d.ts",
       noCheck: true,
     },
-    {
-      filePath: "./src/react/index.ts",
-      outFile: "./build/react.d.ts",
-      noCheck: true,
-    },
   ],
 };
 
