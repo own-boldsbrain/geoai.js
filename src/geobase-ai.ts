@@ -19,6 +19,12 @@ interface ChainInstance {
   ) => Promise<ObjectDetectionResults | SegmentationResults>;
 }
 
+interface TaskConfig {
+  task: string;
+  modelId?: string;
+  modelParams?: PretrainedOptions;
+}
+
 class Pipeline {
   /**
    * Builds a dependency graph from modelRegistry chainableTasks
@@ -112,11 +118,7 @@ class Pipeline {
    * @returns A function that takes inputs and returns the output of the last task in the chain
    */
   static async pipeline(
-    taskOrTasks: {
-      task: string;
-      modelId?: string;
-      modelParams?: PretrainedOptions;
-    }[],
+    taskOrTasks: TaskConfig[],
     providerParams: ProviderParams
   ): Promise<ModelInstance | ChainInstance> {
     // Handle single task case
