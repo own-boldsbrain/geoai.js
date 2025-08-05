@@ -49,6 +49,19 @@ const config = {
     extraContent: (
       <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
         <a
+          href="https://geoaijs-live.geobase.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: "inherit",
+            textDecoration: "none",
+            fontSize: "0.875rem",
+            fontWeight: "500",
+          }}
+        >
+          🎯 Live Examples
+        </a>
+        <a
           href="https://docs.geobase.app"
           target="_blank"
           rel="noopener noreferrer"
@@ -80,20 +93,20 @@ const config = {
           alignItems: "center",
         }}
       >
-        <span>Geobase.app © {new Date().getFullYear()}</span>
-        <a
-          href="https://docs.geobase.app"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            color: "inherit",
-            textDecoration: "none",
-            fontSize: "0.875rem",
-            fontWeight: "500",
-          }}
-        >
-          📚 GeoBase Docs
-        </a>
+        <span>
+          © {new Date().getFullYear()} geoai.js. Open source project by the{" "}
+          <a
+            href="https://geobase.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: "inherit",
+              textDecoration: "underline",
+            }}
+          >
+            Geobase team
+          </a>
+        </span>
       </div>
     ),
   },
