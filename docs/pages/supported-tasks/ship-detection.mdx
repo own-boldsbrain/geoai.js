@@ -1,0 +1,48 @@
+import { Callout } from 'nextra/components';
+
+# Ship Detection
+> Detect ships in satellite imagery
+
+## Quick Start
+
+```typescript
+import { geoai } from "@geobase-js/geoai";
+
+// Initialize pipeline
+const pipeline = await geoai.pipeline([
+  { task: "ship-detection" }
+], providerParams);
+
+// Run detection
+const result = await pipeline.inference({
+  inputs: { polygon: myPolygon }
+});
+
+console.log(`Found ${result.detections.features.length} ships`);
+```
+
+## Parameters
+
+### Map Source
+```typescript
+mapSourceParams: {
+  zoomLevel: 20  // 20+ recommended for ship detection
+}
+```
+## Output
+
+Returns GeoJSON with detected ships:
+
+```typescript
+{
+  detections: {
+    type: "FeatureCollection",
+    features: [
+      {
+        geometry: { /* ship location */ },
+        properties: {}
+      }
+    ]
+  }
+}
+```

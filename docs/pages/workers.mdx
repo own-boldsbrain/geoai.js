@@ -1,0 +1,135 @@
+import { Callout } from 'nextra/components';
+
+# Web Workers
+
+> Run AI tasks in background threads to keep your UI responsive.
+
+### Quick Setup
+
+#### Create Worker File `worker.ts`
+
+```typescript
+import { geoai } from "@geobase-js/geoai";
+
+let modelInstance: any = null;
+
+self.onmessage = async (e) => {
+  const { type, payload } = e.data;
+
+  try {
+    switch (type) {
+      case "init":
+        modelInstance = await geoai.pipeline(payload.tasks, payload.providerParams);
+        self.postMessage({ type: "ready" });
+        break;
+
+      case "inference":
+        const result = await modelInstance.inference(payload);
+        self.postMessage({ type: "result", payload: result });
+        break;
+    }
+  } catch (error) {
+    self.postMessage({ type: "error", payload: error.message });
+  }
+};
+```
+
+#### Create Hook `useGeoAIWorker.ts`
+
+```typescript
+import { useState, useEffect, useRef } from "react";
+
+export function useGeoAIWorker() {
+  const workerRef = useRef<Worker | null>(null);
+  const [isReady, setIsReady] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    workerRef.current = new Worker(new URL("./worker.ts", import.meta.url));
+    
+    workerRef.current.onmessage = (e) => {
+      const { type, payload } = e.data;
+      
+      switch (type) {
+        case "ready":
+          setIsReady(true);
+          break;
+        case "result":
+          setResult(payload);
+          setIsProcessing(false);
+          break;
+        case "error":
+          console.error("Worker error:", payload);
+          setIsProcessing(false);
+          break;
+      }
+    };
+
+    return () => workerRef.current?.terminate();
+  }, []);
+
+  const initialize = (tasks: any[], providerParams: any) => {
+    workerRef.current?.postMessage({
+      type: "init",
+      payload: { tasks, providerParams }
+    });
+  };
+
+  const runInference = (params: any) => {
+    if (!isReady) return;
+    setIsProcessing(true);
+    workerRef.current?.postMessage({
+      type: "inference",
+      payload: params
+    });
+  };
+
+  return { isReady, isProcessing, result, initialize, runInference };
+}
+```
+
+#### Use in Component
+
+```tsx
+import { useGeoAIWorker } from "./useGeoAIWorker";
+
+export default function AIComponent() {
+  const { isReady, isProcessing, result, initialize, runInference } = useGeoAIWorker();
+
+  useEffect(() => {
+    initialize(
+      [{ task: "building-detection" }],
+      { geobase: { accessToken: "your-token" } }
+    );
+  }, []);
+
+  const handleAnalyze = () => {
+    runInference({
+      image: "path/to/image.jpg",
+      bbox: [0, 0, 1, 1]
+    });
+  };
+
+  return (
+    <div>
+      <button 
+        onClick={handleAnalyze} 
+        disabled={!isReady || isProcessing}
+      >
+        {isProcessing ? "Processing..." : "Analyze"}
+      </button>
+      
+      {result && (
+        <pre>{JSON.stringify(result, null, 2)}</pre>
+      )}
+    </div>
+  );
+}
+```
+
+### Benefits
+
+- Non-blocking UI during AI processing
+- Better user experience
+- Parallel task execution
