@@ -4,4 +4,5 @@ export default {
   "map-providers": "Map Providers",
   "supported-tasks": "Supported Tasks",
   workers: "Web Workers",
+  developers: "Developers",
 };

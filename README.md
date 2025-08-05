@@ -2,7 +2,7 @@
 
 # @geobase-js/geoai
 
-A JavaScript library for running Geo AI models in frontend applications.
+A Javascript library for running Geo AI models in frontend applications.
 
 ## Installation
 
@@ -99,7 +99,7 @@ function OptimizedComponent() {
 
 The library is split into two modules:
 
-- **Core Module** (`@geobase-js/geoai`): Pure JavaScript/TypeScript library that works in both Node.js and browser environments
+- **Core Module** (`@geobase-js/geoai`): Pure Javascript/TypeScript library that works in both Node.js and browser environments
 - **React Module** (`@geobase-js/geoai/react`): React-specific hooks that depend on the core module
 
 This separation ensures:

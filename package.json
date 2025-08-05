@@ -1,7 +1,7 @@
 {
   "name": "@geobase-js/geoai",
   "version": "0.0.1",
-  "description": "A JavaScript library for running Geo AI models in frontend applications",
+  "description": "A Javascript library for running Geo AI models in frontend applications",
   "keywords": [
     "geoai",
     "geospatial",

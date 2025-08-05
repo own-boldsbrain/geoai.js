@@ -25,12 +25,19 @@ const config = {
     },
   },
   logo: (
-    <GeobaseLogo
-      style={{
-        width: "8rem",
-        height: "auto",
-      }}
-    />
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <img
+        src="https://upload.wikimedia.org/wikipedia/commons/9/99/Unofficial_JavaScript_logo_2.svg"
+        alt="JavaScript logo"
+        style={{
+          height: "1.5rem",
+          width: "auto",
+          marginRight: "0.5rem",
+          verticalAlign: "middle",
+        }}
+      />
+      geobase/geoai.js
+    </div>
   ),
   project: {
     link: "https://github.com/decision-labs/geobase-ai.js",
@@ -38,10 +45,57 @@ const config = {
   chat: {
     link: "https://geobase.app/discord",
   },
+  navbar: {
+    extraContent: (
+      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+        <a
+          href="https://docs.geobase.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: "inherit",
+            textDecoration: "none",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <GeobaseLogo
+            style={{
+              width: "6rem",
+              height: "auto",
+            }}
+          />
+        </a>
+      </div>
+    ),
+  },
   docsRepositoryBase: "https://github.com/sabman/geobase-docs",
   defaultShowCopyCode: true,
   footer: {
-    content: `Geobase.app © ${new Date().getFullYear()}`,
+    content: (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <span>Geobase.app © {new Date().getFullYear()}</span>
+        <a
+          href="https://docs.geobase.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: "inherit",
+            textDecoration: "none",
+            fontSize: "0.875rem",
+            fontWeight: "500",
+          }}
+        >
+          📚 GeoBase Docs
+        </a>
+      </div>
+    ),
   },
   sidebar: {
     defaultMenuCollapseLevel: 1,

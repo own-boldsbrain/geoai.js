@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GeoRawImage class for image data handling
 - Support for various image formats and sources
 - Configurable confidence thresholds and parameters
-- Framework-agnostic design for use with any JavaScript framework
+- Framework-agnostic design for use with any Javascript framework
 
 ### Technical
 
