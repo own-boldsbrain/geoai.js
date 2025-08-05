@@ -10,14 +10,16 @@
 
 - [ ] **Create MDX file**: `docs/pages/supported-tasks/new-model.mdx`
 - [ ] **Add video embed** at top of page:
+
   ```jsx
-  import VideoEmbed from '../../components/video-embed';
-  
-  <VideoEmbed 
+  import VideoEmbed from "../../components/video-embed";
+
+  <VideoEmbed
     src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/demo.mp4"
     title="Model Demo"
-  />
+  />;
   ```
+
 - [ ] **Add to navigation**: Update `docs/pages/supported-tasks/_meta.js`
 - [ ] **Include Quick Start** code example
 - [ ] **Document parameters** and configuration
@@ -32,4 +34,4 @@
 
 ---
 
-**Video URL Format**: `https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/[filename].mp4` 
+**Video URL Format**: `https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/[filename].mp4`

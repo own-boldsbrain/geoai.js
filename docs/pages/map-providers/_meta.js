@@ -1,4 +1,4 @@
 export default {
-    mapbox: "Mapbox",
-    geobase: "GeoBase",
+  mapbox: "Mapbox",
+  geobase: "GeoBase",
 };

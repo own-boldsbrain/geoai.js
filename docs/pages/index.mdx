@@ -1,11 +1,12 @@
-import { Callout } from 'nextra/components';
+import { Callout } from "nextra/components";
 
 # 🚀 Quickstart Guide
 
 Build your first AI-powered React mapping app in under 5 minutes. Create a React application that can detect objects in satellite imagery with just a few lines of code.
 
 <Callout type="info" emoji="ℹ️">
-  This guide uses the latest version of @geobase-js/geoai for optimal performance and compatibility.
+  This guide uses the latest version of @geobase-js/geoai for optimal
+  performance and compatibility.
 </Callout>
 
 ## Prerequisites
@@ -17,7 +18,8 @@ Before getting started, ensure you have:
 - A map provider API key (Geobase or Mapbox)
 
 <Callout type="warning" emoji="⚠️">
-  Make sure your Node.js version is 16 or higher for compatibility with the latest dependencies.
+  Make sure your Node.js version is 16 or higher for compatibility with the
+  latest dependencies.
 </Callout>
 
 ## Development
@@ -58,7 +60,8 @@ const config = {
 ```
 
 <Callout type="info" emoji="📝">
-  **Getting API Keys:** Visit [Geobase](https://geobase.app) or [Mapbox](https://mapbox.com) to get your free API keys.
+  **Getting API Keys:** Visit [Geobase](https://geobase.app) or
+  [Mapbox](https://mapbox.com) to get your free API keys.
 </Callout>
 
 ### Step 3: Create Your AI Map Component
@@ -66,7 +69,8 @@ const config = {
 Replace the contents of `src/App.tsx` with this React component:
 
 <Callout type="warning" emoji="⚠️">
-  Make sure to replace `your-mapbox-token` with your actual Mapbox API key in the code below.
+  Make sure to replace `your-mapbox-token` with your actual Mapbox API key in
+  the code below.
 </Callout>
 
 ```typescript
@@ -118,7 +122,7 @@ function App() {
 
     map.current.on('draw.create', async (e) => {
       const polygon = e.features[0];
-      
+
       const pipeline = await geoai.pipeline([{ task: "building-detection" }], config as ProviderParams);
       const result = await pipeline.inference({
         inputs: { polygon },
@@ -155,7 +159,7 @@ function App() {
     </div>
   );
 }
- 
+
 export default App;
 ```
 
@@ -170,7 +174,9 @@ npm start
 Your app will open at `http://localhost:3000`. Draw a polygon on the map and watch the AI detect objects in real-time!
 
 <Callout type="success" emoji="🎉">
-  Congratulations! You now have a working AI-powered mapping application. The AI will analyze satellite imagery within drawn polygons and detect objects like buildings, vehicles, and infrastructure.
+  Congratulations! You now have a working AI-powered mapping application. The AI
+  will analyze satellite imagery within drawn polygons and detect objects like
+  buildings, vehicles, and infrastructure.
 </Callout>
 
 ---

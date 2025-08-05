@@ -1,10 +1,11 @@
-import { Callout } from 'nextra/components';
-import VideoEmbed from '../../components/video-embed';
+import { Callout } from "nextra/components";
+import VideoEmbed from "../../components/video-embed";
 
 # Zero-Shot Object Detection
+
 > Detect custom objects using text prompts
 
-<VideoEmbed 
+<VideoEmbed
   src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/zero-shot-object-detection.mp4"
   title="Zero-Shot Object Detection Demo"
 />
@@ -15,20 +16,21 @@ import VideoEmbed from '../../components/video-embed';
 import { geoai } from "@geobase-js/geoai";
 
 // Initialize pipeline
-const pipeline = await geoai.pipeline([
-  { task: "zero-shot-object-detection" }
-], providerParams);
+const pipeline = await geoai.pipeline(
+  [{ task: "zero-shot-object-detection" }],
+  providerParams
+);
 
 // Run detection with custom classes
 const result = await pipeline.inference({
-  inputs: { 
+  inputs: {
     polygon: myPolygon,
-    classLabel: "trees."
+    classLabel: "trees.",
   },
-  postProcessingParams: { 
+  postProcessingParams: {
     threshold: 0.2,
-    topk: 10
-  }
+    topk: 10,
+  },
 });
 
 console.log(`Found ${result.detections.features.length} objects`);
@@ -41,6 +43,7 @@ console.log(`Found ${result.detections.features.length} objects`);
 ## Parameters
 
 ### Input
+
 ```typescript
 inputs: {
   polygon: myPolygon,
@@ -49,6 +52,7 @@ inputs: {
 ```
 
 ### Post-Processing
+
 ```typescript
 postProcessingParams: {
   threshold: 0.2,  // Confidence threshold (0.0-1.0)
@@ -59,18 +63,22 @@ postProcessingParams: {
 ## Example Objects
 
 **Infrastructure**
+
 - `wind turbine`, `solar panel`, `cell tower`
 - `bridge`, `dam`, `construction crane`
 
 **Vehicles**
+
 - `aircraft`, `helicopter`, `cargo ship`
 - `train`, `yacht`, `fishing boat`
 
 **Facilities**
+
 - `swimming pool`, `tennis court`, `golf course`
 - `baseball field`, `basketball court`
 
 **Natural Features**
+
 - `forest`, `lake`, `river`, `beach`
 
 ## Output

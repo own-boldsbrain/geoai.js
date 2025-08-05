@@ -1,4 +1,4 @@
-# Nextra Docs Template 
+# Nextra Docs Template
 
 This is a template for creating documentation with [Nextra](https://nextra.site).
 
@@ -23,6 +23,7 @@ Then, run `pnpm dev` to start the development server and visit localhost:3000.
 This project is licensed under the MIT License.
 
 ## TODOs
+
 - Organize Developer Frameworks into a table
 
 `trigger-deploy:toggle-on`

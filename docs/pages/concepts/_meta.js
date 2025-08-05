@@ -1,5 +1,5 @@
 export default {
-    GeoRawImage : "GeoRawImage",
-    "model-pipeline": "Model Pipeline",
-    InferenceParams: "Inference Parameters"
-}
+  GeoRawImage: "GeoRawImage",
+  "model-pipeline": "Model Pipeline",
+  InferenceParams: "Inference Parameters",
+};

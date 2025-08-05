@@ -1,6 +1,7 @@
-import { Callout } from 'nextra/components';
+import { Callout } from "nextra/components";
 
 # Mapbox Map Provider
+
 > Mapbox offers global satellite imagery and customizable maps for geospatial AI tasks.
 
 ## Setup
@@ -10,13 +11,13 @@ import { Callout } from 'nextra/components';
 </Callout>
 
 ```typescript
-import { geoai } from '@geobase-js/geoai';
+import { geoai } from "@geobase-js/geoai";
 
 // Configuration
 const mapboxParams = {
   provider: "mapbox",
   apiKey: process.env.MAPBOX_ACCESS_TOKEN,
-  style: "mapbox://styles/mapbox/satellite-v9"
+  style: "mapbox://styles/mapbox/satellite-v9",
 };
 
 // Initialize pipeline with Mapbox
@@ -28,7 +29,7 @@ const pipeline = await geoai.pipeline(
 // Run inference on polygon
 const results = await pipeline.inference({
   inputs: { polygon: myPolygon },
-  mapSourceParams: { zoomLevel: 18 }
+  mapSourceParams: { zoomLevel: 18 },
 });
 ```
 
@@ -37,8 +38,8 @@ const results = await pipeline.inference({
 ```typescript
 type MapboxParams = {
   provider: "mapbox";
-  apiKey: string;        // Your Mapbox access token
-  style: string;         // Mapbox style URL or ID
+  apiKey: string; // Your Mapbox access token
+  style: string; // Mapbox style URL or ID
 };
 ```
 

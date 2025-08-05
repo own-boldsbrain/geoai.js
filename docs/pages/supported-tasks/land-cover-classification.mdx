@@ -1,10 +1,11 @@
-import { Callout } from 'nextra/components';
-import VideoEmbed from '../../components/video-embed';
+import { Callout } from "nextra/components";
+import VideoEmbed from "../../components/video-embed";
 
 # Land Cover Classification
+
 > Classify land cover types in satellite imagery
 
-<VideoEmbed 
+<VideoEmbed
   src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/land-cover-classification.mp4"
   title="Land Cover Classification Demo"
 />
@@ -15,50 +16,57 @@ import VideoEmbed from '../../components/video-embed';
 import { geoai } from "@geobase-js/geoai";
 
 // Initialize pipeline
-const pipeline = await geoai.pipeline([
-  { task: "land-cover-classification" }
-], providerParams);
+const pipeline = await geoai.pipeline(
+  [{ task: "land-cover-classification" }],
+  providerParams
+);
 
 // Run classification
 const result = await pipeline.inference({
   inputs: { polygon: myPolygon },
-  postProcessingParams: { minArea: 20 }
+  postProcessingParams: { minArea: 20 },
 });
 
-console.log(`Classified ${result.classifications.features.length} land cover areas`);
+console.log(
+  `Classified ${result.classifications.features.length} land cover areas`
+);
 ```
 
 <Callout type="info" emoji="🌍">
-  Classifies regions into 8 land cover types: forest, agriculture, urban, water, roads, rangeland, bareland, and buildings
+  Classifies regions into 8 land cover types: forest, agriculture, urban, water,
+  roads, rangeland, bareland, and buildings
 </Callout>
 
 ## Parameters
 
 ### Post-Processing
+
 ```typescript
 postProcessingParams: {
-  minArea: 20  // Minimum area threshold for classification polygons
+  minArea: 20; // Minimum area threshold for classification polygons
 }
 ```
 
 ### Map Source
+
 ```typescript
 mapSourceParams: {
-  zoomLevel: 15  // 14-16 recommended for land cover analysis
+  zoomLevel: 15; // 14-16 recommended for land cover analysis
 }
 ```
+
 ## Land Cover Classes
 
-| Class             |
-|-------------------|
-| `tree`            |
-| `agriculture land`|
-| `developed space` |
-| `water`           |
-| `road`            |
-| `rangeland`       |
-| `bareland`        |
-| `buildings`       |
+| Class              |
+| ------------------ |
+| `tree`             |
+| `agriculture land` |
+| `developed space`  |
+| `water`            |
+| `road`             |
+| `rangeland`        |
+| `bareland`         |
+| `buildings`        |
 
 ## Output
 
@@ -67,7 +75,7 @@ Returns a list of GeoJSON FeatureCollections (one for each land cover class):
 ```typescript
 {
   geoRawImage : GeoRawImage, // Inference image
-  outPutImage : GeoRawImage, // combined masks 
+  outPutImage : GeoRawImage, // combined masks
   binaryMasks : RawImage // binary mask for each class
   detections: [   // list of FeatureCollection
     {
@@ -82,7 +90,7 @@ Returns a list of GeoJSON FeatureCollections (one for each land cover class):
       ]
     },
     {
-      type: "FeatureCollection", 
+      type: "FeatureCollection",
       features: [
         {
           geometry: { /* agriculture polygon */ },

@@ -1,10 +1,11 @@
-import { Callout } from 'nextra/components';
-import VideoEmbed from '../../components/video-embed';
+import { Callout } from "nextra/components";
+import VideoEmbed from "../../components/video-embed";
 
 # Oil Storage Tank Detection
+
 > Detect industrial storage tanks in satellite imagery
 
-<VideoEmbed 
+<VideoEmbed
   src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/oil-storage-tank-detection.mp4"
   title="Oil Storage Tank Detection Demo"
 />
@@ -15,29 +16,32 @@ import VideoEmbed from '../../components/video-embed';
 import { geoai } from "@geobase-js/geoai";
 
 // Initialize pipeline
-const pipeline = await geoai.pipeline([
-  { task: "oil-storage-tank-detection" }
-], providerParams);
+const pipeline = await geoai.pipeline(
+  [{ task: "oil-storage-tank-detection" }],
+  providerParams
+);
 
 // Run detection
 const result = await pipeline.inference({
   inputs: { polygon: myPolygon },
-  postProcessingParams: { 
+  postProcessingParams: {
     confidenceThreshold: 0.5,
-    nmsThreshold: 0.3
-  }
+    nmsThreshold: 0.3,
+  },
 });
 
 console.log(`Found ${result.detections.features.length} storage tanks`);
 ```
 
 <Callout type="info" emoji="🛢️">
-  Detects cylindrical oil, fuel, and chemical storage tanks in industrial facilities
+  Detects cylindrical oil, fuel, and chemical storage tanks in industrial
+  facilities
 </Callout>
 
 ## Parameters
 
 ### Post-Processing
+
 ```typescript
 postProcessingParams: {
   confidenceThreshold: 0.5,  // Confidence threshold (0.0-1.0)
@@ -46,11 +50,13 @@ postProcessingParams: {
 ```
 
 ### Map Source
+
 ```typescript
 mapSourceParams: {
-  zoomLevel: 18  // 18+ recommended for tank detection
+  zoomLevel: 18; // 18+ recommended for tank detection
 }
 ```
+
 ## Output
 
 Returns GeoJSON with detected storage tanks:

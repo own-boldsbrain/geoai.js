@@ -1,11 +1,15 @@
-import { Callout } from 'nextra/components';
+import { Callout } from "nextra/components";
 
 # GeoRawImage
 
 > Georeferenced image data structure for geospatial AI processing
 
 <Callout type="info">
-  The `GeoRawImage` class extends the Hugging Face `RawImage` class to provide georeferencing capabilities essential for geospatial AI tasks. It maintains spatial context by storing coordinate reference system (CRS) information and geographic bounds, enabling seamless conversion between pixel and world coordinates.
+  The `GeoRawImage` class extends the Hugging Face `RawImage` class to provide
+  georeferencing capabilities essential for geospatial AI tasks. It maintains
+  spatial context by storing coordinate reference system (CRS) information and
+  geographic bounds, enabling seamless conversion between pixel and world
+  coordinates.
 </Callout>
 
 ## Class Structure
@@ -17,7 +21,7 @@ class GeoRawImage extends RawImage {
   width: number;
   height: number;
   channels: 1 | 2 | 3 | 4;
-  
+
   // Georeferencing properties
   private bounds: Bounds;
   private transform: Transform;
@@ -40,14 +44,14 @@ new GeoRawImage(
 
 ### Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `data` | `Uint8ClampedArray \| Uint8Array` | Raw image pixel data |
-| `width` | `number` | Image width in pixels |
-| `height` | `number` | Image height in pixels |
-| `channels` | `1 \| 2 \| 3 \| 4` | Number of color channels |
-| `bounds` | `Bounds` | Geographic bounds of the image |
-| `crs` | `string` | Coordinate reference system (default: "EPSG:4326") |
+| Parameter  | Type                              | Description                                        |
+| ---------- | --------------------------------- | -------------------------------------------------- |
+| `data`     | `Uint8ClampedArray \| Uint8Array` | Raw image pixel data                               |
+| `width`    | `number`                          | Image width in pixels                              |
+| `height`   | `number`                          | Image height in pixels                             |
+| `channels` | `1 \| 2 \| 3 \| 4`                | Number of color channels                           |
+| `bounds`   | `Bounds`                          | Geographic bounds of the image                     |
+| `crs`      | `string`                          | Coordinate reference system (default: "EPSG:4326") |
 
 ### Bounds Interface
 
@@ -55,10 +59,11 @@ new GeoRawImage(
 interface Bounds {
   north: number; // max latitude
   south: number; // min latitude
-  east: number;  // max longitude
-  west: number;  // min longitude
+  east: number; // max longitude
+  west: number; // min longitude
 }
 ```
+
 ### Transform Interface
 
 ```typescript
@@ -138,14 +143,14 @@ console.log(clonedImage.data !== originalImage.data); // true
 Creates a GeoRawImage from an existing RawImage and georeferencing information.
 
 ```typescript
-import { RawImage } from '@huggingface/transformers';
+import { RawImage } from "@huggingface/transformers";
 
 const rawImage = new RawImage(data, width, height, channels);
 const bounds = {
   north: 37.7849,
   south: 37.7649,
   east: -122.4094,
-  west: -122.4294
+  west: -122.4294,
 };
 
 const geoImage = GeoRawImage.fromRawImage(rawImage, bounds);

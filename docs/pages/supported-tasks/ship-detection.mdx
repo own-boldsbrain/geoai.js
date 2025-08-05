@@ -1,10 +1,11 @@
-import { Callout } from 'nextra/components';
-import VideoEmbed from '../../components/video-embed';
+import { Callout } from "nextra/components";
+import VideoEmbed from "../../components/video-embed";
 
 # Ship Detection
+
 > Detect ships in satellite imagery
 
-<VideoEmbed 
+<VideoEmbed
   src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/ship-detection.mp4"
   title="Ship Detection Demo"
 />
@@ -15,13 +16,14 @@ import VideoEmbed from '../../components/video-embed';
 import { geoai } from "@geobase-js/geoai";
 
 // Initialize pipeline
-const pipeline = await geoai.pipeline([
-  { task: "ship-detection" }
-], providerParams);
+const pipeline = await geoai.pipeline(
+  [{ task: "ship-detection" }],
+  providerParams
+);
 
 // Run detection
 const result = await pipeline.inference({
-  inputs: { polygon: myPolygon }
+  inputs: { polygon: myPolygon },
 });
 
 console.log(`Found ${result.detections.features.length} ships`);
@@ -30,11 +32,13 @@ console.log(`Found ${result.detections.features.length} ships`);
 ## Parameters
 
 ### Map Source
+
 ```typescript
 mapSourceParams: {
-  zoomLevel: 20  // 20+ recommended for ship detection
+  zoomLevel: 20; // 20+ recommended for ship detection
 }
 ```
+
 ## Output
 
 Returns GeoJSON with detected ships:
