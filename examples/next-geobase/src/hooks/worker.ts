@@ -103,8 +103,6 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           postProcessingParams,
           mapSourceParams,
         });
-
-        console.log("[Worker] Starting getImageEmbeddings");
         
         let result: any;
         try {
@@ -113,12 +111,29 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           console.error("[Worker] getImageEmbeddings error:", embedErr);
           throw embedErr;
         }
-        console.log("[Worker] getImageEmbeddings completed successfully");
         console.log("Embeddings result:", result);
+
+        // Convert tensors to serializable format
+        const serializableResult = {
+          ...result,
+          image_embeddings: {
+            ...result.image_embeddings,
+            image_embeddings: {
+              data: Array.from(result.image_embeddings.image_embeddings.data),
+              dims: result.image_embeddings.image_embeddings.dims,
+              type: result.image_embeddings.image_embeddings.type
+            },
+            image_positional_embeddings: {
+              data: Array.from(result.image_embeddings.image_positional_embeddings.data),
+              dims: result.image_embeddings.image_positional_embeddings.dims,
+              type: result.image_embeddings.image_positional_embeddings.type
+            }
+          }
+        };
 
         self.postMessage({
           type: "embeddings_complete",
-          payload: result
+          payload: serializableResult
         });
         break;
       }
