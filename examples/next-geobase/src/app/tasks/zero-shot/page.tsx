@@ -19,8 +19,8 @@ const GEOBASE_CONFIG = {
   projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF ?? "",
   apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY ?? "",
   cogImagery:
-    "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/cars_7cm.tif",
-  center: [-95.4210323139897, 29.678781807220446] as [number, number],
+    "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/688eabbc7163f9907393c3c7/0/688eabbc7163f9907393c3c8.tif",
+  center: [-87.06982344388962,20.653090145447507] as [number, number],
   zoom: 18,
 };
 

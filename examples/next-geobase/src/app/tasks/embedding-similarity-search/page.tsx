@@ -77,20 +77,19 @@ export default function EmbeddingSimilaritySearch() {
   const [cellEmbeddings, setCellEmbeddings] = useState<Map<string, Float32Array>>(new Map());
   const [selectedPoint, setSelectedPoint] = useState<[number, number] | null>(null);
   const [similarityResults, setSimilarityResults] = useState<SimilarityResult[]>([]);
-  const [similarityThreshold, setSimilarityThreshold] = useState<number>(0.0);
+  const [similarityThreshold, setSimilarityThreshold] = useState<number>(0.5);
   const [isComputingEmbeddings, setIsComputingEmbeddings] = useState(false);
-  const [gridSize, setGridSize] = useState<number>(64); // Default 64x64 to match embedding dimensions
+  const [gridSize, setGridSize] = useState<number>(64);
   const [drawingMode, setDrawingMode] = useState<"polygon" | "rectangle">("polygon");
-  const [persistentGridCells, setPersistentGridCells] = useState<GridCell[]>([]); // Keep track of grid cells for re-adding
+  const [persistentGridCells, setPersistentGridCells] = useState<GridCell[]>([]);
   const [isComputingSimilarity, setIsComputingSimilarity] = useState(false);
   const [persistentSimilarityData, setPersistentSimilarityData] = useState<{
     results: SimilarityResult[],
     clickedPoint: [number, number],
     clickedCell?: GridCell
-  } | null>(null); // Keep track of similarity visualization for re-adding
-  const [currentMapZoom, setCurrentMapZoom] = useState<number>(16); // Track actual map zoom level
+  } | null>(null);
+  const [currentMapZoom, setCurrentMapZoom] = useState<number>(16);
 
-  // Save geoRawImage separately for easier access
   const saveGeoRawImage = (geoRawImage: any) => {
     if (!geoRawImage) return;
     
@@ -101,36 +100,25 @@ export default function EmbeddingSimilaritySearch() {
         gridSize: gridSize
       };
       localStorage.setItem('geoai_georawimage', JSON.stringify(geoRawImageData));
-      console.log("GeoRawImage saved separately to localStorage:", {
-        bounds: geoRawImage.bounds,
-        width: geoRawImage.width,
-        height: geoRawImage.height,
-        channels: geoRawImage.channels
-      });
     } catch (err) {
       console.warn("Failed to save geoRawImage to localStorage:", err);
     }
   };
 
-  // Load geoRawImage from localStorage
   const loadGeoRawImage = () => {
     try {
       const savedGeoRawImage = localStorage.getItem('geoai_georawimage');
       if (savedGeoRawImage) {
         const geoRawImageData = JSON.parse(savedGeoRawImage);
         
-        // Check if the saved data is recent (within 1 hour) and matches current grid size
         const oneHour = 60 * 60 * 1000;
         const isRecent = Date.now() - geoRawImageData.timestamp < oneHour;
         const isSameGridSize = geoRawImageData.gridSize === gridSize;
         
         if (isRecent && isSameGridSize) {
-          console.log("Loading geoRawImage from localStorage:", geoRawImageData.geoRawImage);
           return geoRawImageData.geoRawImage;
         } else {
-          // Remove old geoRawImage
           localStorage.removeItem('geoai_georawimage');
-          console.log("Removed old geoRawImage from localStorage");
         }
       }
     } catch (err) {
@@ -140,28 +128,24 @@ export default function EmbeddingSimilaritySearch() {
     return null;
   };
 
-  // Update text layer visibility based on zoom level
   const updateTextLayerVisibility = useCallback(() => {
     if (!map.current) return;
     
     const currentZoom = map.current.getZoom();
-    setCurrentMapZoom(currentZoom); // Update the current map zoom state
+    setCurrentMapZoom(currentZoom);
     const textLayer = map.current.getLayer("similarity-text-layer");
     
     if (textLayer) {
       const visibility = currentZoom > 21 ? "visible" : "none";
       map.current.setLayoutProperty("similarity-text-layer", "visibility", visibility);
-      console.log(`Updated text layer visibility to ${visibility} (zoom: ${currentZoom.toFixed(2)})`);
     }
   }, []);
 
   const handleReset = () => {
-    // Clear all drawn features
     if (draw.current) {
       draw.current.deleteAll();
     }
 
-    // Remove layers if they exist
     if (map.current) {
       const layersToRemove = ["grid-layer", "similarity-results-layer", "similarity-text-layer", "selected-point-layer", "clicked-cell-layer"];
       layersToRemove.forEach(layerId => {
@@ -182,7 +166,6 @@ export default function EmbeddingSimilaritySearch() {
     try {
       localStorage.removeItem('geoai_embeddings');
       localStorage.removeItem('geoai_georawimage');
-      console.log("Cleared embeddings and geoRawImage from localStorage");
     } catch (err) {
       console.warn("Failed to clear localStorage:", err);
     }
@@ -201,11 +184,9 @@ export default function EmbeddingSimilaritySearch() {
     resetWorker();
   };
 
-  // Generate grid from polygon bounds
   const generateGrid = useCallback((polygonFeature: GeoJSON.Feature): GridCell[] => {
     const coordinates = (polygonFeature.geometry as GeoJSON.Polygon).coordinates[0];
     
-    // Find bounding box
     let minLng = coordinates[0][0];
     let maxLng = coordinates[0][0];
     let minLat = coordinates[0][1];
@@ -221,7 +202,6 @@ export default function EmbeddingSimilaritySearch() {
     return generateGridFromBounds(minLng, maxLng, minLat, maxLat);
   }, [gridSize]);
 
-  // Generate grid from bounds (can be used with geoRawImage.bounds)
   const generateGridFromBounds = useCallback((minLng: number, maxLng: number, minLat: number, maxLat: number): GridCell[] => {
     const lngStep = (maxLng - minLng) / gridSize;
     const latStep = (maxLat - minLat) / gridSize;
@@ -274,15 +254,11 @@ export default function EmbeddingSimilaritySearch() {
     return cells;
   }, [gridSize]);
 
-  // Compute embeddings for the main polygon - using real getEmbeddings function
   const computeImageEmbeddings = async () => {
     if (!polygon || !isInitialized) return;
 
     try {
-      setIsComputingEmbeddings(true);
-      console.log("[EmbeddingSimilaritySearch] Computing embeddings for polygon:", zoomLevel);
-      
-      // Use the real getEmbeddings function from the GenericSegmentation model
+      setIsComputingEmbeddings(true);      
       await getEmbeddings({
         inputs: {
           polygon: polygon
@@ -299,48 +275,28 @@ export default function EmbeddingSimilaritySearch() {
     }
   };
 
-  // Process the embeddings result when it's received
   useEffect(() => {
     if (lastResult && lastResult.image_embeddings) {
-      console.log("Received embeddings result:", lastResult);
-      console.log("Image embeddings structure:", {
-        type: typeof lastResult.image_embeddings,
-        hasData: !!lastResult.image_embeddings?.data,
-        hasDims: !!lastResult.image_embeddings?.dims,
-        dataLength: lastResult.image_embeddings?.data?.length,
-        dims: lastResult.image_embeddings?.dims,
-        isArray: Array.isArray(lastResult.image_embeddings),
-        // Legacy format checks
-        length: lastResult.image_embeddings?.length,
-        shape: Array.isArray(lastResult.image_embeddings) ? 
-          `[${lastResult.image_embeddings.length}${lastResult.image_embeddings[0] ? `, ${lastResult.image_embeddings[0].length}` : ''}${lastResult.image_embeddings[0]?.[0] ? `, ${lastResult.image_embeddings[0][0].length}` : ''}${lastResult.image_embeddings[0]?.[0]?.[0] ? `, ${lastResult.image_embeddings[0][0][0].length}` : ''}]` : 
-          'not array'
-      });
+      // Clear old embeddings before setting new ones
+      setImageEmbeddings(null);
+      setCellEmbeddings(new Map());
       
-      // Extract embeddings (should be 1 x 256 x 64 x 64 format)
       setImageEmbeddings(lastResult.image_embeddings);
       setGeoRawImage(lastResult.geoRawImage);
       
-      // Save geoRawImage separately for easier access
       saveGeoRawImage(lastResult.geoRawImage);
       
-      // Save embeddings to localStorage for persistence
       try {
+        // Remove old embeddings before storing new ones
+        localStorage.removeItem('geoai_embeddings');
+        
         const embeddingsData = {
-          image_embeddings: lastResult.image_embeddings,
+          image_embeddings: lastResult.image_embeddings.image_embeddings,
           geoRawImage: lastResult.geoRawImage,
           timestamp: Date.now(),
           gridSize: gridSize
         };
         localStorage.setItem('geoai_embeddings', JSON.stringify(embeddingsData));
-        console.log("Embeddings and geoRawImage saved to localStorage");
-        console.log("GeoRawImage details:", {
-          bounds: lastResult.geoRawImage?.bounds,
-          width: lastResult.geoRawImage?.width,
-          height: lastResult.geoRawImage?.height,
-          channels: lastResult.geoRawImage?.channels,
-          type: typeof lastResult.geoRawImage
-        });
       } catch (err) {
         console.warn("Failed to save embeddings to localStorage:", err);
       }
@@ -350,15 +306,12 @@ export default function EmbeddingSimilaritySearch() {
       
       if (lastResult.geoRawImage && lastResult.geoRawImage.bounds) {
         // Use bounds from geoRawImage (works even after page refresh)
-        const bounds = lastResult.geoRawImage.bounds;
-        console.log("Using geoRawImage bounds for grid generation:", bounds);
-        
+        const bounds = lastResult.geoRawImage.bounds;        
         // geoRawImage.bounds format may vary, handle different formats
         let minLng: number, maxLng: number, minLat: number, maxLat: number;
         
      
         if (bounds.north !== undefined && bounds.south !== undefined && bounds.east !== undefined && bounds.west !== undefined) {
-          // Format: {north, south, east, west} - This is the actual format!
           minLng = bounds.west;
           maxLng = bounds.east;
           minLat = bounds.south;
@@ -391,86 +344,46 @@ export default function EmbeddingSimilaritySearch() {
       if (savedEmbeddings) {
         const embeddingsData = JSON.parse(savedEmbeddings);
         
-        // Check if the saved data is recent (within 1 hour) and matches current grid size
         const oneHour = 60 * 60 * 1000;
         const isRecent = Date.now() - embeddingsData.timestamp < oneHour;
         const isSameGridSize = embeddingsData.gridSize === gridSize;
         
         if (isRecent && isSameGridSize) {
-          console.log("Loading embeddings from localStorage");
-          console.log("Saved embeddings data structure:", {
-            hasImageEmbeddings: !!embeddingsData.image_embeddings,
-            imageEmbeddingsType: typeof embeddingsData.image_embeddings,
-            imageEmbeddingsIsArray: Array.isArray(embeddingsData.image_embeddings),
-            imageEmbeddingsLength: embeddingsData.image_embeddings?.length,
-            hasGeoRawImage: !!embeddingsData.geoRawImage,
-            gridSize: embeddingsData.gridSize
-          });
-          
           setImageEmbeddings(embeddingsData.image_embeddings);
           
-          // Try to load geoRawImage from embeddings data, or fallback to separately saved geoRawImage
           let geoRawImageToUse = embeddingsData.geoRawImage;
           if (!geoRawImageToUse) {
-            console.log("No geoRawImage in embeddings data, trying to load separately saved geoRawImage");
             geoRawImageToUse = loadGeoRawImage();
           }
           
           if (geoRawImageToUse) {
             setGeoRawImage(geoRawImageToUse);
-            console.log("Loaded geoRawImage:", {
-              bounds: geoRawImageToUse.bounds,
-              width: geoRawImageToUse.width,
-              height: geoRawImageToUse.height,
-              channels: geoRawImageToUse.channels
-            });
-          } else {
-            console.warn("No geoRawImage available in localStorage");
           }
           
-          // Trigger grid generation using the saved bounds
           if (geoRawImageToUse && geoRawImageToUse.bounds) {
             const bounds = geoRawImageToUse.bounds;
-            console.log("Loading from localStorage - bounds format:", bounds, typeof bounds);
             let minLng: number, maxLng: number, minLat: number, maxLat: number;
             
-            if (Array.isArray(bounds) && bounds.length === 4) {
-              [minLng, minLat, maxLng, maxLat] = bounds;
-            } else if (bounds.north !== undefined && bounds.south !== undefined && bounds.east !== undefined && bounds.west !== undefined) {
+            if (bounds.north !== undefined && bounds.south !== undefined && bounds.east !== undefined && bounds.west !== undefined) {
               // Format: {north, south, east, west} - This is the actual format!
               minLng = bounds.west;
               maxLng = bounds.east;
               minLat = bounds.south;
               maxLat = bounds.north;
-            } else if (bounds.west !== undefined) {
-              minLng = bounds.west;
-              maxLng = bounds.east;
-              minLat = bounds.south;
-              maxLat = bounds.north;
-            } else if (bounds.minLng !== undefined) {
-              minLng = bounds.minLng;
-              maxLng = bounds.maxLng;
-              minLat = bounds.minLat;
-              maxLat = bounds.maxLat;
             } else {
               console.warn("Unknown bounds format in localStorage:", bounds);
               return;
             }
             
-            console.log("Parsed bounds:", { minLng, maxLng, minLat, maxLat });
             const cells = generateGridFromBounds(minLng, maxLng, minLat, maxLat);
-            console.log("Generated cells from localStorage:", cells.length, "first cell:", cells[0]);
             setGridCells(cells);
             setPersistentGridCells(cells);
             
             // Wait for map to be ready before adding grid
             const addGridWhenReady = () => {
               if (map.current && map.current.isStyleLoaded()) {
-                console.log("Map is ready, adding grid now");
                 addGridToMap(cells);
-                console.log("Added grid to map from localStorage");
               } else {
-                console.log("Map not ready yet, waiting...");
                 setTimeout(addGridWhenReady, 500);
               }
             };
@@ -482,12 +395,9 @@ export default function EmbeddingSimilaritySearch() {
           }
         } else {
           // Remove old embeddings
-          localStorage.removeItem('geoai_embeddings');
-          console.log("Removed old embeddings from localStorage");
-        }
+          localStorage.removeItem('geoai_embeddings');        }
       }
     } catch (err) {
-      console.warn("Failed to load embeddings from localStorage:", err);
       localStorage.removeItem('geoai_embeddings');
     }
   }, [generateGridFromBounds, gridSize]);
@@ -496,35 +406,30 @@ export default function EmbeddingSimilaritySearch() {
   useEffect(() => {
     if (!map.current || persistentGridCells.length === 0) return;
 
-    const checkGridLayer = () => {
-      if (!map.current || !map.current.isStyleLoaded()) return;
-      
-      const gridLayer = map.current.getLayer("grid-layer");
-      const gridSource = map.current.getSource("grid");
-      
-      if (!gridLayer && gridSource) {
-        console.log("Grid layer missing but source exists, re-adding layer...");
-        try {
-          map.current.addLayer({
-            id: "grid-layer",
-            type: "line",
-            source: "grid",
-            paint: {
-              "line-color": "#00ff00",
-              "line-width": 1,
-              "line-opacity": 0.3
-            }
-          });
-          console.log("Re-added missing grid layer");
-        } catch (err) {
-          console.error("Error re-adding grid layer:", err);
-        }
-      } else if (!gridLayer && !gridSource) {
-        console.log("Both grid layer and source missing, re-adding both...");
-        addGridToMap(persistentGridCells);
-      }
-      
-      // Also check similarity layer if we have results
+      const checkGridLayer = () => {
+        if (!map.current || !map.current.isStyleLoaded()) return;
+        
+        const gridLayer = map.current.getLayer("grid-layer");
+        const gridSource = map.current.getSource("grid");
+        
+        if (!gridLayer && gridSource) {
+          try {
+            map.current.addLayer({
+              id: "grid-layer",
+              type: "line",
+              source: "grid",
+              paint: {
+                "line-color": "#00ff00",
+                "line-width": 1,
+                "line-opacity": 0.3
+              }
+            });
+          } catch (err) {
+            console.error("Error re-adding grid layer:", err);
+          }
+        } else if (!gridLayer && !gridSource) {
+          addGridToMap(persistentGridCells);
+        }      // Also check similarity layer if we have results
       if (persistentSimilarityData) {
         const similarityLayer = map.current.getLayer("similarity-results-layer");
         const similaritySource = map.current.getSource("similarity-results");
@@ -532,10 +437,8 @@ export default function EmbeddingSimilaritySearch() {
         const textSource = map.current.getSource("similarity-text");
         
         if (!similarityLayer && !similaritySource) {
-          console.log("Both similarity layer and source missing, re-adding both...");
           visualizeSimilarityResults(persistentSimilarityData.results, persistentSimilarityData.clickedPoint, persistentSimilarityData.clickedCell);
         } else if (!similarityLayer && similaritySource) {
-          console.log("Similarity layer missing but source exists, re-adding layer...");
           try {
             map.current.addLayer({
               id: "similarity-results-layer",
@@ -555,7 +458,6 @@ export default function EmbeddingSimilaritySearch() {
                 "fill-opacity": 0.3
               }
             });
-            console.log("Re-added missing similarity layer");
           } catch (err) {
             console.error("Error re-adding similarity layer:", err);
           }
@@ -567,10 +469,8 @@ export default function EmbeddingSimilaritySearch() {
           const clickedCellSource = map.current.getSource("clicked-cell");
           
           if (!clickedCellLayer && !clickedCellSource) {
-            console.log("Both clicked cell layer and source missing, re-adding both...");
             // Will be re-added when visualizeSimilarityResults is called above
           } else if (!clickedCellLayer && clickedCellSource) {
-            console.log("Clicked cell layer missing but source exists, re-adding layer...");
             try {
               map.current.addLayer({
                 id: "clicked-cell-layer",
@@ -582,7 +482,6 @@ export default function EmbeddingSimilaritySearch() {
                   "fill-opacity": 0
                 }
               });
-              console.log("Re-added missing clicked cell layer");
             } catch (err) {
               console.error("Error re-adding clicked cell layer:", err);
             }
@@ -591,10 +490,8 @@ export default function EmbeddingSimilaritySearch() {
 
         // Check text layer separately
         if (!textLayer && !textSource) {
-          console.log("Both text layer and source missing, re-adding with similarity results...");
           // Text layer will be re-added when visualizeSimilarityResults is called above
         } else if (!textLayer && textSource) {
-          console.log("Text layer missing but source exists, re-adding layer...");
           try {
             map.current.addLayer({
               id: "similarity-text-layer",
@@ -617,7 +514,6 @@ export default function EmbeddingSimilaritySearch() {
                 "text-halo-width": 2
               }
             });
-            console.log("Re-added missing text layer");
           } catch (err) {
             console.error("Error re-adding text layer:", err);
           }
@@ -633,7 +529,6 @@ export default function EmbeddingSimilaritySearch() {
     
     // Also check when map style changes
     const handleStyleData = () => {
-      console.log("Map style changed, checking grid and similarity layers...");
       setTimeout(checkGridLayer, 100);
     };
     
@@ -650,24 +545,18 @@ export default function EmbeddingSimilaritySearch() {
   // Add grid visualization to map
   const addGridToMap = (cells: GridCell[]) => {
     if (!map.current) {
-      console.warn("Map not available for grid visualization");
       return;
     }
 
     if (!map.current.isStyleLoaded()) {
-      console.log("Map style not loaded yet, waiting...");
       map.current.once('styledata', () => {
-        console.log("Map style loaded, adding grid...");
         addGridToMap(cells);
       });
       return;
     }
 
-    console.log("Adding grid to map with", cells.length, "cells");
-    console.log("Sample cell:", cells[0]);
 
     const gridFeatures: GeoJSON.Feature[] = cells.map(cell => cell.polygon);
-    console.log("Grid features created:", gridFeatures.length, "first feature:", gridFeatures[0]);
     
     const gridSource: GeoJSON.GeoJSON = {
       type: "FeatureCollection",
@@ -679,21 +568,14 @@ export default function EmbeddingSimilaritySearch() {
       const existingSource = map.current.getSource("grid");
       const existingLayer = map.current.getLayer("grid-layer");
       
-      console.log("Before adding - Source exists:", !!existingSource, "Layer exists:", !!existingLayer);
-      
       if (existingSource) {
-        console.log("Updating existing grid source");
         (existingSource as maplibregl.GeoJSONSource).setData(gridSource);
-        console.log("Updated existing grid source successfully");
       } else {
-        console.log("Creating new grid source and layer");
-        
         // Add source first
         map.current.addSource("grid", {
           type: "geojson",
           data: gridSource
         });
-        console.log("Grid source added");
 
         // Add layer
         map.current.addLayer({
@@ -706,21 +588,6 @@ export default function EmbeddingSimilaritySearch() {
             "line-opacity": 0.7
           }
         });
-        console.log("Grid layer added");
-        
-        // Immediate verification
-        const newSource = map.current.getSource("grid");
-        const newLayer = map.current.getLayer("grid-layer");
-        console.log("Immediate verification - Layer exists:", !!newLayer, "Source exists:", !!newSource);
-        
-        // Also check map layers
-        const allLayers = map.current.getStyle().layers;
-        const gridLayerInStyle = allLayers.find(layer => layer.id === "grid-layer");
-        console.log("Grid layer in style:", !!gridLayerInStyle);
-        
-        // Force a map repaint
-        // map.current.triggerRepaint(); // Removed to prevent unnecessary map refresh
-        console.log("Grid added without triggering repaint");
       }
       
       // Delayed verification with more details
@@ -728,17 +595,8 @@ export default function EmbeddingSimilaritySearch() {
         if (map.current) {
           const layer = map.current.getLayer("grid-layer");
           const source = map.current.getSource("grid");
-          const style = map.current.getStyle();
-          const layersInStyle = style.layers.map(l => l.id);
-          
-          console.log("Delayed verification:");
-          console.log("- Layer exists:", !!layer);
-          console.log("- Source exists:", !!source);
-          console.log("- All layer IDs:", layersInStyle);
-          console.log("- Grid layer in layers:", layersInStyle.includes("grid-layer"));
           
           if (!layer && source) {
-            console.log("Source exists but layer missing, re-adding layer...");
             try {
               map.current.addLayer({
                 id: "grid-layer",
@@ -750,7 +608,6 @@ export default function EmbeddingSimilaritySearch() {
                   "line-opacity": 0.5
                 }
               });
-              console.log("Re-added missing layer");
             } catch (err) {
               console.error("Error re-adding layer:", err);
             }
@@ -801,11 +658,11 @@ export default function EmbeddingSimilaritySearch() {
 
   // Handle map click to perform similarity search
   const handleMapClick = useCallback(async (e: maplibregl.MapMouseEvent) => {
-    if (!imageEmbeddings || gridCells.length === 0) return;
-
+    if (!imageEmbeddings || gridCells.length === 0) {
+      return;
+    }
     const clickedPoint: [number, number] = [e.lngLat.lng, e.lngLat.lat];
     setSelectedPoint(clickedPoint);
-
     // Find which grid cell was clicked
     const clickedCell = gridCells.find(cell => {
       return clickedPoint[0] >= cell.bounds.minLng &&
@@ -814,168 +671,361 @@ export default function EmbeddingSimilaritySearch() {
              clickedPoint[1] <= cell.bounds.maxLat;
     });
 
-    if (!clickedCell) return;
+    if (!clickedCell) {
+      return;
+    }
 
     try {
       setIsComputingSimilarity(true);
-      console.log(`Computing similarity for clicked cell: ${clickedCell.id}`);
-      
       // Extract the actual embedding for the clicked cell from the SAM embeddings
       // imageEmbeddings should be in format [1, 256, 64, 64]
       const clickedCellId = clickedCell.id;
       const [_, i, j] = clickedCellId.split('_').map(Number); // Extract i, j from cell_i_j
-      
       // Get embedding for the clicked cell if not already computed
       let clickedCellEmbedding = cellEmbeddings.get(clickedCell.id);
-      
+
       if (!clickedCellEmbedding) {
         // Extract real embedding from the SAM model output
         // imageEmbeddings format: [1, 256, 64, 64] - we want the embedding at position [i, j]
-        console.log("Extracting embedding for cell", clickedCell.id, "at position [", i, ",", j, "]");
-        console.log("Image embeddings available:", !!imageEmbeddings);
-        console.log("Image embeddings type:", typeof imageEmbeddings);
-        console.log("Image embeddings structure:", {
-          isArray: Array.isArray(imageEmbeddings),
-          length: imageEmbeddings?.length,
-          firstElementType: typeof imageEmbeddings?.[0],
-          firstElementLength: imageEmbeddings?.[0]?.length
-        });
-        
         if (imageEmbeddings) {
-          console.log("Processing embeddings with structure:", {
-            type: typeof imageEmbeddings,
-            hasData: !!imageEmbeddings.data,
-            hasDims: !!imageEmbeddings.dims,
-            dataLength: imageEmbeddings.data?.length,
-            dims: imageEmbeddings.dims,
-            isArray: Array.isArray(imageEmbeddings)
-          });
           
+          // Handle the actual format we're receiving: {image_embeddings: ..., image_positional_embeddings: ...}
+          if (imageEmbeddings.image_embeddings) {
+            const actualEmbeddings = imageEmbeddings.image_embeddings;
+          
+            
+            // Handle structured format: {data: Array, dims: Array, type: string}
+            if (actualEmbeddings.data && actualEmbeddings.dims && Array.isArray(actualEmbeddings.dims)) {
+              const data = actualEmbeddings.data;
+              const dims = actualEmbeddings.dims; // Should be [1, 256, 64, 64]
+              // Verify dimensions match expected [1, 256, 64, 64]
+              if (dims.length === 4 && dims[0] === 1 && dims[1] === 256 && dims[2] === 64 && dims[3] === 64) {
+                clickedCellEmbedding = new Float32Array(256);
+
+                // Data is flattened, so we need to calculate the correct indices
+                // For dimensions [1, 256, 64, 64], the index calculation is:
+                // index = batch * (256 * 64 * 64) + channel * (64 * 64) + row * 64 + col
+                // Note: Grid cell_i_j maps to: i=col (x/width), j=row (y/height)
+                // So for embeddings[0][c][j][i], we access at position [j, i]
+                const batchSize = dims[1] * dims[2] * dims[3]; // 256 * 64 * 64
+                const channelSize = dims[2] * dims[3]; // 64 * 64
+                const rowSize = dims[3]; // 64
+
+                for (let c = 0; c < 256; c++) {
+                  const index = 0 * batchSize + c * channelSize + j * rowSize + i;
+                  if (index < data.length) {
+                    clickedCellEmbedding[c] = data[index];
+                  } else {
+                    clickedCellEmbedding[c] = 0; // Fallback
+                  }
+                }
+              } else {
+                console.log("[handleMapClick] Dimension mismatch for nested structured format:", dims);
+              }
+            }
+            // Handle other formats for actualEmbeddings
+            else if (actualEmbeddings.shape && Array.isArray(actualEmbeddings.shape)) {
+              if (actualEmbeddings.shape.length === 4 && actualEmbeddings.shape[0] === 1 && actualEmbeddings.shape[1] === 256) {
+                clickedCellEmbedding = new Float32Array(256);
+                const data = actualEmbeddings.data || actualEmbeddings;
+                const [batch, channels, height, width] = actualEmbeddings.shape;
+                const channelSize = height * width;
+                const rowSize = width;
+
+                for (let c = 0; c < 256; c++) {
+                  const index = c * channelSize + j * rowSize + i;
+                  if (index < data.length) {
+                    clickedCellEmbedding[c] = data[index];
+                  } else {
+                    clickedCellEmbedding[c] = 0;
+                  }
+                }
+              }
+            }
+            // Handle direct array format for actualEmbeddings
+            else if (actualEmbeddings instanceof Float32Array || actualEmbeddings instanceof Array) {
+              // Assume flattened [1, 256, 64, 64] format
+              if (actualEmbeddings.length === 1 * 256 * 64 * 64) {
+                clickedCellEmbedding = new Float32Array(256);
+                const channelSize = 64 * 64;
+                const rowSize = 64;
+
+                for (let c = 0; c < 256; c++) {
+                  const index = c * channelSize + j * rowSize + i;
+                  if (index < actualEmbeddings.length) {
+                    clickedCellEmbedding[c] = actualEmbeddings[index];
+                  } else {
+                    clickedCellEmbedding[c] = 0;
+                  }
+                }
+              }
+            }
+            // Handle nested array format for actualEmbeddings
+            else if (Array.isArray(actualEmbeddings) && actualEmbeddings.length > 0) {
+              const embeddingData = actualEmbeddings[0]; // Get first batch
+              if (embeddingData && embeddingData.length === 256) {
+                clickedCellEmbedding = new Float32Array(256);
+                // For legacy nested array format: embeddingData[c][i][j]
+                // where i,j correspond to the grid cell indices
+                for (let c = 0; c < 256; c++) {
+                  const channelData = embeddingData[c];
+                  if (channelData && channelData[j] && channelData[j][i] !== undefined) {
+                    clickedCellEmbedding[c] = channelData[j][i];
+                  } else {
+                    clickedCellEmbedding[c] = 0; // Fallback
+                  }
+                }
+              }
+            }
+          }
+          // Try additional common formats
           // Handle new structured format: {data: Array, dims: Array, type: string}
-          if (imageEmbeddings.data && imageEmbeddings.dims && Array.isArray(imageEmbeddings.dims)) {
+          else if (imageEmbeddings.data && imageEmbeddings.dims && Array.isArray(imageEmbeddings.dims)) {
             const data = imageEmbeddings.data;
             const dims = imageEmbeddings.dims; // Should be [1, 256, 64, 64]
-            
-            console.log("Structured embedding format detected:", {
-              dataLength: data.length,
-              dims: dims,
-              expectedDims: [1, 256, 64, 64]
-            });
-            
             // Verify dimensions match expected [1, 256, 64, 64]
             if (dims.length === 4 && dims[0] === 1 && dims[1] === 256 && dims[2] === 64 && dims[3] === 64) {
-              // Extract the 256-dimensional embedding for this specific grid cell
               clickedCellEmbedding = new Float32Array(256);
-              
+
               // Data is flattened, so we need to calculate the correct indices
               // For dimensions [1, 256, 64, 64], the index calculation is:
               // index = batch * (256 * 64 * 64) + channel * (64 * 64) + row * 64 + col
+              // Note: Grid cell_i_j maps to: i=row (y/height), j=col (x/width)
+              // So for embeddings[0][c][i][j], we access at position [i, j]
               const batchSize = dims[1] * dims[2] * dims[3]; // 256 * 64 * 64
               const channelSize = dims[2] * dims[3]; // 64 * 64
               const rowSize = dims[3]; // 64
-              
+
               for (let c = 0; c < 256; c++) {
-                const index = 0 * batchSize + c * channelSize + j * rowSize + i;
+                const index = 0 * batchSize + c * channelSize + i * rowSize + j;
                 if (index < data.length) {
                   clickedCellEmbedding[c] = data[index];
                 } else {
                   clickedCellEmbedding[c] = 0; // Fallback
                 }
               }
-              console.log("Successfully extracted embedding for", clickedCell.id, "from structured format");
-              console.log("Sample embedding values:", Array.from(clickedCellEmbedding.slice(0, 10)).map(v => v.toFixed(4)));
             } else {
-              console.warn("Unexpected dimensions in structured format:", dims);
               // Fallback to simulated embedding
               clickedCellEmbedding = new Float32Array(256);
               for (let c = 0; c < 256; c++) {
                 clickedCellEmbedding[c] = Math.random() * 2 - 1;
+              }
+            }
+          }
+          
+          // Try additional common formats
+          // Format 1: Direct tensor-like object with shape property
+          else if (imageEmbeddings.shape && Array.isArray(imageEmbeddings.shape)) {
+            if (imageEmbeddings.shape.length === 4 && imageEmbeddings.shape[0] === 1 && imageEmbeddings.shape[1] === 256) {
+              clickedCellEmbedding = new Float32Array(256);
+              const data = imageEmbeddings.data || imageEmbeddings;
+              const [batch, channels, height, width] = imageEmbeddings.shape;
+              const channelSize = height * width;
+              const rowSize = width;
+
+              for (let c = 0; c < 256; c++) {
+                const index = c * channelSize + i * rowSize + j;
+                if (index < data.length) {
+                  clickedCellEmbedding[c] = data[index];
+                } else {
+                  clickedCellEmbedding[c] = 0;
+                }
+              }
+            }
+          }
+          // Format 2: Direct Float32Array or similar
+          else if (imageEmbeddings instanceof Float32Array || imageEmbeddings instanceof Array) {
+            // Assume flattened [1, 256, 64, 64] format
+            if (imageEmbeddings.length === 1 * 256 * 64 * 64) {
+              clickedCellEmbedding = new Float32Array(256);
+              const channelSize = 64 * 64;
+              const rowSize = 64;
+
+              for (let c = 0; c < 256; c++) {
+                const index = c * channelSize + i * rowSize + j;
+                if (index < imageEmbeddings.length) {
+                  clickedCellEmbedding[c] = imageEmbeddings[index];
+                } else {
+                  clickedCellEmbedding[c] = 0;
+                }
               }
             }
           }
           // Handle legacy nested array format
           else if (Array.isArray(imageEmbeddings) && imageEmbeddings.length > 0) {
             const embeddingData = imageEmbeddings[0]; // Get first batch
-            console.log("Legacy array format detected");
-            
+
             if (embeddingData && embeddingData.length === 256) {
-              // Extract the 256-dimensional embedding for this specific grid cell
               clickedCellEmbedding = new Float32Array(256);
+              // For legacy nested array format: embeddingData[c][i][j]
+              // where i,j correspond to the grid cell indices
               for (let c = 0; c < 256; c++) {
-                // Access the embedding at channel c, position [i, j]
                 const channelData = embeddingData[c];
-                if (channelData && channelData[j] && channelData[j][i] !== undefined) {
-                  clickedCellEmbedding[c] = channelData[j][i];
+                if (channelData && channelData[i] && channelData[i][j] !== undefined) {
+                  clickedCellEmbedding[c] = channelData[i][j];
                 } else {
                   clickedCellEmbedding[c] = 0; // Fallback
                 }
               }
-              console.log("Successfully extracted embedding from legacy format for", clickedCell.id);
             } else {
-              console.warn("Unexpected legacy embedding format");
-              // Fallback to simulated embedding
               clickedCellEmbedding = new Float32Array(256);
               for (let c = 0; c < 256; c++) {
                 clickedCellEmbedding[c] = Math.random() * 2 - 1;
               }
             }
           } else {
-            console.warn("Unknown embedding format");
-            // Fallback to simulated embedding
             clickedCellEmbedding = new Float32Array(256);
             for (let c = 0; c < 256; c++) {
               clickedCellEmbedding[c] = Math.random() * 2 - 1;
             }
           }
         } else {
-          console.warn("No valid image embeddings available, using simulated embeddings");
-          console.log("imageEmbeddings:", imageEmbeddings);
-          
           // Use simulated but consistent embeddings based on cell position
-          // This ensures reproducible similarity results
           clickedCellEmbedding = new Float32Array(256);
-          const seed = i * 1000 + j; // Create a seed based on cell position
-          
-          // Simple pseudo-random generator for consistent results
+          const seed = i * 1000 + j;
           let rng = seed;
           for (let c = 0; c < 256; c++) {
             rng = (rng * 9301 + 49297) % 233280;
-            clickedCellEmbedding[c] = (rng / 233280.0) * 2 - 1; // Range [-1, 1]
+            clickedCellEmbedding[c] = (rng / 233280.0) * 2 - 1;
           }
-          
-          console.log("Generated simulated embedding for", clickedCell.id, "with seed", seed);
         }
-        
+
+        // Ensure clickedCellEmbedding is always defined
+        if (!clickedCellEmbedding) {
+          clickedCellEmbedding = new Float32Array(256);
+          for (let c = 0; c < 256; c++) {
+            clickedCellEmbedding[c] = Math.random() * 2 - 1;
+          }
+        }
+
         cellEmbeddings.set(clickedCell.id, clickedCellEmbedding);
         setCellEmbeddings(new Map(cellEmbeddings));
+      } else {
+        console.log("[handleMapClick] Used cached embedding for clicked cell.");
       }
 
       // Compute similarities with other cells
       const similarities: SimilarityResult[] = [];
-      
+
       for (const cell of gridCells) {
         if (cell.id === clickedCell.id) continue;
-        
+
         // Get or compute embedding for this cell
         let cellEmbedding = cellEmbeddings.get(cell.id);
         if (!cellEmbedding) {
-          // Extract real embedding for this cell
           const [_, cellI, cellJ] = cell.id.split('_').map(Number);
           cellEmbedding = new Float32Array(256);
-          
+
           if (imageEmbeddings) {
-            // Handle new structured format: {data: Array, dims: Array, type: string}
-            if (imageEmbeddings.data && imageEmbeddings.dims && Array.isArray(imageEmbeddings.dims)) {
-              const data = imageEmbeddings.data;
-              const dims = imageEmbeddings.dims; // Should be [1, 256, 64, 64]
+            // Handle the actual format we're receiving: {image_embeddings: ..., image_positional_embeddings: ...}
+            if (imageEmbeddings.image_embeddings) {
+              const actualEmbeddings = imageEmbeddings.image_embeddings;
               
-              // Verify dimensions match expected [1, 256, 64, 64]
+              // Handle structured format: {data: Array, dims: Array, type: string}
+              if (actualEmbeddings.data && actualEmbeddings.dims && Array.isArray(actualEmbeddings.dims)) {
+                const data = actualEmbeddings.data;
+                const dims = actualEmbeddings.dims;
+                if (dims.length === 4 && dims[0] === 1 && dims[1] === 256 && dims[2] === 64 && dims[3] === 64) {
+                  const batchSize = dims[1] * dims[2] * dims[3];
+                  const channelSize = dims[2] * dims[3];
+                  const rowSize = dims[3];
+                  for (let c = 0; c < 256; c++) {
+                    const index = 0 * batchSize + c * channelSize + cellJ * rowSize + cellI;
+                    if (index < data.length) {
+                      cellEmbedding[c] = data[index];
+                    } else {
+                      cellEmbedding[c] = 0;
+                    }
+                  }
+                  if (cell.id.endsWith("_0_0")) {
+                    console.log("[handleMapClick] Extracted embedding for cell", cell.id, "(nested structured).");
+                  }
+                } else {
+                  const seed = cellI * 1000 + cellJ;
+                  let rng = seed;
+                  for (let c = 0; c < 256; c++) {
+                    rng = (rng * 9301 + 49297) % 233280;
+                    cellEmbedding[c] = (rng / 233280.0) * 2 - 1;
+                  }
+                  if (cell.id.endsWith("_0_0")) {
+                    console.log("[handleMapClick] Used fallback simulated embedding for cell", cell.id, "(nested dims mismatch).");
+                  }
+                }
+              }
+              // Handle other formats for actualEmbeddings
+              else if (actualEmbeddings.shape && Array.isArray(actualEmbeddings.shape)) {
+                if (actualEmbeddings.shape.length === 4 && actualEmbeddings.shape[0] === 1 && actualEmbeddings.shape[1] === 256) {
+                  const data = actualEmbeddings.data || actualEmbeddings;
+                  const [batch, channels, height, width] = actualEmbeddings.shape;
+                  const channelSize = height * width;
+                  const rowSize = width;
+                  for (let c = 0; c < 256; c++) {
+                    const index = c * channelSize + cellJ * rowSize + cellI;
+                    if (index < data.length) {
+                      cellEmbedding[c] = data[index];
+                    } else {
+                      cellEmbedding[c] = 0;
+                    }
+                  }
+                  if (cell.id.endsWith("_0_0")) {
+                    console.log("[handleMapClick] Extracted embedding for cell", cell.id, "(nested tensor format).");
+                  }
+                }
+              }
+              // Handle direct array format for actualEmbeddings
+              else if (actualEmbeddings instanceof Float32Array || actualEmbeddings instanceof Array) {
+                if (actualEmbeddings.length === 1 * 256 * 64 * 64) {
+                  const channelSize = 64 * 64;
+                  const rowSize = 64;
+                  for (let c = 0; c < 256; c++) {
+                    const index = c * channelSize + cellJ * rowSize + cellI;
+                    if (index < actualEmbeddings.length) {
+                      cellEmbedding[c] = actualEmbeddings[index];
+                    } else {
+                      cellEmbedding[c] = 0;
+                    }
+                  }
+                  if (cell.id.endsWith("_0_0")) {
+                    console.log("[handleMapClick] Extracted embedding for cell", cell.id, "(nested direct array).");
+                  }
+                }
+              }
+              // Handle nested array format for actualEmbeddings
+              else if (Array.isArray(actualEmbeddings) && actualEmbeddings.length > 0) {
+                const embeddingData = actualEmbeddings[0];
+                if (embeddingData && embeddingData.length === 256) {
+                  for (let c = 0; c < 256; c++) {
+                    const channelData = embeddingData[c];
+                    if (channelData && channelData[cellJ] && channelData[cellJ][cellI] !== undefined) {
+                      cellEmbedding[c] = channelData[cellJ][cellI];
+                    } else {
+                      cellEmbedding[c] = 0;
+                    }
+                  }
+                  if (cell.id.endsWith("_0_0")) {
+                    console.log("[handleMapClick] Extracted embedding for cell", cell.id, "(nested legacy array).");
+                  }
+                } else {
+                  const seed = cellI * 1000 + cellJ;
+                  let rng = seed;
+                  for (let c = 0; c < 256; c++) {
+                    rng = (rng * 9301 + 49297) % 233280;
+                    cellEmbedding[c] = (rng / 233280.0) * 2 - 1;
+                  }
+                  if (cell.id.endsWith("_0_0")) {
+                    console.log("[handleMapClick] Used fallback simulated embedding for cell", cell.id, "(nested legacy array mismatch).");
+                  }
+                }
+              }
+            }
+            // Fallback to original format handling
+            else if (imageEmbeddings.data && imageEmbeddings.dims && Array.isArray(imageEmbeddings.dims)) {
+              const data = imageEmbeddings.data;
+              const dims = imageEmbeddings.dims;
               if (dims.length === 4 && dims[0] === 1 && dims[1] === 256 && dims[2] === 64 && dims[3] === 64) {
-                // Data is flattened, calculate indices for this cell
-                const batchSize = dims[1] * dims[2] * dims[3]; // 256 * 64 * 64
-                const channelSize = dims[2] * dims[3]; // 64 * 64
-                const rowSize = dims[3]; // 64
-                
+                const batchSize = dims[1] * dims[2] * dims[3];
+                const channelSize = dims[2] * dims[3];
+                const rowSize = dims[3];
                 for (let c = 0; c < 256; c++) {
                   const index = 0 * batchSize + c * channelSize + cellJ * rowSize + cellI;
                   if (index < data.length) {
@@ -984,17 +1034,64 @@ export default function EmbeddingSimilaritySearch() {
                     cellEmbedding[c] = 0;
                   }
                 }
+                // Debug log for each cell embedding extraction
+                if (cell.id.endsWith("_0_0")) {
+                  console.log("[handleMapClick] Extracted embedding for cell", cell.id, "(structured).");
+                }
               } else {
-                // Fallback: use consistent simulated embeddings
                 const seed = cellI * 1000 + cellJ;
                 let rng = seed;
                 for (let c = 0; c < 256; c++) {
                   rng = (rng * 9301 + 49297) % 233280;
                   cellEmbedding[c] = (rng / 233280.0) * 2 - 1;
                 }
+                if (cell.id.endsWith("_0_0")) {
+                  console.log("[handleMapClick] Used fallback simulated embedding for cell", cell.id, "(dims mismatch).");
+                }
               }
             }
-            // Handle legacy nested array format
+            // Try additional common formats
+            // Format 1: Direct tensor-like object with shape property
+            else if (imageEmbeddings.shape && Array.isArray(imageEmbeddings.shape)) {
+              if (imageEmbeddings.shape.length === 4 && imageEmbeddings.shape[0] === 1 && imageEmbeddings.shape[1] === 256) {
+                const data = imageEmbeddings.data || imageEmbeddings;
+                const [batch, channels, height, width] = imageEmbeddings.shape;
+                const channelSize = height * width;
+                const rowSize = width;
+
+                for (let c = 0; c < 256; c++) {
+                  const index = c * channelSize + cellJ * rowSize + cellI;
+                  if (index < data.length) {
+                    cellEmbedding[c] = data[index];
+                  } else {
+                    cellEmbedding[c] = 0;
+                  }
+                }
+                if (cell.id.endsWith("_0_0")) {
+                  console.log("[handleMapClick] Extracted embedding for cell", cell.id, "(tensor format).");
+                }
+              }
+            }
+            // Format 2: Direct Float32Array or similar
+            else if (imageEmbeddings instanceof Float32Array || imageEmbeddings instanceof Array) {
+              // Assume flattened [1, 256, 64, 64] format
+              if (imageEmbeddings.length === 1 * 256 * 64 * 64) {
+                const channelSize = 64 * 64;
+                const rowSize = 64;
+
+                for (let c = 0; c < 256; c++) {
+                  const index = c * channelSize + cellJ * rowSize + cellI;
+                  if (index < imageEmbeddings.length) {
+                    cellEmbedding[c] = imageEmbeddings[index];
+                  } else {
+                    cellEmbedding[c] = 0;
+                  }
+                }
+                if (cell.id.endsWith("_0_0")) {
+                  console.log("[handleMapClick] Extracted embedding for cell", cell.id, "(direct array).");
+                }
+              }
+            }
             else if (Array.isArray(imageEmbeddings) && imageEmbeddings.length > 0) {
               const embeddingData = imageEmbeddings[0];
               if (embeddingData && embeddingData.length === 256) {
@@ -1006,60 +1103,68 @@ export default function EmbeddingSimilaritySearch() {
                     cellEmbedding[c] = 0;
                   }
                 }
+                if (cell.id.endsWith("_0_0")) {
+                  console.log("[handleMapClick] Extracted embedding for cell", cell.id, "(legacy array).");
+                }
               } else {
-                // Fallback: use consistent simulated embeddings
                 const seed = cellI * 1000 + cellJ;
                 let rng = seed;
                 for (let c = 0; c < 256; c++) {
                   rng = (rng * 9301 + 49297) % 233280;
                   cellEmbedding[c] = (rng / 233280.0) * 2 - 1;
                 }
+                if (cell.id.endsWith("_0_0")) {
+                  console.log("[handleMapClick] Used fallback simulated embedding for cell", cell.id, "(legacy array mismatch).");
+                }
               }
             } else {
-              // Fallback: use consistent simulated embeddings
               const seed = cellI * 1000 + cellJ;
               let rng = seed;
               for (let c = 0; c < 256; c++) {
                 rng = (rng * 9301 + 49297) % 233280;
                 cellEmbedding[c] = (rng / 233280.0) * 2 - 1;
               }
+              if (cell.id.endsWith("_0_0")) {
+                console.log("[handleMapClick] Used fallback simulated embedding for cell", cell.id, "(unknown format).");
+              }
             }
           } else {
-            // Fallback: use consistent simulated embeddings
             const seed = cellI * 1000 + cellJ;
             let rng = seed;
             for (let c = 0; c < 256; c++) {
               rng = (rng * 9301 + 49297) % 233280;
               cellEmbedding[c] = (rng / 233280.0) * 2 - 1;
             }
+            if (cell.id.endsWith("_0_0")) {
+              console.log("[handleMapClick] Used fallback simulated embedding for cell", cell.id, "(no imageEmbeddings).");
+            }
           }
-          
+
           cellEmbeddings.set(cell.id, cellEmbedding);
         }
-        
-        const similarity = cosineSimilarity(clickedCellEmbedding, cellEmbedding);
-        
-        // Add all similarities (we'll filter and sort later)
-        similarities.push({
-          cellId: cell.id,
-          similarity,
-          bounds: cell.bounds,
-          center: cell.center
-        });
+
+        // Ensure both embeddings are valid before calculating similarity
+        if (clickedCellEmbedding && cellEmbedding) {
+          const similarity = cosineSimilarity(clickedCellEmbedding, cellEmbedding);
+
+          // Add all similarities (we'll filter and sort later)
+          similarities.push({
+            cellId: cell.id,
+            similarity,
+            bounds: cell.bounds,
+            center: cell.center
+          });
+        }
       }
-      
-      // Filter for cells with similarity greater than 90% (0.90)
+
+      // Filter for cells with similarity greater than the threshold
       similarities.sort((a, b) => b.similarity - a.similarity);
-      const highSimilarityCells = similarities.filter(s => s.similarity > 0.75);
+      const highSimilarityCells = similarities.filter(s => s.similarity > similarityThreshold);
       setSimilarityResults(highSimilarityCells);
-      
-      console.log(`Found ${similarities.length} similar cells, showing ${highSimilarityCells.length} cells with >90% similarity`);
-      console.log("High similarity cells (>90%):", highSimilarityCells.slice(0, 10).map(s => ({ id: s.cellId, sim: s.similarity.toFixed(3) })));
-      console.log("Similarity range:", similarities.length > 0 ? `${similarities[0].similarity.toFixed(3)} - ${similarities[similarities.length-1].similarity.toFixed(3)}` : 'none');
-      
+
       // Visualize results on map
       visualizeSimilarityResults(highSimilarityCells, clickedPoint, clickedCell);
-      
+
     } catch (err) {
       console.error("Error performing similarity search:", err);
     } finally {
@@ -1145,23 +1250,9 @@ export default function EmbeddingSimilaritySearch() {
     // Since results are already filtered for >90% similarity, show them all
     // But still apply the similarity threshold for additional filtering if needed
     const visualizationResults = results.filter(r => r.similarity >= similarityThreshold);
-    console.log(`Visualizing ${visualizationResults.length} cells above threshold ${similarityThreshold} from ${results.length} high-similarity cells (>90%)`);
-    console.log("High similarity results sample:", results.slice(0, 5).map(r => ({ id: r.cellId, sim: r.similarity.toFixed(4) })));
-    console.log("Threshold comparison - Top 5 vs threshold:", results.slice(0, 5).map(r => ({ 
-      id: r.cellId, 
-      sim: r.similarity.toFixed(4), 
-      aboveThreshold: r.similarity >= similarityThreshold 
-    })));
-
+    
     // Show the high similarity results (>90%), or if threshold filters them out, show top 10 for debugging
     const finalResults = visualizationResults.length > 0 ? visualizationResults : results.slice(0, 10);
-    console.log(`Final visualization will show ${finalResults.length} cells`);
-    
-    if (results.length === 0) {
-      console.log("No cells found with >90% similarity");
-    } else if (visualizationResults.length === 0 && results.length > 0) {
-      console.log(`Found ${results.length} cells with >90% similarity, but none meet the additional threshold of ${similarityThreshold}`);
-    }
 
     // Add similarity results (show top results even if below threshold)
     const similarityFeatures: GeoJSON.Feature[] = finalResults.map((result, index) => {
@@ -1183,10 +1274,8 @@ export default function EmbeddingSimilaritySearch() {
     };
 
     if (map.current.getSource("similarity-results")) {
-      console.log("Updating existing similarity-results source with", finalResults.length, "features");
       (map.current.getSource("similarity-results") as maplibregl.GeoJSONSource).setData(similaritySource);
     } else {
-      console.log("Creating new similarity-results source and layer with", finalResults.length, "features");
       map.current.addSource("similarity-results", {
         type: "geojson",
         data: similaritySource
@@ -1211,15 +1300,12 @@ export default function EmbeddingSimilaritySearch() {
           "fill-outline-color": "#FFD700"  // Color blind safe yellow outline
         }
       });
-      
-      console.log("Similarity layer added successfully");
     }
 
     // Add text labels for similarity scores and tile numbers
     const textFeatures: GeoJSON.Feature[] = finalResults.map((result, index) => {
       const cell = gridCells.find(c => c.id === result.cellId)!;
       const displayText = `#${index + 1}\n${result.cellId}\n${(result.similarity * 100).toFixed(1)}%`;
-      console.log(`Creating text feature for ${result.cellId}: "${displayText}"`);
       
       return {
         type: "Feature",
@@ -1236,8 +1322,6 @@ export default function EmbeddingSimilaritySearch() {
       };
     });
 
-    console.log(`Created ${textFeatures.length} text features`);
-    console.log("Sample text feature:", textFeatures[0]);
 
     const textSource: GeoJSON.GeoJSON = {
       type: "FeatureCollection",
@@ -1245,10 +1329,8 @@ export default function EmbeddingSimilaritySearch() {
     };
 
     if (map.current.getSource("similarity-text")) {
-      console.log("Updating existing similarity-text source with", textFeatures.length, "features");
       (map.current.getSource("similarity-text") as maplibregl.GeoJSONSource).setData(textSource);
     } else {
-      console.log("Creating new similarity-text source and layer with", textFeatures.length, "features");
       map.current.addSource("similarity-text", {
         type: "geojson",
         data: textSource
@@ -1276,7 +1358,6 @@ export default function EmbeddingSimilaritySearch() {
         }
       });
       
-      console.log("Similarity text layer added successfully");
     }
     
     // Verify the layer exists after creation
@@ -1286,33 +1367,8 @@ export default function EmbeddingSimilaritySearch() {
         const source = map.current.getSource("similarity-results");
         const textLayer = map.current.getLayer("similarity-text-layer");
         const textSource = map.current.getSource("similarity-text");
-        console.log("Similarity layer verification - Layer exists:", !!layer, "Source exists:", !!source);
-        console.log("Text layer verification - Layer exists:", !!textLayer, "Source exists:", !!textSource);
-        
-        // Verify text source data
-        if (textSource) {
-          const sourceData = (textSource as any)._data;
-          console.log("Text source data:", sourceData);
-          console.log("Number of text features:", sourceData?.features?.length);
-          if (sourceData?.features?.length > 0) {
-            console.log("First text feature:", sourceData.features[0]);
-            console.log("Display text property:", sourceData.features[0]?.properties?.displayText);
-          }
-        }
-        
-        // Check if text layer is actually visible
-        if (textLayer) {
-          const layerStyle = map.current.getStyle();
-          const textLayerInStyle = layerStyle.layers.find(l => l.id === "similarity-text-layer");
-          console.log("Text layer in style:", !!textLayerInStyle);
-          if (textLayerInStyle) {
-            console.log("Text layer layout:", textLayerInStyle.layout);
-            console.log("Text layer paint:", textLayerInStyle.paint);
-          }
-        }
         
         if (!layer && source) {
-          console.log("Similarity layer missing, re-adding...");
           try {
             map.current.addLayer({
               id: "similarity-results-layer",
@@ -1333,14 +1389,12 @@ export default function EmbeddingSimilaritySearch() {
                 "fill-outline-color": "#FFD700"  // Color blind safe yellow outline
               }
             });
-            console.log("Re-added similarity layer");
           } catch (err) {
             console.error("Error re-adding similarity layer:", err);
           }
         }
 
         if (!textLayer && textSource) {
-          console.log("Text layer missing, re-adding...");
           try {
             map.current.addLayer({
               id: "similarity-text-layer",
@@ -1363,15 +1417,10 @@ export default function EmbeddingSimilaritySearch() {
                 "text-halo-width": 2
               }
             });
-            console.log("Re-added text layer");
           } catch (err) {
             console.error("Error re-adding text layer:", err);
           }
         }
-        
-        // Force repaint to ensure visibility
-        // map.current.triggerRepaint(); // Removed to prevent map refresh during similarity search
-        console.log("Visualization complete without map refresh");
       }
     }, 100);
   };
@@ -1532,7 +1581,6 @@ export default function EmbeddingSimilaritySearch() {
     map.current.on("draw.delete", () => setPolygon(null));
 
     // Listen for map clicks
-    map.current.on("click", handleMapClick);
 
     // Listen for zoom changes to update text layer visibility
     map.current.on("zoom", updateTextLayerVisibility);
@@ -1598,7 +1646,7 @@ export default function EmbeddingSimilaritySearch() {
   }, [mapProvider]);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen text-black">
       {/* Control Panel */}
       <div className="w-80 bg-white shadow-lg p-4 overflow-y-auto">
         <h1 className="text-xl font-bold mb-4">Embedding Similarity Search</h1>
@@ -1609,7 +1657,7 @@ export default function EmbeddingSimilaritySearch() {
           <select
             value={mapProvider}
             onChange={(e) => setMapProvider(e.target.value as MapProvider)}
-            className="w-full p-2 border border-gray-300 rounded"
+            className="w-full p-2 border border-gray-300 rounded text-black"
           >
             <option value="geobase">Geobase</option>
             <option value="mapbox">Mapbox</option>
@@ -1634,7 +1682,7 @@ export default function EmbeddingSimilaritySearch() {
 
         {/* Zoom Level */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">
+          <label className="block text-sm font-medium mb-2 text-black">
             Zoom Level: {zoomLevel} (Current: {currentMapZoom.toFixed(1)})
           </label>
           <input
@@ -1649,11 +1697,11 @@ export default function EmbeddingSimilaritySearch() {
 
         {/* Drawing Mode */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Drawing Mode:</label>
+          <label className="block text-sm font-medium mb-2 text-black">Drawing Mode:</label>
           <select
             value={drawingMode}
             onChange={(e) => setDrawingMode(e.target.value as 'rectangle' | 'polygon')}
-            className="w-full p-2 border border-gray-300 rounded"
+            className="w-full p-2 border border-gray-300 rounded text-black"
           >
             <option value="rectangle">Rectangle</option>
             <option value="polygon">Polygon</option>
@@ -1662,13 +1710,13 @@ export default function EmbeddingSimilaritySearch() {
 
         {/* Similarity Threshold */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">
-            Similarity Threshold: {similarityThreshold.toFixed(2)}
+          <label className="block text-sm font-medium mb-2 text-black">
+            Match Sensitivity: {similarityThreshold.toFixed(2)}
           </label>
           <input
             type="range"
             min="0.0"
-            max="0.5"
+            max="1.0"
             step="0.01"
             value={similarityThreshold}
             onChange={(e) => setSimilarityThreshold(parseFloat(e.target.value))}
@@ -1678,12 +1726,12 @@ export default function EmbeddingSimilaritySearch() {
 
         {/* Instructions */}
         <div className="mb-4 p-3 bg-blue-50 rounded">
-          <h3 className="font-semibold text-sm mb-2">Instructions:</h3>
+          <h3 className="font-semibold text-sm mb-2">How to use:</h3>
           <ol className="text-xs space-y-1">
-            <li>1. Draw a polygon on the map</li>
-            <li>2. Click "Generate Grid & Embeddings"</li>
-            <li>3. Click on any grid cell to find areas with &gt;90% similarity</li>
-            <li>4. Adjust similarity threshold for additional filtering</li>
+            <li>1. Draw an area on the map</li>
+            <li>2. Click "Analyze Area"</li>
+            <li>3. Click anywhere to find similar areas</li>
+            <li>4. Adjust match sensitivity if needed</li>
           </ol>
         </div>
 
@@ -1729,7 +1777,6 @@ export default function EmbeddingSimilaritySearch() {
                 link.download = 'geoRawImage_metadata.json';
                 link.click();
                 URL.revokeObjectURL(url);
-                console.log("Downloaded geoRawImage metadata");
               }}
               className="w-full bg-purple-500 text-white py-2 px-4 rounded text-xs"
             >
@@ -1740,31 +1787,29 @@ export default function EmbeddingSimilaritySearch() {
 
         {/* Status */}
         <div className="mb-4">
-          <div className="text-sm">
-            <p>Model Initialized: {isInitialized ? "✅" : "❌"}</p>
-            <p>Processing: {isProcessing ? "✅" : "❌"}</p>
-            <p>Computing Similarity: {isComputingSimilarity ? "✅" : "❌"}</p>
-            <p>Current Zoom: <span className="font-mono">{currentMapZoom.toFixed(2)}</span></p>
-            <p>Grid Cells: {gridCells.length}</p>
-            <p>Cached Embeddings: {cellEmbeddings.size}</p>
-            <p>Image Embeddings: {imageEmbeddings ? "✅" : "❌"}</p>
-            <p>GeoRawImage: {geoRawImage ? "✅" : "❌"}</p>
+          <div className="text-sm text-black">
+            <p className="text-black">AI Ready: {isInitialized ? "✅" : "❌"}</p>
+            <p className="text-black">Processing: {isProcessing ? "✅" : "❌"}</p>
+            <p className="text-black">Finding Similar Areas: {isComputingSimilarity ? "✅" : "❌"}</p>
+            <p className="text-black">Map Zoom: <span className="font-mono text-black">{currentMapZoom.toFixed(2)}</span></p>
+            <p className="text-black">Analysis Areas: {gridCells.length}</p>
+            <p className="text-black">Data Ready: {imageEmbeddings ? "✅" : "❌"}</p>
+            <p className="text-black">Image Data: {geoRawImage ? "✅" : "❌"}</p>
             {imageEmbeddings && geoRawImage && (
-              <p className="text-green-600">📊 Embeddings loaded and ready</p>
+              <p className="text-green-600">📊 Ready to analyze</p>
             )}
             {geoRawImage && (
               <div className="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                <p><strong>GeoRawImage Details:</strong></p>
-                <p>Width: {geoRawImage.width}</p>
-                <p>Height: {geoRawImage.height}</p>
-                <p>Channels: {geoRawImage.channels}</p>
+                <p className="text-black"><strong>Image Details:</strong></p>
+                <p className="text-black">Size: {geoRawImage.width} x {geoRawImage.height}</p>
+                <p className="text-black">Layers: {geoRawImage.channels}</p>
                 {geoRawImage.bounds && (
-                  <p>Bounds: [{geoRawImage.bounds.west?.toFixed(6)}, {geoRawImage.bounds.south?.toFixed(6)}, {geoRawImage.bounds.east?.toFixed(6)}, {geoRawImage.bounds.north?.toFixed(6)}]</p>
+                  <p className="text-black">Area: [{geoRawImage.bounds.west?.toFixed(6)}, {geoRawImage.bounds.south?.toFixed(6)}, {geoRawImage.bounds.east?.toFixed(6)}, {geoRawImage.bounds.north?.toFixed(6)}]</p>
                 )}
               </div>
             )}
             {isComputingSimilarity && (
-              <p className="text-blue-600">🔍 Computing similarities...</p>
+              <p className="text-blue-600">🔍 Finding similar areas...</p>
             )}
           </div>
         </div>
@@ -1772,11 +1817,11 @@ export default function EmbeddingSimilaritySearch() {
         {/* Similarity Results */}
         {similarityResults.length > 0 && (
           <div className="mb-4">
-            <h3 className="font-semibold mb-2">
-              {similarityResults.length} Areas with &gt;90% Similarity
+            <h3 className="font-semibold mb-2 text-black">
+              {similarityResults.length} Similar Areas Found
               {selectedPoint && (
                 <div className="text-xs text-gray-600 mt-1">
-                  Selected: [{selectedPoint[0].toFixed(6)}, {selectedPoint[1].toFixed(6)}]
+                  Location: [{selectedPoint[0].toFixed(6)}, {selectedPoint[1].toFixed(6)}]
                 </div>
               )}
             </h3>
@@ -1784,7 +1829,7 @@ export default function EmbeddingSimilaritySearch() {
               {similarityResults.map((result, index) => (
                 <div 
                   key={result.cellId} 
-                  className={`text-xs p-2 rounded cursor-pointer hover:bg-gray-200 ${
+                  className={`text-xs p-2 rounded cursor-pointer hover:bg-gray-200 text-black ${
                     index < 10 ? 'bg-green-50 border-l-2 border-green-400' : 
                     index < 25 ? 'bg-yellow-50 border-l-2 border-yellow-400' : 
                     'bg-gray-50'
@@ -1799,41 +1844,41 @@ export default function EmbeddingSimilaritySearch() {
                       });
                     }
                   }}
-                  title="Click to zoom to this cell"
+                  title="Click to zoom to this area"
                 >
                   <div className="flex justify-between items-center">
-                    <span className="font-mono">#{index + 1} {result.cellId}</span>
+                    <span className="font-mono text-black">#{index + 1}</span>
                     <span className={`font-bold ${
                       result.similarity > 0.9 ? 'text-red-600' :
                       result.similarity > 0.8 ? 'text-orange-600' :
                       result.similarity > 0.7 ? 'text-yellow-600' :
                       'text-gray-600'
                     }`}>
-                      {(result.similarity * 100).toFixed(1)}%
+                      {(result.similarity * 100).toFixed(1)}% match
                     </span>
                   </div>
                   <div className="text-gray-500 mt-1">
-                    Center: [{result.center[0].toFixed(6)}, {result.center[1].toFixed(6)}]
+                    Location: [{result.center[0].toFixed(6)}, {result.center[1].toFixed(6)}]
                   </div>
                 </div>
               ))}
             </div>
             
             {/* Summary Statistics */}
-            <div className="mt-3 p-2 bg-blue-50 rounded text-xs">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <strong>Highest:</strong> {(similarityResults[0]?.similarity * 100 || 0).toFixed(1)}%
+            <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-black">
+              <div className="grid grid-cols-2 gap-2 text-black">
+                <div className="text-black">
+                  <strong>Best Match:</strong> {(similarityResults[0]?.similarity * 100 || 0).toFixed(1)}%
                 </div>
-                <div>
-                  <strong>Lowest:</strong> {(similarityResults[similarityResults.length - 1]?.similarity * 100 || 0).toFixed(1)}%
+                <div className="text-black">
+                  <strong>Weakest Match:</strong> {(similarityResults[similarityResults.length - 1]?.similarity * 100 || 0).toFixed(1)}%
                 </div>
-                <div>
+                <div className="text-black">
                   <strong>Average:</strong> {similarityResults.length > 0 ? 
                     ((similarityResults.reduce((sum, r) => sum + r.similarity, 0) / similarityResults.length) * 100).toFixed(1) : 0}%
                 </div>
-                <div>
-                  <strong>Above {(similarityThreshold * 100).toFixed(0)}%:</strong> {
+                <div className="text-black">
+                  <strong>Good Matches ({(similarityThreshold * 100).toFixed(0)}%+):</strong> {
                     similarityResults.filter(r => r.similarity >= similarityThreshold).length
                   }
                 </div>
@@ -1853,29 +1898,6 @@ export default function EmbeddingSimilaritySearch() {
       {/* Map Container */}
       <div className="flex-1 relative">
         <div ref={mapContainer} className="w-full h-full" />
-        <div className="absolute top-4 right-4 bg-white p-2 rounded shadow">
-          <p className="text-sm font-semibold">Legend:</p>
-          <div className="text-xs space-y-1">
-            <div className="flex items-center">
-              <div className="w-3 h-3 bg-green-500 mr-2"></div>
-              <span>Grid</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-              <span>Selected Point</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-3 h-3 bg-yellow-500 mr-2"></div>
-              <span>Similar Areas</span>
-            </div>
-            <div className="text-xs mt-2 text-gray-600">
-              <div>Text shows (zoom &gt; 23):</div>
-              <div>• Rank (#1, #2, etc.)</div>
-              <div>• Tile ID (cell_x_y)</div>
-              <div>• Similarity %</div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
