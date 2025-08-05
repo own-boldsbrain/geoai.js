@@ -98,7 +98,7 @@ export default function Home() {
         <div className="bg-gray-800/80 border border-gray-600 rounded-2xl backdrop-blur-sm mx-auto max-w-6xl px-4 md:px-6 shadow-xl">
           <div className="flex items-center justify-between py-4 lg:py-6 relative">
             <a className="text-white lg:absolute lg:left-0 lg:top-1/2 lg:-translate-y-1/2" href="/">
-              <h1 className="text-2xl font-bold text-white">GeoAI.js</h1>
+              <h1 className="text-2xl font-bold text-white">geoai.js</h1>
             </a>
             <nav className="hidden lg:flex grow items-center justify-center">
               <ul className="flex gap-1 text-sm font-semibold">
@@ -268,7 +268,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/oil-storage-tank.mp4" type="video/mp4" />
+                <source src="/video/oil-storage-tank-detection.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Oil Storage Tank Detection
@@ -353,7 +353,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/cars-detection-model.mp4" type="video/mp4" />
+                <source src="/video/car-detection-model.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Car Detection
@@ -377,7 +377,7 @@ const result = await pipeline.inference(polygon);`}
                 <source src="/video/wetland-segmentation.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
-                Wet Land Detection
+                Wetland Detection
               </h3>
               <p className="text-gray-300 text-base">
                 Identifies wetland areas such as marshes and swamps in the imagery.
@@ -395,7 +395,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/solar-detection-model.mp4" type="video/mp4" />
+                <source src="/video/solar-panel-detection.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Solar Panel Detection
@@ -416,7 +416,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/ship-detection-model.mp4" type="video/mp4" />
+                <source src="/video/ship-detection.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Ship Detection
@@ -458,7 +458,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/building-footprint.mp4" type="video/mp4" />
+                <source src="/video/building-footprint-segmentation.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Building Footprint Segmentation
@@ -559,7 +559,7 @@ const result = await pipeline.inference(polygon);`}
           <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div className="col-span-1 md:col-span-2">
-                <h3 className="text-2xl font-bold text-white mb-4">GeoAI.js</h3>
+                <h3 className="text-2xl font-bold text-white mb-4">geoai.js</h3>
                 <p className="text-gray-300 text-base max-w-md">
                   Open-source GeoAI toolkit for JavaScript developers. Run AI models directly in your browser or edge devices without any backend infrastructure.
                 </p>
@@ -585,7 +585,7 @@ const result = await pipeline.inference(polygon);`}
             </div>
             <div className="border-t border-gray-700 mt-8 pt-8 text-center">
               <p className="text-gray-400 text-sm">
-                © 2024 GeoAI.js. Open source project by the GeoBase team.
+                © 2024 geoai.js. Open source project by the GeoBase team.
               </p>
             </div>
           </div>

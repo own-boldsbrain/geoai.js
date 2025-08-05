@@ -1,4 +1,4 @@
-# GeoAI.js User Guide for Frontend Developers
+# geoai.js User Guide for Frontend Developers
 
 A comprehensive guide for frontend developers to integrate geospatial AI models into web mapping applications using web workers.
 
@@ -53,7 +53,7 @@ const result = await pipeline.inference({
 
 ### Why Use Web Workers?
 
-Web workers are essential for GeoAI.js because:
+Web workers are essential for geoai.js because:
 - **Non-blocking UI**: AI model inference can be computationally intensive
 - **Better performance**: Prevents main thread blocking during model loading and inference
 - **Responsive user experience**: Users can continue interacting with the map while AI processes
@@ -661,4 +661,4 @@ function getMapStyle(provider: string, config: any) {
 }
 ```
 
-This documentation provides frontend developers with everything they need to integrate GeoAI.js into their mapping applications, with special emphasis on web worker implementation for optimal performance.
+This documentation provides frontend developers with everything they need to integrate geoai.js into their mapping applications, with special emphasis on web worker implementation for optimal performance.

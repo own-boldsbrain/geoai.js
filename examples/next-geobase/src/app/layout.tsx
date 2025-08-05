@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GeoAI.js",
+  title: "geoai.js",
   description: "Geospatial AI Models for the Web. Explore AI models for JavaScript and Frontend Applications.",
 };
 
