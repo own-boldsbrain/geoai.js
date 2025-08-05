@@ -5,6 +5,7 @@ import maplibregl from "maplibre-gl";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import GitHubButton from 'react-github-btn'
+import { Grid3X3 } from 'lucide-react';
 
 const GEOBASE_CONFIG = {
   projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF,
@@ -103,7 +104,6 @@ export default function Home() {
             <nav className="hidden lg:flex grow items-center justify-center">
               <ul className="flex gap-1 text-sm font-semibold">
                 <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#features">Features</a></li>
-                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#pricing">Pricing</a></li>
                 <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#docs">Docs</a></li>
                 <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#about">About</a></li>
               </ul>
@@ -150,25 +150,25 @@ export default function Home() {
             <div className="absolute bottom-0 left-0 w-full h-3/4 bg-gradient-to-t from-gray-900 to-transparent"></div>
           </div>
           
-          <div className="mt-10 lg:mt-14 flex flex-col gap-6 lg:gap-12 items-center justify-center p-4 z-[1] max-w-5xl mx-auto">
+          <div className="mt-0 lg:mt-2 flex flex-col gap-6 lg:gap-12 items-center justify-center p-4 z-[1] max-w-5xl mx-auto">
             {/* Announcement Banner */}
-            <a className="flex gap-2 items-center justify-center rounded-full bg-gray-700/60 hover:bg-gray-600/60 border border-gray-500/50 text-sm font-medium px-4 py-2 cursor-pointer transition" href="https://mailchi.mp/ece911e44b4e/new-geoaijs-models">
+            <a className="flex gap-2 items-center justify-center rounded-full bg-gray-700/60 hover:bg-gray-600/60 border border-gray-500/50 text-base font-medium px-4 py-2 cursor-pointer transition mt-1" href="https://mailchi.mp/ece911e44b4e/new-geoaijs-models">
               <span className="block mr-0.5">🚀</span>
-              We're working on more models—stay tuned or join our newsletter
+              We're working on more models, stay tuned or join our newsletter
               <span className="text-green-400">→</span>
             </a>
             
             {/* Main Heading */}
-            <div className="relative h-36 lg:h-40 w-full">
+            <div className="relative h-36 lg:h-40 w-full mt-6">
               <h1 className="absolute left-1/2 w-full lg:w-[150%] top-1/2 -translate-x-1/2 -translate-y-1/2 text-center font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl leading-tight">
                 GeoAI for the modern
                 <br/>
-                <span className="text-green-500">JavaScript</span> developer
+                <span className="text-green-500">Javascript</span> developer
               </h1>
             </div>
             
             <p className="text-center font-normal text-lg sm:text-xl md:text-2xl text-gray-300 max-w-3xl">
-              Open-source GeoAI. No backend required. Run models right in your JavaScript apps or edge devices!
+              Open-source GeoAI. No backend required. Run models right in your Javascript apps or edge devices!
             </p>
             
             <div className="flex gap-4">
@@ -182,28 +182,84 @@ export default function Home() {
             
             {/* Works with section */}
             <div className="flex flex-col items-center gap-4">
-              <div className="flex flex-wrap justify-center items-center gap-8 rounded-full py-3 px-6 bg-gray-800 shadow-lg">
-                <div className="flex flex-col items-center">
-                  <div className="h-12 w-28 flex items-center justify-center mb-2">
-                    <img src="/provider-logos/geobase.svg" alt="Geobase" className="h-full object-contain filter grayscale opacity-70" />
+              <div className="text-center">
+                <h3 className="text-lg font-medium text-gray-300 mb-2">Works with your favorite mapping providers</h3>
+                <p className="text-sm text-gray-400">Seamlessly integrate with existing mapping infrastructure</p>
+              </div>
+              
+              {/* All Providers - Single Row */}
+              <div className="flex gap-3 flex-nowrap overflow-x-auto max-w-full">
+                {/* Geobase */}
+                <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:border-green-500/50 transition-all duration-200 group flex-shrink-0">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="h-8 w-20 flex items-center justify-center mb-3">
+                      <img src="/provider-logos/geobase.svg" alt="Geobase" className="h-full object-contain filter brightness-0 invert opacity-80 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                    <span className="text-xs text-green-400 font-medium">Available</span>
                   </div>
                 </div>
-                <div className="flex flex-col items-center">
-                  <div className="h-12 w-28 flex items-center justify-center mb-2">
-                    <img src="/provider-logos/mapbox.svg" alt="Mapbox" className="h-full object-contain filter grayscale opacity-70" />
+                
+                {/* Mapbox */}
+                <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:border-green-500/50 transition-all duration-200 group flex-shrink-0">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="h-8 w-20 flex items-center justify-center mb-3">
+                      <img src="/provider-logos/mapbox.svg" alt="Mapbox" className="h-full object-contain filter brightness-0 invert opacity-80 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                    <span className="text-xs text-green-400 font-medium">Available</span>
                   </div>
                 </div>
-                <div className="flex flex-col items-center">
-                  <div className="h-12 w-28 flex items-center justify-center mb-2">
-                    <img src="/provider-logos/esri.svg" alt="ESRI" className="h-full object-contain filter grayscale opacity-70" style={{ transform: 'scale(0.7)' }} />
+                
+                {/* Open Raster Tiles */}
+                <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:border-green-500/50 transition-all duration-200 group flex-shrink-0">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="h-8 w-20 flex items-center justify-center mb-3">
+                      <Grid3X3 className="w-6 h-6 text-gray-300 group-hover:text-green-400 transition-colors" />
+                    </div>
+                    <span className="text-xs text-green-400 font-medium">Available</span>
+                    <span className="text-xs text-gray-400 mt-1">XYZ</span>
                   </div>
-                  <span className="mt-1 px-2 py-0.5 border border-dashed border-gray-500 rounded text-xs text-gray-400">coming soon</span>
                 </div>
-                <div className="flex flex-col items-center">
-                  <div className="h-12 w-28 flex items-center justify-center mb-2">
-                    <img src="/provider-logos/google-maps.svg" alt="Google Maps" className="h-full object-contain filter grayscale opacity-70" />
+                
+                {/* ESRI */}
+                <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-4 opacity-60 flex-shrink-0">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="h-8 w-20 flex items-center justify-center mb-3">
+                      <img src="/provider-logos/esri.svg" alt="ESRI" className="h-full object-contain filter brightness-0 invert opacity-60" style={{ transform: 'scale(0.8)' }} />
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">Coming Soon</span>
                   </div>
-                  <span className="mt-1 px-2 py-0.5 border border-dashed border-gray-500 rounded text-xs text-gray-400">coming soon</span>
+                </div>
+                
+                {/* Google Maps */}
+                <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-4 opacity-60 flex-shrink-0">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="h-8 w-20 flex items-center justify-center mb-3">
+                      <img src="/provider-logos/google-maps.svg" alt="Google Maps" className="h-full object-contain filter brightness-0 invert opacity-60" />
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">Coming Soon</span>
+                  </div>
+                </div>
+                
+                {/* TMS Format */}
+                <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-4 opacity-60 flex-shrink-0">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="h-8 w-20 flex items-center justify-center mb-3">
+                      <Grid3X3 className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">TMS</span>
+                    <span className="text-xs text-gray-500 mt-1">Coming Soon</span>
+                  </div>
+                </div>
+                
+                {/* WMTS Format */}
+                <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-4 opacity-60 flex-shrink-0">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="h-8 w-20 flex items-center justify-center mb-3">
+                      <Grid3X3 className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">WMTS</span>
+                    <span className="text-xs text-gray-500 mt-1">Coming Soon</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -561,7 +617,7 @@ const result = await pipeline.inference(polygon);`}
               <div className="col-span-1 md:col-span-2">
                 <h3 className="text-2xl font-bold text-white mb-4">geoai.js</h3>
                 <p className="text-gray-300 text-base max-w-md">
-                  Open-source GeoAI toolkit for JavaScript developers. Run AI models directly in your browser or edge devices without any backend infrastructure.
+                  Open-source GeoAI toolkit for Javascript developers. Run AI models directly in your browser or edge devices without any backend infrastructure.
                 </p>
               </div>
               <div>
