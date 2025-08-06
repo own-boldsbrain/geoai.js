@@ -103,15 +103,15 @@ export default function Home() {
             </a>
             <nav className="hidden lg:flex grow items-center justify-center">
               <ul className="flex gap-1 text-sm font-semibold">
-                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#features">Features</a></li>
-                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#docs">Docs</a></li>
+                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="https://geoaijs-docs.geobase.app/supported-tasks">Features</a></li>
+                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="https://geoaijs-docs.geobase.app">Docs</a></li>
                 <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#about">About</a></li>
               </ul>
             </nav>
             <div className="hidden lg:flex items-center gap-2 lg:absolute lg:-right-1 lg:top-1/2 lg:-translate-y-1/2">
                 <a
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium text-sm cursor-pointer min-h-[38px] bg-green-600 shadow-lg hover:bg-green-700 transition"
-                href="#get-started"
+                href="https://geoaijs-docs.geobase.app"
                 >
                 Get Started
                 </a>
@@ -172,10 +172,10 @@ export default function Home() {
             </p>
             
             <div className="flex gap-4">
-              <a className="flex items-center gap-2 px-6 py-3 rounded-lg text-white font-medium text-lg cursor-pointer min-h-[44px] bg-gray-600 shadow-lg hover:bg-gray-500 transition" href="#features">
-                Explore Features
+              <a className="flex items-center gap-2 px-6 py-3 rounded-lg text-white font-medium text-lg cursor-pointer min-h-[44px] bg-gray-600 shadow-lg hover:bg-gray-500 transition" href="https://geoaijs-docs.geobase.app/supported-tasks">
+                Explore Tasks
               </a>
-              <a className="flex items-center gap-2 px-6 py-3 rounded-lg text-white font-medium text-lg cursor-pointer min-h-[44px] bg-green-700 shadow-lg hover:bg-green-600 transition" href="#get-started">
+              <a className="flex items-center gap-2 px-6 py-3 rounded-lg text-white font-medium text-lg cursor-pointer min-h-[44px] bg-green-700 shadow-lg hover:bg-green-600 transition" href="https://geoaijs-docs.geobase.app/">
                 Get Started
               </a>
             </div>
@@ -206,17 +206,6 @@ export default function Home() {
                       <img src="/provider-logos/mapbox.svg" alt="Mapbox" className="h-full object-contain filter brightness-0 invert opacity-80 group-hover:opacity-100 transition-opacity" />
                     </div>
                     <span className="text-xs text-green-400 font-medium">Available</span>
-                  </div>
-                </div>
-                
-                {/* Open Raster Tiles */}
-                <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:border-green-500/50 transition-all duration-200 group flex-shrink-0">
-                  <div className="flex flex-col items-center text-center">
-                    <div className="h-8 w-20 flex items-center justify-center mb-3">
-                      <Grid3X3 className="w-6 h-6 text-gray-300 group-hover:text-green-400 transition-colors" />
-                    </div>
-                    <span className="text-xs text-green-400 font-medium">Available</span>
-                    <span className="text-xs text-gray-400 mt-1">XYZ</span>
                   </div>
                 </div>
                 
