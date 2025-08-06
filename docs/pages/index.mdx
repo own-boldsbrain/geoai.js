@@ -32,12 +32,23 @@ Before getting started, ensure you have:
 
 ### Step 1: Create React App
 
+#### Option A: Create a new app manually
+
 Create a new React app and install the required dependencies:
 
 ```bash
 npx create-react-app my-geoai-app --template typescript
 cd my-geoai-app
 npm install maplibre-gl @geobase-js/geoai maplibre-gl-draw
+```
+
+#### Option B: Clone an Quickstart example
+```bash
+git init
+touch README.md
+git add .
+git commit -m "Initial commit"
+git subtree add --prefix=examples/01-geobase-geoai.js-quickstart https://github.com/decision-labs/geobase-ai.js main --squash
 ```
 
 ### Step 2: Setup Your Map Provider

@@ -615,7 +615,7 @@ const result = await pipeline.inference(polygon);`}
           <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div className="col-span-1 md:col-span-2">
-                <h3 className="text-2xl font-bold text-white mb-4">geoai.js</h3>
+                <h3 className="text-2xl font-bold text-white mb-4">Geoai</h3>
                 <p className="text-gray-300 text-base max-w-md">
                   Open-source GeoAI toolkit for Javascript developers. Run AI models directly in your browser or edge devices without any backend infrastructure.
                 </p>
@@ -623,25 +623,21 @@ const result = await pipeline.inference(polygon);`}
               <div>
                 <h4 className="text-lg font-semibold text-white mb-4">Resources</h4>
                 <ul className="space-y-2">
-                  <li><a href="#" className="text-gray-300 hover:text-white transition">Documentation</a></li>
-                  <li><a href="#" className="text-gray-300 hover:text-white transition">Examples</a></li>
-                  <li><a href="#" className="text-gray-300 hover:text-white transition">GitHub</a></li>
-                  <li><a href="#" className="text-gray-300 hover:text-white transition">API Reference</a></li>
+                  <li><a href="https://geoaijs-docs.geobase.app" className="text-gray-300 hover:text-white transition">Documentation</a></li>
+                  <li><a href="https://geoaijs-live.geobase.app" className="text-gray-300 hover:text-white transition">Examples</a></li>
+                  <li><a href="https://github.com/decision-labs/geobase-ai.js" className="text-gray-300 hover:text-white transition">GitHub</a></li>
                 </ul>
               </div>
               <div>
                 <h4 className="text-lg font-semibold text-white mb-4">Community</h4>
                 <ul className="space-y-2">
-                  <li><a href="#" className="text-gray-300 hover:text-white transition">Discord</a></li>
-                  <li><a href="#" className="text-gray-300 hover:text-white transition">Twitter</a></li>
-                  <li><a href="#" className="text-gray-300 hover:text-white transition">Blog</a></li>
-                  <li><a href="#" className="text-gray-300 hover:text-white transition">Newsletter</a></li>
+                  <li><a href="https://discord.com/invite/4susZSj4bd" className="text-gray-300 hover:text-white transition">Discord</a></li>
                 </ul>
               </div>
             </div>
             <div className="border-t border-gray-700 mt-8 pt-8 text-center">
               <p className="text-gray-400 text-sm">
-                © 2024 geoai.js. Open source project by the GeoBase team.
+              Geobase.app © 2025
               </p>
             </div>
           </div>
