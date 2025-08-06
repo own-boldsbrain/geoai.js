@@ -303,7 +303,7 @@ const result = await pipeline.inference(polygon);`}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 
             <a
-              href="/tasks/oil-storage-tank"
+              href="/tasks/oil-storage-tank-detection"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -430,7 +430,7 @@ const result = await pipeline.inference(polygon);`}
             </a>
             
             <a
-              href="/tasks/solar-panel"
+              href="/tasks/solar-panel-detection"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -493,7 +493,7 @@ const result = await pipeline.inference(polygon);`}
             </a>
             
             <a
-              href="/tasks/building-footprint"
+              href="/tasks/building-footprint-segmentation"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -514,7 +514,7 @@ const result = await pipeline.inference(polygon);`}
             </a>
             
             <a
-              href="/tasks/land-cover"
+              href="/tasks/land-cover-classification"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -535,7 +535,7 @@ const result = await pipeline.inference(polygon);`}
             </a>
             
             <a
-              href="/tasks/zero-shot"
+              href="/tasks/zero-shot-object-detection"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
