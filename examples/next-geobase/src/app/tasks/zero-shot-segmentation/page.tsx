@@ -11,6 +11,7 @@ import {
   ExportButton
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
+import { ESRI_CONFIG } from "../../../config";
 
 const GEOBASE_CONFIG = {
   provider: "geobase" as const,
@@ -36,7 +37,7 @@ if (!GEOBASE_CONFIG.projectRef || !GEOBASE_CONFIG.apikey) {
   );
 }
 
-type MapProvider = "geobase" | "mapbox";
+type MapProvider = "geobase" | "mapbox" | "esri";
 
 export default function ZeroShotSegmentation() {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -147,6 +148,14 @@ export default function ZeroShotSegmentation() {
           ],
           tileSize: 512,
         },
+        "esri-tiles": {
+          type: "raster",
+          tiles: [
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          ],
+          tileSize: 256,
+          attribution: "ESRI World Imagery",
+        },
       },
       layers: [
         {
@@ -177,6 +186,16 @@ export default function ZeroShotSegmentation() {
           maxzoom: 23,
           layout: {
             visibility: mapProvider === "mapbox" ? "visible" : "none",
+          },
+        },
+        {
+          id: "esri-layer",
+          type: "raster",
+          source: "esri-tiles",
+          minzoom: 0,
+          maxzoom: 23,
+          layout: {
+            visibility: mapProvider === "esri" ? "visible" : "none",
           },
         },
       ],

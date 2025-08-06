@@ -5,6 +5,7 @@ import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
 import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
+import { ESRI_CONFIG } from "../../../config";
 
 const GEOBASE_CONFIG = {
   provider: "geobase" as const,
@@ -27,7 +28,7 @@ if (!GEOBASE_CONFIG.projectRef || !GEOBASE_CONFIG.apikey) {
   );
 }
 
-type MapProvider = "geobase" | "mapbox";
+type MapProvider = "geobase" | "mapbox" | "esri";
 
 export default function MaskGeneration() {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -265,6 +266,14 @@ export default function MaskGeneration() {
           ],
           tileSize: 256,
         },
+        "esri-tiles": {
+          type: "raster",
+          tiles: [
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          ],
+          tileSize: 256,
+          attribution: "ESRI World Imagery",
+        },
       },
       layers: [
         {
@@ -285,6 +294,16 @@ export default function MaskGeneration() {
           maxzoom: 22,
           layout: {
             visibility: mapProvider === "mapbox" ? "visible" : "none",
+          },
+        },
+        {
+          id: "esri-layer",
+          type: "raster",
+          source: "esri-tiles",
+          minzoom: 0,
+          maxzoom: 22,
+          layout: {
+            visibility: mapProvider === "esri" ? "visible" : "none",
           },
         },
       ],
@@ -398,14 +417,21 @@ export default function MaskGeneration() {
 
   // Initialize the model when the map provider changes
   useEffect(() => {
+    let providerParams;
+    if (mapProvider === "geobase") {
+      providerParams = GEOBASE_CONFIG;
+    } else if (mapProvider === "esri") {
+      providerParams = ESRI_CONFIG;
+    } else {
+      providerParams = MAPBOX_CONFIG;
+    }
+
     initializeModel({
       tasks: [{
         task: "mask-generation",
         modelId: customModelId || selectedModel,
       }],
-      providerParams: {
-        ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
-      },
+      providerParams,
     });
   }, [mapProvider, initializeModel, customModelId, selectedModel]);
 
@@ -596,6 +622,7 @@ export default function MaskGeneration() {
                   >
                     <option value="geobase">Geobase</option>
                     <option value="mapbox">Mapbox</option>
+                    <option value="esri">ESRI</option>
                   </select>
                 </div>
               </div>

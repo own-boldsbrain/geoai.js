@@ -36,7 +36,9 @@ const config = {
           verticalAlign: "middle",
         }}
       />
-      geobase/geoai.js
+      <pre style={{ fontSize: "1.2rem", fontWeight: "bold" }}>
+        @geobase/geoai.js
+      </pre>
     </div>
   ),
   project: {
@@ -46,41 +48,6 @@ const config = {
     link: "https://geobase.app/discord",
   },
   navbar: {
-    extraContent: (
-      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-        <a
-          href="https://geoaijs-live.geobase.app"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            color: "inherit",
-            textDecoration: "none",
-            fontSize: "0.875rem",
-            fontWeight: "500",
-          }}
-        >
-          🎯 Live Examples
-        </a>
-        <a
-          href="https://docs.geobase.app"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            color: "inherit",
-            textDecoration: "none",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <GeobaseLogo
-            style={{
-              width: "6rem",
-              height: "auto",
-            }}
-          />
-        </a>
-      </div>
-    ),
   },
   docsRepositoryBase: "https://github.com/sabman/geobase-docs",
   defaultShowCopyCode: true,

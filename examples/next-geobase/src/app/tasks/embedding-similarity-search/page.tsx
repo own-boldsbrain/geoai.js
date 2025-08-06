@@ -6,6 +6,7 @@ import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
+import { ESRI_CONFIG } from "../../../config";
 
 const GEOBASE_CONFIG = {
   provider: "geobase" as const,
@@ -28,7 +29,7 @@ if (!GEOBASE_CONFIG.projectRef || !GEOBASE_CONFIG.apikey) {
   );
 }
 
-type MapProvider = "geobase" | "mapbox";
+type MapProvider = "geobase" | "mapbox" | "esri";
 
 interface GridCell {
   id: string;
@@ -1459,6 +1460,14 @@ export default function EmbeddingSimilaritySearch() {
           ],
           tileSize: 256,
         },
+        "esri-tiles": {
+          type: "raster",
+          tiles: [
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          ],
+          tileSize: 256,
+          attribution: "ESRI World Imagery",
+        },
       },
       layers: [
         {
@@ -1479,6 +1488,16 @@ export default function EmbeddingSimilaritySearch() {
           maxzoom: 22,
           layout: {
             visibility: mapProvider === "mapbox" ? "visible" : "none",
+          },
+        },
+        {
+          id: "esri-layer",
+          type: "raster",
+          source: "esri-tiles",
+          minzoom: 0,
+          maxzoom: 22,
+          layout: {
+            visibility: mapProvider === "esri" ? "visible" : "none",
           },
         },
       ],
@@ -1609,13 +1628,20 @@ export default function EmbeddingSimilaritySearch() {
 
   // Initialize model when component mounts
   useEffect(() => {
+    let providerParams;
+    if (mapProvider === "geobase") {
+      providerParams = GEOBASE_CONFIG;
+    } else if (mapProvider === "esri") {
+      providerParams = ESRI_CONFIG;
+    } else {
+      providerParams = MAPBOX_CONFIG;
+    }
+
     initializeModel({
       tasks: [{
         task: "mask-generation"
       }],
-      providerParams: {
-        ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
-      },
+      providerParams,
     });
   }, [mapProvider, initializeModel]);
 
@@ -1635,6 +1661,11 @@ export default function EmbeddingSimilaritySearch() {
         "mapbox-layer",
         "visibility",
         mapProvider === "mapbox" ? "visible" : "none"
+      );
+      map.current.setLayoutProperty(
+        "esri-layer",
+        "visibility",
+        mapProvider === "esri" ? "visible" : "none"
       );
     };
 
@@ -1661,6 +1692,7 @@ export default function EmbeddingSimilaritySearch() {
           >
             <option value="geobase">Geobase</option>
             <option value="mapbox">Mapbox</option>
+            <option value="esri">ESRI</option>
           </select>
         </div>
 

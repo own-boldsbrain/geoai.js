@@ -11,8 +11,9 @@ import {
   ExportButton
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
+import { ESRI_CONFIG } from "../../../config";
 
-type MapProvider = "geobase" | "mapbox";
+type MapProvider = "geobase" | "mapbox" | "esri";
 
 const GEOBASE_CONFIG = {
   provider: "geobase" as const,
@@ -111,6 +112,14 @@ export default function SolarPanelDetection() {
           ],
           tileSize: 256,
         },
+        "esri-tiles": {
+          type: "raster",
+          tiles: [
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          ],
+          tileSize: 256,
+          attribution: "ESRI World Imagery",
+        },
       },
       layers: [
         {
@@ -141,6 +150,16 @@ export default function SolarPanelDetection() {
           maxzoom: 22,
           layout: {
             visibility: mapProvider === "mapbox" ? "visible" : "none",
+          },
+        },
+        {
+          id: "esri-layer",
+          type: "raster",
+          source: "esri-tiles",
+          minzoom: 0,
+          maxzoom: 22,
+          layout: {
+            visibility: mapProvider === "esri" ? "visible" : "none",
           },
         },
       ],
@@ -197,13 +216,20 @@ export default function SolarPanelDetection() {
 
   // Initialize the model when the map provider changes
   useEffect(() => {
+    let providerParams;
+    if (mapProvider === "geobase") {
+      providerParams = GEOBASE_CONFIG;
+    } else if (mapProvider === "esri") {
+      providerParams = ESRI_CONFIG;
+    } else {
+      providerParams = MAPBOX_CONFIG;
+    }
+
     initializeModel({
       tasks: [{
         task: "solar-panel-detection"
       }],
-      providerParams: {
-        ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
-      },
+      providerParams,
     });
   }, [mapProvider, initializeModel]);
 
