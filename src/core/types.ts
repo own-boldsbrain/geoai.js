@@ -42,6 +42,14 @@ export type GeobaseParams = {
   projectRef: string;
 };
 
+export type EsriParams = {
+  provider: "esri";
+  serviceUrl?: string;
+  serviceName?: string;
+  tileSize?: number;
+  attribution?: string;
+};
+
 export interface InferenceInputs {
   polygon: GeoJSON.Feature;
   classLabel?: string;
@@ -71,7 +79,11 @@ export interface mapSourceConfig {
 
 export type onnxModel = ort.InferenceSession;
 
-export type ProviderParams = MapboxParams | SentinelParams | GeobaseParams;
+export type ProviderParams =
+  | MapboxParams
+  | SentinelParams
+  | GeobaseParams
+  | EsriParams;
 
 export type HuggingFaceModelTask =
   | "mask-generation"

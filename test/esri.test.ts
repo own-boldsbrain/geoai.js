@@ -164,5 +164,19 @@ describe("Esri", () => {
       const esriInstance = new Esri(config);
       expect(esriInstance.tileSize).toBe(256); // Default tile size
     });
+
+    it("should use all defaults when only provider is specified", () => {
+      const config = {
+        provider: "esri" as const,
+      };
+
+      const esriInstance = new Esri(config);
+      expect(esriInstance.serviceUrl).toBe(
+        "https://server.arcgisonline.com/ArcGIS/rest/services"
+      );
+      expect(esriInstance.serviceName).toBe("World_Imagery");
+      expect(esriInstance.tileSize).toBe(256);
+      expect(esriInstance.attribution).toBe("ESRI World Imagery");
+    });
   });
 });

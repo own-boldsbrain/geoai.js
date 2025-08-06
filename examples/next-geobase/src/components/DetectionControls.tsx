@@ -5,7 +5,7 @@ import { ZoomSlider } from './ui/ZoomSlider';
 import { MapProviderSelector } from './MapProviderSelector';
 import { StatusMessage } from './ui/StatusMessage';
 
-type MapProvider = 'geobase' | 'mapbox';
+type MapProvider = 'geobase' | 'mapbox' | 'esri';
 
 interface DetectionControlsProps {
   // State props
