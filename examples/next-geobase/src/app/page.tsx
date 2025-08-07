@@ -215,7 +215,7 @@ export default function Home() {
                     <div className="h-8 w-20 flex items-center justify-center mb-3">
                       <img src="/provider-logos/esri.svg" alt="ESRI" className="h-full object-contain filter brightness-0 invert opacity-60" style={{ transform: 'scale(0.8)' }} />
                     </div>
-                    <span className="text-xs text-gray-500 font-medium">Coming Soon</span>
+                    <span className="text-xs text-gray-500 font-medium">Available</span>
                   </div>
                 </div>
                 
