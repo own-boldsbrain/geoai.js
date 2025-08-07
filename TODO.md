@@ -36,3 +36,20 @@
 12. `building-footprint-segmentation`
 
 **Action needed**: Compare each task name with corresponding route paths and fix any mismatches.
+
+## Demo Geobase integration
+
+### Task: Show how to save model predictions to Geobase
+
+**Status**: 🔄 Pending
+
+**Description**: Show how to save model predictions to Geobase.
+
+**Files to check**:
+
+- `examples/next-geobase/src/app/tasks/` - Check route folders match task names
+- `docs/pages/supported-tasks/` - Check MDX files match task names
+
+
+## Minor fixes
+- [ ] Mask generation - another issue copy doesn't work and the data isn't valid geojson so can't copy paste into geojson.io - something to fix
