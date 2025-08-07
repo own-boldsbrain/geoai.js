@@ -18,8 +18,8 @@ type MapProvider = "geobase" | "mapbox" | "esri";
 GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/cars_7cm.tif"
 
 const mapInitConfig = {
-  center: [54.686191879921466, 24.7598344253214] as [number, number],
-  zoom: 18,
+  center: [54.690310447932006, 24.75763471820723] as [number, number],
+  zoom: 15,
 }
 
 // Add validation for required environment variables
