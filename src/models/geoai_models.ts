@@ -397,7 +397,7 @@ export class WetLandSegmentation extends BaseModel {
       mapSourceParams?.expression
     );
     const inferenceStartTime = performance.now();
-    console.log("[oriented-object-detection] starting inference...");
+    console.log("[wetland-segmentation] starting inference...");
 
     const inputs = await this.preProcessor(geoRawImage);
     let outputs;
@@ -414,7 +414,7 @@ export class WetLandSegmentation extends BaseModel {
     outputs = await this.postProcessor(outputs, geoRawImage);
     const inferenceEndTime = performance.now();
     console.log(
-      `[oriented-object-detection] inference completed. Time taken: ${(inferenceEndTime - inferenceStartTime).toFixed(2)}ms`
+      `[wetland-segmentation] inference completed. Time taken: ${(inferenceEndTime - inferenceStartTime).toFixed(2)}ms`
     );
 
     return {
