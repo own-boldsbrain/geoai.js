@@ -303,7 +303,7 @@ const result = await pipeline.inference(polygon);`}
         <section id="features" className="mx-auto max-w-7xl pb-16 px-4">
           <div className="flex flex-col gap-5 mb-12 mx-auto text-center">
             <h2 className="font-semibold text-3xl md:text-4xl lg:text-5xl text-white leading-tight">
-              Prototype a geo app in minutes, launch in days.
+              Build geospatial AI apps in minutes, deploy in days.
             </h2>
             <p className="text-lg md:text-xl text-gray-300 max-w-4xl mx-auto">
               Designed for developers, data analysts, GIS experts and anyone in between. Explore our features and guides to get started now.
