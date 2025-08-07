@@ -47,10 +47,6 @@ describe("ESRI Integration", () => {
 
     // Save the image for debugging
     const image = result.geoRawImage;
-    const outputPath = join(__dirname, "esri-debug-image.png");
-    await image.save(outputPath);
-    console.log(`ESRI debug image saved to: ${outputPath}`);
     console.log(`Image dimensions: ${image.width}x${image.height}`);
-    console.log(`Image bounds:`, image.getBounds());
   });
 });
