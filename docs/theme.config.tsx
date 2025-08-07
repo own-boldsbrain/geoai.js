@@ -27,7 +27,7 @@ const config = {
   logo: (
     <div style={{ display: "flex", alignItems: "center" }}>
       <img
-        src="https://upload.wikimedia.org/wikipedia/commons/9/99/Unofficial_JavaScript_logo_2.svg"
+        src="/javascript-logo.svg"
         alt="JavaScript logo"
         style={{
           height: "1.5rem",

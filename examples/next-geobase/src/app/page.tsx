@@ -93,19 +93,28 @@ export default function Home() {
   // );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-900 text-white" style={{ scrollBehavior: 'smooth' }}>
       {/* Header */}
       <header className="fixed w-full p-3 sm:p-5 z-50">
         <div className="bg-gray-800/80 border border-gray-600 rounded-2xl backdrop-blur-sm mx-auto max-w-6xl px-4 md:px-6 shadow-xl">
           <div className="flex items-center justify-between py-4 lg:py-6 relative">
             <a className="text-white lg:absolute lg:left-0 lg:top-1/2 lg:-translate-y-1/2" href="/">
-              <h1 className="text-2xl font-bold text-white">geoai.js</h1>
+              <div className="flex items-center">
+                <img
+                  src="/javascript-logo.svg"
+                  alt="JavaScript logo"
+                  className="h-6 w-auto mr-2"
+                />
+                <pre className="text-xl font-bold text-white font-mono">
+                  @geobase/geoai.js
+                </pre>
+              </div>
             </a>
             <nav className="hidden lg:flex grow items-center justify-center">
               <ul className="flex gap-1 text-sm font-semibold">
-                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="https://geoaijs-docs.geobase.app/supported-tasks">Features</a></li>
-                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="https://geoaijs-docs.geobase.app">Docs</a></li>
-                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#about">About</a></li>
+                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#features">AI Models</a></li>
+                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="https://geobase-ai-js.vercel.app/">Docs</a></li>
+                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#footer">About</a></li>
               </ul>
             </nav>
             <div className="hidden lg:flex items-center gap-2 lg:absolute lg:-right-1 lg:top-1/2 lg:-translate-y-1/2">
@@ -576,10 +585,12 @@ const result = await pipeline.inference(polygon);`}
               </p>
             </a>
             
-            <a
-              href="/tasks/embedding-similarity-search"
-              className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
+            <div
+              className="bg-gray-800 p-6 rounded-xl shadow-xl transition-all duration-300 transform border border-gray-700 relative group cursor-not-allowed"
             >
+              <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                <span className="text-white font-semibold text-lg">Coming Soon</span>
+              </div>
               <video
                 autoPlay
                 loop
@@ -595,16 +606,23 @@ const result = await pipeline.inference(polygon);`}
               <p className="text-gray-300 text-base">
                 Finds similar patches in the imagery based on embeddings.
               </p>
-            </a>
+            </div>
           </div>
         </section>
 
         {/* Footer */}
-        <footer className="bg-gray-800/50 border-t border-gray-700 mt-20">
+        <footer id="footer" className="bg-gray-800/50 border-t border-gray-700 mt-20">
           <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div className="col-span-1 md:col-span-2">
-                <h3 className="text-2xl font-bold text-white mb-4">Geoai</h3>
+                <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
+                  <img
+                    src="/javascript-logo.svg"
+                    alt="JavaScript logo"
+                    className="h-8 w-auto mr-3"
+                  />
+                  GeoAI.js
+                </h3>
                 <p className="text-gray-300 text-base max-w-md">
                   Open-source GeoAI toolkit for Javascript developers. Run AI models directly in your browser or edge devices without any backend infrastructure.
                 </p>
@@ -620,7 +638,7 @@ const result = await pipeline.inference(polygon);`}
               <div>
                 <h4 className="text-lg font-semibold text-white mb-4">Community</h4>
                 <ul className="space-y-2">
-                  <li><a href="https://discord.com/invite/4susZSj4bd" className="text-gray-300 hover:text-white transition">Discord</a></li>
+                  <li><a href="https://geobase.app/discord" className="text-gray-300 hover:text-white transition">Discord</a></li>
                 </ul>
               </div>
             </div>
@@ -628,6 +646,13 @@ const result = await pipeline.inference(polygon);`}
               <p className="text-gray-400 text-sm">
               Geobase.app © 2025
               </p>
+              <p className="text-gray-400 text-sm mt-2">
+                Made with ❤️ in Berlin
+              </p>
+              <div className="flex justify-center gap-4 mt-4">
+                <a href="https://geobase.app/agb" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition text-sm">AGB</a>
+                <a href="https://geobase.app/impressum" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition text-sm">Impressum</a>
+              </div>
             </div>
           </div>
         </footer>
