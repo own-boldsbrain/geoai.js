@@ -210,12 +210,12 @@ export default function Home() {
                 </div>
                 
                 {/* ESRI */}
-                <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-4 opacity-60 flex-shrink-0">
+                <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:border-green-500/50 transition-all duration-200 group flex-shrink-0">
                   <div className="flex flex-col items-center text-center">
                     <div className="h-8 w-20 flex items-center justify-center mb-3">
                       <img src="/provider-logos/esri.svg" alt="ESRI" className="h-full object-contain filter brightness-0 invert opacity-60" style={{ transform: 'scale(0.8)' }} />
                     </div>
-                    <span className="text-xs text-gray-500 font-medium">Available</span>
+                    <span className="text-xs text-green-400 font-medium">Available</span>
                   </div>
                 </div>
                 
