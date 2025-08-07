@@ -7,6 +7,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
+import { MapProvider } from "../../../types"
+
 
 GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/686e390615a6768f282b22b3/0/686e390615a6768f282b22b4.tif"
 
@@ -22,7 +24,6 @@ if (!GEOBASE_CONFIG.projectRef || !GEOBASE_CONFIG.apikey) {
   );
 }
 
-type MapProvider = "geobase" | "mapbox" | "esri";
 
 interface GridCell {
   id: string;

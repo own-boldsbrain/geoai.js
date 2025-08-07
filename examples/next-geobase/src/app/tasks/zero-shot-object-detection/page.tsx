@@ -12,8 +12,7 @@ import {
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
-
-type MapProvider = "geobase" | "mapbox" | "esri";
+import { MapProvider } from "../../../types"
 
 GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/688eabbc7163f9907393c3c7/0/688eabbc7163f9907393c3c8.tif"
 

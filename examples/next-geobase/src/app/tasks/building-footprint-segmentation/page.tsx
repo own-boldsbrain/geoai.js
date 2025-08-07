@@ -12,6 +12,7 @@ import {
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
+import { MapProvider } from "../../../types"
 
 GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/naip_train.tif"
 
@@ -27,7 +28,6 @@ if (!GEOBASE_CONFIG.projectRef || !GEOBASE_CONFIG.apikey) {
   );
 }
 
-type MapProvider = "geobase" | "mapbox" | "esri";
 
 export default function BuildingFootPrintSegmentation() {
   // Map refs

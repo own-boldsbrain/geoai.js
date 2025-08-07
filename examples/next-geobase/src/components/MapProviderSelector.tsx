@@ -1,6 +1,5 @@
 import React from 'react';
-
-type MapProvider = 'geobase' | 'mapbox' | 'esri';
+import { MapProvider } from "../types"
 
 interface MapProviderSelectorProps {
   value: MapProvider;

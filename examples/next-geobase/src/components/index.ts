@@ -12,6 +12,3 @@ export { ZeroShotControls } from './ZeroShotControls';
 export { ZeroShotSegmentationControls } from './ZeroShotSegmentationControls';
 export { GeoAIMap } from './GeoAIMap';
 export { BackgroundEffects } from './BackgroundEffects';
-
-// Types
-export type MapProvider = 'geobase' | 'mapbox' | 'esri';

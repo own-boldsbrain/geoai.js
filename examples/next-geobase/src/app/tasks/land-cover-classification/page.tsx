@@ -11,9 +11,8 @@ import {
   ExportButton
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
+import { MapProvider } from "../../../types"
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
-
-type MapProvider = "geobase" | "mapbox" | "esri";
 
 GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/68917a624c782f9c3fbde513/0/68917a624c782f9c3fbde514.tif"
 

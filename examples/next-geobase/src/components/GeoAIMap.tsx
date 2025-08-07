@@ -2,8 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import maplibregl from 'maplibre-gl';
 import MaplibreDraw from 'maplibre-gl-draw';
 import type { StyleSpecification } from 'maplibre-gl';
-
-type MapProvider = 'geobase' | 'mapbox';
+import { MapProvider } from "../types"
 
 interface MapConfig {
   provider: string;

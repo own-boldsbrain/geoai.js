@@ -1,7 +1,5 @@
 import { GeobaseParams, ProviderParams } from "@geobase-js/geoai";
 
-export type MapProvider = "esri";
-
 export const ESRI_CONFIG = {
   provider: "esri" as const,
   serviceUrl: "https://server.arcgisonline.com/ArcGIS/rest/services",

@@ -4,8 +4,8 @@ import { GradientButton } from './ui/GradientButton';
 import { ZoomSlider } from './ui/ZoomSlider';
 import { MapProviderSelector } from './MapProviderSelector';
 import { StatusMessage } from './ui/StatusMessage';
+import { MapProvider } from "../types"
 
-type MapProvider = 'geobase' | 'mapbox' | 'esri';
 
 interface ZeroShotControlsProps {
   // State props
