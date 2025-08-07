@@ -19,7 +19,7 @@ GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/
 
 const mapInitConfig = {
   center: [114.84857638295142, -3.449805712621256] as [number, number],
-  zoom: 18,
+  zoom: 20,
 }
 
 // Add validation for required environment variables

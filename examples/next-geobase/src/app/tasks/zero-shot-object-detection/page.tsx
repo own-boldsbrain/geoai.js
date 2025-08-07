@@ -18,8 +18,8 @@ type MapProvider = "geobase" | "mapbox" | "esri";
 GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/688eabbc7163f9907393c3c7/0/688eabbc7163f9907393c3c8.tif"
 
 const mapInitConfig = {
-  center: [-87.06982344388962, 20.653090145447507] as [number, number],
-  zoom: 18,
+  center: [-87.06908566748001, 20.653232827552685] as [number, number],
+  zoom: 20,
 }
 
 // Add validation for required environment variables
@@ -29,7 +29,7 @@ if (!GEOBASE_CONFIG.projectRef || !GEOBASE_CONFIG.apikey) {
   );
 }
 
-export default function ZeroShotDetection() {
+export default function ZeroShotObjectDetection() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const draw = useRef<MaplibreDraw | null>(null);
@@ -48,9 +48,9 @@ export default function ZeroShotDetection() {
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
   const [detections, setDetections] = useState<GeoJSON.FeatureCollection>();
   const [zoomLevel, setZoomLevel] = useState<number>(21);
-  const [confidenceScore, setConfidenceScore] = useState<number>(0.4);
+  const [confidenceScore, setConfidenceScore] = useState<number>(0.3);
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
-  const [classLabel, setClassLabel] = useState<string>("trees.");
+  const [classLabel, setClassLabel] = useState<string>("cars.");
 
   // Helper to ensure label ends with a dot
   function ensureDot(label: string) {

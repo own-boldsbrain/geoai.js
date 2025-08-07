@@ -29,10 +29,12 @@ interface ZeroShotControlsProps {
   onConfidenceScoreChange: (score: number) => void;
   onClearError: () => void;
 
+  taskName?: string;
   className?: string;
 }
 
 export const ZeroShotControls: React.FC<ZeroShotControlsProps> = ({
+  taskName = "Zero Shot Object Detection",
   polygon,
   isInitialized,
   isProcessing,
@@ -57,8 +59,8 @@ export const ZeroShotControls: React.FC<ZeroShotControlsProps> = ({
   
   // Predefined class labels
   const predefinedLabels = [
-    "trees.",
     "cars.",
+    "trees.",
     "buildings.",
     "trucks.", 
     "cooling towers.",
@@ -144,7 +146,7 @@ export const ZeroShotControls: React.FC<ZeroShotControlsProps> = ({
         <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg blur opacity-10"></div>
         <div className="relative backdrop-blur-sm bg-white/90 p-4 rounded-lg border border-green-200/50 shadow-sm">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
-            Zero Shot Object Detection
+            {taskName}
           </h2>
           <p className="text-sm text-gray-600 leading-relaxed">
             Advanced geospatial AI powered detection system

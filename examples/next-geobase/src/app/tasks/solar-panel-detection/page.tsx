@@ -19,7 +19,7 @@ GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/r
 
 const mapInitConfig = {
   center: [-121.7743491, 38.5533061] as [number, number],
-  zoom: 18,
+  zoom: 21,
 }
 
 // Add validation for required environment variables

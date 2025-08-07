@@ -17,7 +17,7 @@ type MapProvider = "geobase" | "mapbox" | "esri";
 GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/naip_train.tif"
 
 const mapInitConfig = {
-  center: [-117.59040545822742, 47.652878388765174] as [number, number],
+  center: [-117.59159209938863, 47.65325850830081] as [number, number],
   zoom: 18,
 }
 

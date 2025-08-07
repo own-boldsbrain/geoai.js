@@ -16,8 +16,8 @@ import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/cars_7cm.tif"
 
 const mapInitConfig = {
-  center: [-95.4210323139897, 29.678781807220446] as [number, number],
-  zoom: 18,
+  center: [-95.42019681827594, 29.679416036729847] as [number, number],
+  zoom: 20,
 }
 
 // Add validation for required environment variables
@@ -48,9 +48,9 @@ export default function ZeroShotSegmentation() {
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
   const [detections, setDetections] = useState<GeoJSON.FeatureCollection>();
   const [zoomLevel, setZoomLevel] = useState<number>(21);
-  const [confidenceScore, setConfidenceScore] = useState<number>(0.4);
+  const [confidenceScore, setConfidenceScore] = useState<number>(0.3);
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
-  const [classLabel, setClassLabel] = useState<string>("trees.");
+  const [classLabel, setClassLabel] = useState<string>("cars.");
 
   const handleReset = () => {
     // Clear all drawn features
@@ -286,6 +286,7 @@ export default function ZeroShotSegmentation() {
         {/* Glassmorphism sidebar */}
         <div className="backdrop-blur-xl bg-white/80 border-r border-gray-200/30 h-full shadow-2xl">
           <ZeroShotControls
+            taskName="Zero Shot Object Segmentation"
             polygon={polygon}
             isInitialized={isInitialized}
             isProcessing={isProcessing}
