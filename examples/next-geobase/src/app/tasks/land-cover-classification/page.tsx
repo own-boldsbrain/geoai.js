@@ -15,11 +15,11 @@ import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 
 type MapProvider = "geobase" | "mapbox" | "esri";
 
-GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/67ba1d2bec9237a9ebd358a3/0/67ba1d2bec9237a9ebd358a4.tif"
+GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/68917a624c782f9c3fbde513/0/68917a624c782f9c3fbde514.tif"
 
 const mapInitConfig = {
-  center: [114.84857638295142, -3.449805712621256] as [number, number],
-  zoom: 18,
+  center: [-99.98154044151306,50.642806912434835] as [number, number],
+  zoom: 19,
 }
 
 // Add validation for required environment variables
@@ -47,8 +47,10 @@ export default function LandCoverClassification() {
 
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
   const [classifications, setClassifications] = useState<any>();
-  const [zoomLevel, setZoomLevel] = useState<number>(18);
+  const [zoomLevel, setZoomLevel] = useState<number>(mapInitConfig.zoom);
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
+  const [showDetections, setShowDetections] = useState(false);
+
 
   const handleReset = () => {
     // Clear all drawn features
@@ -72,6 +74,16 @@ export default function LandCoverClassification() {
       }
     }
 
+    const rawImageSourceId = "geoai-rawimage";
+    const rawImageLayerId = "geoai-rawimage-layer";
+
+    if (map.current?.getLayer(rawImageLayerId)) {
+      map.current.removeLayer(rawImageLayerId);
+    }
+    if (map.current?.getSource(rawImageSourceId)) {
+      map.current.removeSource(rawImageSourceId);
+    }
+
     // Reset states
     setPolygon(null);
     setClassifications(undefined);
@@ -91,6 +103,68 @@ export default function LandCoverClassification() {
       draw.current.changeMode("draw_polygon");
     }
   };
+
+  useEffect(() => {
+    if (!map.current || !lastResult?.outputImage) return;
+  
+    const { width, height, data, bounds, channels } = lastResult.outputImage;
+    const [west, south, east, north] = [
+      bounds.west,
+      bounds.south,
+      bounds.east,
+      bounds.north,
+    ];
+  
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+  
+    const imageData = ctx.createImageData(width, height);
+    const imageArray = imageData.data;
+  
+    for (let i = 0, j = 0; i < data.length; i += channels, j += 4) {
+      imageArray[j] = data[i];     // R
+      imageArray[j + 1] = data[i + 1]; // G
+      imageArray[j + 2] = data[i + 2]; // B
+      imageArray[j + 3] = 255;     // A
+    }
+  
+    ctx.putImageData(imageData, 0, 0);
+    const dataURL = canvas.toDataURL();
+  
+    const sourceId = "geoai-rawimage";
+    const layerId = "geoai-rawimage-layer";
+  
+    // Remove existing layer if exists
+    if (map.current.getLayer(layerId)) map.current.removeLayer(layerId);
+    if (map.current.getSource(sourceId)) map.current.removeSource(sourceId);
+  
+    // Add image source
+    map.current.addSource(sourceId, {
+      type: "image",
+      url: dataURL,
+      coordinates: [
+        [west, north],
+        [east, north],
+        [east, south],
+        [west, south],
+      ],
+    });
+  
+    // Add raster layer
+    map.current.addLayer({
+      id: layerId,
+      type: "raster",
+      source: sourceId,
+      paint: {
+        "raster-opacity": 0.85,
+      },
+    });
+  
+  }, [lastResult?.outputImage]);
+  
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -242,12 +316,12 @@ export default function LandCoverClassification() {
 
   // Handle results from the worker
   useEffect(() => {
-    if (lastResult?.detections && map.current) {
+    if (lastResult?.detections && map.current && showDetections) {
       displayDetections(lastResult.detections);
       setClassifications(lastResult.detections);
     }
-    if (lastResult?.geoRawImage?.bounds && map.current) {
-      MapUtils.displayInferenceBounds(map.current, lastResult.geoRawImage.bounds);
+    if (lastResult?.outputImage?.bounds && map.current) {
+      MapUtils.displayInferenceBounds(map.current, lastResult.outputImage.bounds);
     }
   }, [lastResult]);
 

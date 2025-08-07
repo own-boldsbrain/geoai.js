@@ -288,7 +288,6 @@ export class LandCoverClassification extends BaseModel {
       detections: featureCollection,
       binaryMasks,
       outputImage: outputRawImage,
-      geoRawImage,
     };
   }
 }
