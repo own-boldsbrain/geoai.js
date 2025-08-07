@@ -9,7 +9,7 @@ import {
 } from "@/core/types";
 import { modelRegistry } from "./registry";
 import { ZeroShotObjectDetection } from "./models/zero_shot_object_detection";
-import { GenericSegmentation } from "./models/generic_segmentation";
+import { MaskGeneration } from "./models/mask_generation";
 import { ObjectDetection } from "./models/object_detection";
 import { ErrorType, GeobaseError } from "./errors";
 
@@ -219,9 +219,7 @@ class Pipeline {
                 break;
 
               case "mask-generation":
-                currentInput = await (
-                  instance as GenericSegmentation
-                ).inference({
+                currentInput = await (instance as MaskGeneration).inference({
                   inputs: {
                     ...currentInput.inferenceInputs.inputs,
                     input: currentInput,

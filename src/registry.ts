@@ -8,7 +8,7 @@ import {
   ObjectDetectionResults,
 } from "@/core/types";
 import { ZeroShotObjectDetection } from "./models/zero_shot_object_detection";
-import { GenericSegmentation } from "./models/generic_segmentation";
+import { MaskGeneration } from "./models/mask_generation";
 import { ObjectDetection } from "./models/object_detection";
 import { OrientedObjectDetection } from "./models/oriented_object_detection";
 import { LandCoverClassification } from "./models/land_cover_classification";
@@ -49,9 +49,9 @@ export const modelRegistry: ModelConfig[] = [
       modelId: string = "Xenova/slimsam-77-uniform",
       modelParams?: PretrainedOptions
     ): Promise<{
-      instance: GenericSegmentation;
+      instance: MaskGeneration;
     }> => {
-      return GenericSegmentation.getInstance(modelId, params, modelParams);
+      return MaskGeneration.getInstance(modelId, params, modelParams);
     },
   },
   {

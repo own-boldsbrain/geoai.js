@@ -4,10 +4,7 @@ import { GeoRawImage } from "@/types/images/GeoRawImage";
 
 // Model Types:
 // ==============================
-import {
-  GenericSegmentation,
-  SegmentationInput,
-} from "@/models/generic_segmentation";
+import { MaskGeneration, SegmentationInput } from "@/models/mask_generation";
 import {
   BuildingDetection,
   CarDetection,
@@ -108,7 +105,7 @@ export type GeobaseAiModelTask =
   | "building-footprint-segmentation";
 
 export type ModelInstance =
-  | GenericSegmentation
+  | MaskGeneration
   | ZeroShotObjectDetection
   | ObjectDetection
   | OrientedObjectDetection

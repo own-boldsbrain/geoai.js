@@ -51,8 +51,8 @@ const getOppositePoints = (coordinates: number[][]): number[][] => {
   ];
 };
 
-export class GenericSegmentation extends BaseModel {
-  protected static instance: GenericSegmentation | null = null;
+export class MaskGeneration extends BaseModel {
+  protected static instance: MaskGeneration | null = null;
   private model: SamModel | undefined;
   private processor: SamProcessor | undefined;
 
@@ -73,24 +73,24 @@ export class GenericSegmentation extends BaseModel {
     model_id: string,
     providerParams: ProviderParams,
     modelParams?: PretrainedOptions
-  ): Promise<{ instance: GenericSegmentation }> {
+  ): Promise<{ instance: MaskGeneration }> {
     if (
-      !GenericSegmentation.instance ||
+      !MaskGeneration.instance ||
       parametersChanged(
-        GenericSegmentation.instance,
+        MaskGeneration.instance,
         model_id,
         providerParams,
         modelParams
       )
     ) {
-      GenericSegmentation.instance = new GenericSegmentation(
+      MaskGeneration.instance = new MaskGeneration(
         model_id,
         providerParams,
         modelParams
       );
-      await GenericSegmentation.instance.initialize();
+      await MaskGeneration.instance.initialize();
     }
-    return { instance: GenericSegmentation.instance };
+    return { instance: MaskGeneration.instance };
   }
 
   protected async initializeModel(): Promise<void> {

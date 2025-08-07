@@ -1,9 +1,9 @@
 import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import { geoai } from "@/geobase-ai";
 import {
-  GenericSegmentation,
+  MaskGeneration,
   SegmentationInput,
-} from "../src/models/generic_segmentation";
+} from "../src/models/mask_generation";
 import {
   geobaseParams,
   geobaseParamsBuilding,
@@ -19,10 +19,10 @@ import {
 } from "./constants";
 import { geoJsonToGist } from "./utils/saveToGist";
 
-describe("geoai.genericSegmentation", () => {
-  let mapboxInstance: GenericSegmentation | undefined;
-  let geobaseInstance: GenericSegmentation | undefined;
-  let geobaseBuildingInstance: GenericSegmentation | undefined;
+describe("geoai.maskGeneration", () => {
+  let mapboxInstance: MaskGeneration | undefined;
+  let geobaseInstance: MaskGeneration | undefined;
+  let geobaseBuildingInstance: MaskGeneration | undefined;
 
   beforeAll(async () => {
     try {
@@ -71,7 +71,7 @@ describe("geoai.genericSegmentation", () => {
       [{ task: "mask-generation" }],
       mapboxParams
     );
-    expect(instance).toBeInstanceOf(GenericSegmentation);
+    expect(instance).toBeInstanceOf(MaskGeneration);
     expect(instance).toBeDefined();
     expect(instance).not.toBeNull();
   });
@@ -173,9 +173,9 @@ describe("geoai.genericSegmentation", () => {
         // Save output to gist
         await geoJsonToGist({
           content: masks,
-          fileName: "genericSegmentationMapbox.geojson",
+          fileName: "maskGenerationMapbox.geojson",
           description:
-            "result genericSegmentation - should process a polygon for segmentation and generate valid GeoJSON",
+            "result maskGeneration - should process a polygon for segmentation and generate valid GeoJSON",
         });
       } catch (error) {
         console.error(`Error processing quadrant ${quadrant}:`, error);
@@ -214,9 +214,9 @@ describe("geoai.genericSegmentation", () => {
     // Save output to gist
     await geoJsonToGist({
       content: masks,
-      fileName: "genericSegmentationGeobase.geojson",
+      fileName: "maskGenerationGeobase.geojson",
       description:
-        "result genericSegmentation - should process a polygon for segmentation and generate valid GeoJSON for source geobase with point",
+        "result maskGeneration - should process a polygon for segmentation and generate valid GeoJSON for source geobase with point",
     });
   });
 
@@ -250,15 +250,15 @@ describe("geoai.genericSegmentation", () => {
     // Save output to gist
     await geoJsonToGist({
       content: masks,
-      fileName: "genericSegmentationGeobaseBoxes.geojson",
+      fileName: "maskGenerationGeobaseBoxes.geojson",
       description:
-        "result genericSegmentation - should process a polygon for segmentation and generate valid GeoJSON for source geobase with boxes",
+        "result maskGeneration - should process a polygon for segmentation and generate valid GeoJSON for source geobase with boxes",
     });
   });
 });
 
 describe("boxes pipeline with thresholds parameter", () => {
-  let boxesInstance: GenericSegmentation | undefined;
+  let boxesInstance: MaskGeneration | undefined;
 
   beforeAll(async () => {
     try {
@@ -330,7 +330,7 @@ describe("boxes pipeline with thresholds parameter", () => {
 });
 
 describe("getImageEmbeddings", () => {
-  let imageEmbeddingsInstance: GenericSegmentation | undefined;
+  let imageEmbeddingsInstance: MaskGeneration | undefined;
 
   beforeAll(async () => {
     try {
