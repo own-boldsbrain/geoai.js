@@ -11,25 +11,16 @@ import {
   ExportButton
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
-import { ESRI_CONFIG } from "../../../config";
+import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 
 type MapProvider = "geobase" | "mapbox" | "esri";
 
-const GEOBASE_CONFIG = {
-  provider: "geobase" as const,
-  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF ?? "",
-  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY ?? "",
-  cogImagery:
-    "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/ships_dubai.tif",
+GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/ships_dubai.tif"
+
+const mapInitConfig = {
   center: [55.135912, 25.115014] as [number, number],
   zoom: 17,
-};
-
-const MAPBOX_CONFIG = {
-  provider: "mapbox" as const,
-  apiKey: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "test",
-  style: "mapbox://styles/mapbox/satellite-v9",
-};
+}
 
 // Add validation for required environment variables
 if (!GEOBASE_CONFIG.projectRef || !GEOBASE_CONFIG.apikey) {
@@ -188,8 +179,8 @@ export default function ShipDetection() {
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: mapStyle,
-      center: GEOBASE_CONFIG.center,
-      zoom: GEOBASE_CONFIG.zoom,
+      center: mapInitConfig.center,
+      zoom: mapInitConfig.zoom,
     });
 
     // Add draw control

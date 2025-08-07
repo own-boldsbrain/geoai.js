@@ -11,24 +11,14 @@ import {
   ExportButton
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
-import { ESRI_CONFIG } from "../../../config";
+import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 
-const GEOBASE_CONFIG = {
-  provider: "geobase" as const,
-  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF ?? "",
-  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY ?? "",
-  cogImagery:
-    "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/cars_7cm.tif",
+GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/cars_7cm.tif"
+
+const mapInitConfig = {
   center: [-95.4210323139897, 29.678781807220446] as [number, number],
   zoom: 18,
-};
-
-
-const MAPBOX_CONFIG = {
-  provider: "mapbox" as const,
-  apiKey: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "test",
-  style: "mapbox://styles/mapbox/satellite-v9",
-};
+}
 
 // Add validation for required environment variables
 if (!GEOBASE_CONFIG.projectRef || !GEOBASE_CONFIG.apikey) {
@@ -204,8 +194,8 @@ export default function ZeroShotSegmentation() {
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: mapStyle,
-      center: GEOBASE_CONFIG.center,
-      zoom: GEOBASE_CONFIG.zoom,
+      center: mapInitConfig.center,
+      zoom: mapInitConfig.zoom,
     });
 
     // Add draw control
@@ -252,6 +242,14 @@ export default function ZeroShotSegmentation() {
 
   // Initialize the model when the map provider changes
   useEffect(() => {
+    let providerParams;
+    if (mapProvider === "geobase") {
+      providerParams = GEOBASE_CONFIG;
+    } else if (mapProvider === "esri") {
+      providerParams = ESRI_CONFIG;
+    } else {
+      providerParams = MAPBOX_CONFIG;
+    }
     initializeModel({
       tasks: [
         {
@@ -264,9 +262,7 @@ export default function ZeroShotSegmentation() {
           },
         }
       ],
-      providerParams: {
-        ...(mapProvider === "geobase" ? GEOBASE_CONFIG : MAPBOX_CONFIG),
-      },
+      providerParams,
     });
   }, [mapProvider, initializeModel]);
 

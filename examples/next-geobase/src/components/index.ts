@@ -14,4 +14,4 @@ export { GeoAIMap } from './GeoAIMap';
 export { BackgroundEffects } from './BackgroundEffects';
 
 // Types
-export type MapProvider = 'geobase' | 'mapbox';
+export type MapProvider = 'geobase' | 'mapbox' | 'esri';

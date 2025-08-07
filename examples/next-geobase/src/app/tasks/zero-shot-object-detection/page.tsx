@@ -11,25 +11,16 @@ import {
   ExportButton
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
-import { ESRI_CONFIG } from "../../../config";
+import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 
 type MapProvider = "geobase" | "mapbox" | "esri";
 
-const GEOBASE_CONFIG = {
-  provider: "geobase" as const,
-  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF ?? "",
-  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY ?? "",
-  cogImagery:
-    "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/688eabbc7163f9907393c3c7/0/688eabbc7163f9907393c3c8.tif",
-  center: [-87.06982344388962,20.653090145447507] as [number, number],
-  zoom: 18,
-};
+GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/688eabbc7163f9907393c3c7/0/688eabbc7163f9907393c3c8.tif"
 
-const MAPBOX_CONFIG = {
-  provider: "mapbox" as const,
-  apiKey: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "test",
-  style: "mapbox://styles/mapbox/satellite-v9",
-};
+const mapInitConfig = {
+  center: [-87.06982344388962, 20.653090145447507] as [number, number],
+  zoom: 18,
+}
 
 // Add validation for required environment variables
 if (!GEOBASE_CONFIG.projectRef || !GEOBASE_CONFIG.apikey) {
@@ -204,8 +195,8 @@ export default function ZeroShotDetection() {
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: mapStyle,
-      center: GEOBASE_CONFIG.center,
-      zoom: GEOBASE_CONFIG.zoom,
+      center: mapInitConfig.center,
+      zoom: mapInitConfig.zoom,
     });
 
     // Add draw control

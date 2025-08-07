@@ -5,21 +5,15 @@ import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
 import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
-import { ESRI_CONFIG } from "../../../config";
+import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG  } from "../../../config";
 
-const GEOBASE_CONFIG = {
-  provider: "geobase" as const,
-  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF ?? "",
-  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY ?? "",
-  cogImagery:
-    "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/686e390615a6768f282b22b3/0/686e390615a6768f282b22b4.tif",
-};
+GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/686e390615a6768f282b22b3/0/686e390615a6768f282b22b4.tif"
 
-const MAPBOX_CONFIG = {
-  provider: "mapbox" as const,
-  apiKey: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "test",
-  style: "mapbox://styles/mapbox/satellite-v9",
-};
+const mapInitConfig = {
+  center: [-13.274357, 8.486711] as [number, number],
+  zoom: 18,
+}
+
 
 // Add validation for required environment variables
 if (!GEOBASE_CONFIG.projectRef || !GEOBASE_CONFIG.apikey) {
@@ -312,9 +306,8 @@ export default function MaskGeneration() {
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: mapStyle,
-      center: [-13.274357, 8.486711],
-
-      zoom: 18,
+      center: mapInitConfig.center,
+      zoom: mapInitConfig.zoom,
     });
 
     // Add draw control

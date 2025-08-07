@@ -6,21 +6,14 @@ import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
-import { ESRI_CONFIG } from "../../../config";
+import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 
-const GEOBASE_CONFIG = {
-  provider: "geobase" as const,
-  projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF ?? "",
-  apikey: process.env.NEXT_PUBLIC_GEOBASE_API_KEY ?? "",
-  cogImagery:
-    "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/686e390615a6768f282b22b3/0/686e390615a6768f282b22b4.tif",
-};
+GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/686e390615a6768f282b22b3/0/686e390615a6768f282b22b4.tif"
 
-const MAPBOX_CONFIG = {
-  provider: "mapbox" as const,
-  apiKey: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "test",
-  style: "mapbox://styles/mapbox/satellite-v9",
-};
+const mapInitConfig = {
+  center : [-13.274357, 8.486711] as [number, number],
+  zoom : 16
+}
 
 // Add validation for required environment variables
 if (!GEOBASE_CONFIG.projectRef || !GEOBASE_CONFIG.apikey) {
@@ -70,7 +63,7 @@ export default function EmbeddingSimilaritySearch() {
   } = useGeoAIWorker(); // Use mask-generation as it supports the SAM model
 
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
-  const [zoomLevel, setZoomLevel] = useState<number>(16);
+  const [zoomLevel, setZoomLevel] = useState<number>(mapInitConfig.zoom);
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
   const [gridCells, setGridCells] = useState<GridCell[]>([]);
   const [imageEmbeddings, setImageEmbeddings] = useState<any>(null);
@@ -1506,7 +1499,7 @@ export default function EmbeddingSimilaritySearch() {
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: mapStyle,
-      center: [-13.274357, 8.486711] as [number, number],
+      center: mapInitConfig.center,
       zoom: zoomLevel,
     });
 
