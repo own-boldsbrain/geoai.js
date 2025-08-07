@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { geoai, InferenceParams } from "@geobase-js/geoai";
 import { PipelineInitConfig } from "./useGeoAIWorker";
 
@@ -30,7 +31,6 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         // Debug: check geoai import
         try {
           console.log("[Worker] Attempting to import geoai...");
-          // @ts-ignore
           if (!geoai) {
             throw new Error("geoai is not defined");
           }

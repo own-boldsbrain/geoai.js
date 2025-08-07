@@ -8,7 +8,7 @@ import { ConfidenceSlider } from './ui/ConfidenceSlider';
 import { ClassLabelSelector } from './ui/ClassLabelSelector';
 import { PostProcessingControls } from './ui/PostProcessingControls';
 
-type MapProvider = 'geobase' | 'mapbox';
+type MapProvider = 'geobase' | 'mapbox' | 'esri';
 
 interface ZeroShotSegmentationControlsProps {
   // State props

@@ -116,7 +116,7 @@ export const GeoAIMap: React.FC<GeoAIMapProps> = ({
         trash: true,
       },
     });
-    map.current.addControl(draw.current, "top-left");
+    map.current.addControl(draw.current as any, "top-left");
 
     // Listen for polygon creation
     map.current.on("draw.create", updatePolygon);
