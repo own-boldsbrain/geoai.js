@@ -162,8 +162,7 @@ export class OrientedObjectDetection extends BaseModel {
       polygon,
       mapSourceParams?.zoomLevel,
       mapSourceParams?.bands,
-      mapSourceParams?.expression,
-      true
+      mapSourceParams?.expression
     );
 
     const inputs = await this.preProcessor(geoRawImage);

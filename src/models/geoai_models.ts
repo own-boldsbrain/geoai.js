@@ -152,8 +152,7 @@ abstract class BaseDetectionModel extends BaseModel {
       polygon,
       mapSourceParams?.zoomLevel,
       mapSourceParams?.bands,
-      mapSourceParams?.expression,
-      true // models require square image
+      mapSourceParams?.expression
     );
 
     const task = this.model_id.split("/").pop()?.split(".")[0].split("_")[0];
@@ -394,8 +393,7 @@ export class WetLandSegmentation extends BaseModel {
       polygon,
       mapSourceParams?.zoomLevel,
       mapSourceParams?.bands,
-      mapSourceParams?.expression,
-      true
+      mapSourceParams?.expression
     );
     const inferenceStartTime = performance.now();
     console.log("[wetland-segmentation] starting inference...");

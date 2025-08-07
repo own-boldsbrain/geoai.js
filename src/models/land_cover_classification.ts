@@ -190,8 +190,7 @@ export class LandCoverClassification extends BaseModel {
       polygon,
       mapSourceParams?.zoomLevel,
       mapSourceParams?.bands,
-      mapSourceParams?.expression,
-      true
+      mapSourceParams?.expression
     );
     const inferenceStartTime = performance.now();
     console.log("[oriented-object-detection] starting inference...");

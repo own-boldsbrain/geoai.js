@@ -83,8 +83,7 @@ export class ZeroShotObjectDetection extends BaseModel {
       polygon,
       mapSourceParams?.zoomLevel,
       mapSourceParams?.bands,
-      mapSourceParams?.expression,
-      true
+      mapSourceParams?.expression
     );
     const inferenceStartTime = performance.now();
     console.log("[zero-shot-object-detection] starting inference...");

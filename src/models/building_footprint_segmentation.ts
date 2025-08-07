@@ -148,8 +148,7 @@ export class BuildingFootPrintSegmentation extends BaseModel {
       polygon,
       mapSourceParams?.zoomLevel,
       mapSourceParams?.bands,
-      mapSourceParams?.expression,
-      true
+      mapSourceParams?.expression
     );
     const { originalImage, paddedImage } = await this.preProcessor(geoRawImage);
 

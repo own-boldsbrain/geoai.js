@@ -155,8 +155,7 @@ export class MaskGeneration extends BaseModel {
         polygon,
         zoomLevel,
         bands,
-        expression,
-        true
+        expression
       );
     }
     image_inputs = await this.processor(geoRawImage);
@@ -408,8 +407,7 @@ export class MaskGeneration extends BaseModel {
       inputs.polygon,
       params.mapSourceParams?.zoomLevel,
       params.mapSourceParams?.bands,
-      params.mapSourceParams?.expression,
-      true // ensures that image is square
+      params.mapSourceParams?.expression
     );
 
     if (!geoRawImage) {
