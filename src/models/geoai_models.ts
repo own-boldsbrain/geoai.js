@@ -394,7 +394,8 @@ export class WetLandSegmentation extends BaseModel {
       polygon,
       mapSourceParams?.zoomLevel,
       mapSourceParams?.bands,
-      mapSourceParams?.expression
+      mapSourceParams?.expression,
+      true
     );
     const inferenceStartTime = performance.now();
     console.log("[wetland-segmentation] starting inference...");
@@ -429,7 +430,6 @@ export class WetLandSegmentation extends BaseModel {
   ): Promise<GeoJSON.FeatureCollection> {
     outputs = Object.values(outputs);
     const masks = outputs[1];
-    const labels = outputs[3];
     const scores = outputs[0].data as Float32Array;
     const threshold = 0.5;
 
@@ -473,7 +473,6 @@ export class WetLandSegmentation extends BaseModel {
             },
             properties: {
               score: scores[idx],
-              label: labels ? labels.data[idx] : undefined,
             },
           });
         }
