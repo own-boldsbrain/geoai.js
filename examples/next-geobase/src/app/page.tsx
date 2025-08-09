@@ -93,7 +93,7 @@ export default function Home() {
   // );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white" style={{ scrollBehavior: 'smooth' }}>
+    <div className="min-h-screen bg-gray-900 text-white scroll-smooth">
       {/* Header */}
       <header className="fixed w-full p-3 sm:p-5 z-50">
         <div className="bg-gray-800/80 border border-gray-600 rounded-2xl backdrop-blur-sm mx-auto max-w-6xl px-4 md:px-6 shadow-xl">
@@ -120,7 +120,7 @@ export default function Home() {
             <div className="hidden lg:flex items-center gap-2 lg:absolute lg:-right-1 lg:top-1/2 lg:-translate-y-1/2">
                 <a
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium text-sm cursor-pointer min-h-[38px] bg-green-600 shadow-lg hover:bg-green-700 transition"
-                href="https://geoaijs-docs.geobase.app"
+                href="https://docs.geobase.app/geoai/"
                 >
                 Get Started
                 </a>
@@ -181,10 +181,10 @@ export default function Home() {
             </p>
             
             <div className="flex gap-4">
-              <a className="flex items-center gap-2 px-6 py-3 rounded-lg text-white font-medium text-lg cursor-pointer min-h-[44px] bg-gray-600 shadow-lg hover:bg-gray-500 transition" href="https://geoaijs-docs.geobase.app/supported-tasks">
+              <a className="flex items-center gap-2 px-6 py-3 rounded-lg text-white font-medium text-lg cursor-pointer min-h-[44px] bg-gray-600 shadow-lg hover:bg-gray-500 transition" href="#features">
                 Explore Tasks
               </a>
-              <a className="flex items-center gap-2 px-6 py-3 rounded-lg text-white font-medium text-lg cursor-pointer min-h-[44px] bg-green-700 shadow-lg hover:bg-green-600 transition" href="https://geoaijs-docs.geobase.app/">
+              <a className="flex items-center gap-2 px-6 py-3 rounded-lg text-white font-medium text-lg cursor-pointer min-h-[44px] bg-green-700 shadow-lg hover:bg-green-600 transition" href="https://docs.geobase.app/geoai/">
                 Get Started
               </a>
             </div>
@@ -300,7 +300,7 @@ const result = await pipeline.inference(polygon);`}
         </section>
 
         {/* Features Grid */}
-        <section id="features" className="mx-auto max-w-7xl pb-16 px-4">
+        <section id="features" className="mx-auto max-w-7xl pb-16 px-4 scroll-mt-32">
           <div className="flex flex-col gap-5 mb-12 mx-auto text-center">
             <h2 className="font-semibold text-3xl md:text-4xl lg:text-5xl text-white leading-tight">
               Build geospatial AI apps in minutes, deploy in days.
@@ -630,7 +630,7 @@ const result = await pipeline.inference(polygon);`}
               <div>
                 <h4 className="text-lg font-semibold text-white mb-4">Resources</h4>
                 <ul className="space-y-2">
-                  <li><a href="https://geoaijs-docs.geobase.app" className="text-gray-300 hover:text-white transition">Documentation</a></li>
+                  <li><a href="https://docs.geobase.app/geoai/" className="text-gray-300 hover:text-white transition">Documentation</a></li>
                   <li><a href="https://docs.geobase.app/geoai-live" className="text-gray-300 hover:text-white transition">Examples</a></li>
                   <li><a href="https://github.com/decision-labs/geobase-ai.js" className="text-gray-300 hover:text-white transition">GitHub</a></li>
                 </ul>
