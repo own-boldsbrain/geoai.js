@@ -1,6 +1,6 @@
 {
   "name": "@geobase-js/geoai",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "A Javascript library for running Geo AI models in frontend applications",
   "keywords": [
     "geoai",
@@ -52,6 +52,9 @@
   "scripts": {
     "dev": "vite --host",
     "build": "rimraf build/**/* && pnpm build:core && pnpm build:types && pnpm build:package",
+    "prepublish:prep": "node ./scripts/prepare-publish.mjs",
+    "publish:build": "cd build && npm publish --access public --ignore-scripts",
+    "publish:pkg": "pnpm prepublish:prep && pnpm publish:build",
     "build:core": "tsc && vite build",
     "build:types": "dts-bundle-generator --config ./dts-bundle-generator.config.ts",
     "build:package": "copyfiles ./package.json build",
