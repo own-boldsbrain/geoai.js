@@ -24,14 +24,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://geoaijs-live.geobase.app"),
+  metadataBase: new URL("https://geobase-geoai-js-examples.vercel.app"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
     title: "GeoAI.js - Interactive Examples",
     description: "Explore GeoAI.js capabilities with interactive examples. Run AI models for building detection, object detection, land cover classification, and more directly in your browser.",
-    url: "https://geoaijs-live.geobase.app",
+    url: "https://geobase-geoai-js-examples.vercel.app",
     siteName: "GeoAI.js Examples",
     images: [
       {
@@ -100,7 +100,7 @@ export default function RootLayout({
               "@type": "WebApplication",
               "name": "GeoAI.js Interactive Examples",
               "description": "Explore GeoAI.js capabilities with interactive examples. Run AI models for building detection, object detection, land cover classification, and more directly in your browser.",
-              "url": "https://geoaijs-live.geobase.app",
+              "url": "https://geobase-geoai-js-examples.vercel.app",
               "applicationCategory": "DeveloperApplication",
               "operatingSystem": "Web Browser",
               "author": {
@@ -130,7 +130,7 @@ export default function RootLayout({
                 "Solar Panel Detection",
                 "Wetland Segmentation"
               ],
-              "screenshot": "https://geoaijs-live.geobase.app/geoaijs-meta.png",
+              "screenshot": "https://geobase-geoai-js-examples.vercel.app/geoaijs-meta.png",
               "softwareVersion": "1.0.0",
               "datePublished": "2025-01-01",
               "inLanguage": "en-US"

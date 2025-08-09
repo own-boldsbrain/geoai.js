@@ -631,7 +631,7 @@ const result = await pipeline.inference(polygon);`}
                 <h4 className="text-lg font-semibold text-white mb-4">Resources</h4>
                 <ul className="space-y-2">
                   <li><a href="https://geoaijs-docs.geobase.app" className="text-gray-300 hover:text-white transition">Documentation</a></li>
-                  <li><a href="https://geoaijs-live.geobase.app" className="text-gray-300 hover:text-white transition">Examples</a></li>
+                  <li><a href="https://geobase-geoai-js-examples.vercel.app" className="text-gray-300 hover:text-white transition">Examples</a></li>
                   <li><a href="https://github.com/decision-labs/geobase-ai.js" className="text-gray-300 hover:text-white transition">GitHub</a></li>
                 </ul>
               </div>
