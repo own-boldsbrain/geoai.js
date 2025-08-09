@@ -6,6 +6,16 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_BASE_PATH: "/geoai-live",
   },
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/geoai-live",
+        permanent: false,
+        basePath: false,
+      },
+    ];
+  },
   webpack: (config, { isServer }) => {
     // Configure webpack for WASM support
     config.experiments = {

@@ -9,4 +9,17 @@ const withNextra = nextra({
 export default withNextra({
   basePath: "/geoai",
   assetPrefix: "/geoai",
+  images: {
+    path: "/geoai/_next/image",
+  },
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/geoai",
+        permanent: false,
+        basePath: false,
+      },
+    ];
+  },
 });
