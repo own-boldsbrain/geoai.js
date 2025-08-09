@@ -28,7 +28,7 @@ This example app includes comprehensive meta card implementation for better link
 - **Title**: "GeoAI.js - Interactive Examples"
 - **Description**: Detailed description of the app's capabilities
 - **Image**: Uses `geoaijs-meta.png` for social media previews
-- **URL**: Points to the live demo at `https://geobase-geoai-js-examples.vercel.app`
+- **URL**: Points to the live demo at `https://docs.geobase.app/geoai-live`
 
 ### Twitter Card Meta Tags
 - **Card Type**: `summary_large_image`

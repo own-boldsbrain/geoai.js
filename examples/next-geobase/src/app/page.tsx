@@ -113,7 +113,7 @@ export default function Home() {
             <nav className="hidden lg:flex grow items-center justify-center">
               <ul className="flex gap-1 text-sm font-semibold">
                 <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#features">AI Models</a></li>
-                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="https://geobase-ai-js.vercel.app/">Docs</a></li>
+                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="https://docs.geobase.app/geoai">Docs</a></li>
                 <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#footer">About</a></li>
               </ul>
             </nav>
@@ -631,7 +631,7 @@ const result = await pipeline.inference(polygon);`}
                 <h4 className="text-lg font-semibold text-white mb-4">Resources</h4>
                 <ul className="space-y-2">
                   <li><a href="https://geoaijs-docs.geobase.app" className="text-gray-300 hover:text-white transition">Documentation</a></li>
-                  <li><a href="https://geobase-geoai-js-examples.vercel.app" className="text-gray-300 hover:text-white transition">Examples</a></li>
+                  <li><a href="https://docs.geobase.app/geoai-live" className="text-gray-300 hover:text-white transition">Examples</a></li>
                   <li><a href="https://github.com/decision-labs/geobase-ai.js" className="text-gray-300 hover:text-white transition">GitHub</a></li>
                 </ul>
               </div>
