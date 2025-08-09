@@ -38,14 +38,6 @@ const nextConfig: NextConfig = {
     return config;
   },
   transpilePackages: ["@geobase-js/geoai"],
-  // Mirror prior turbopack dev settings
-  turbopack: {
-    sourceMap: {
-      client: false,
-      server: false,
-    },
-    hmr: false,
-  },
   // Configure headers for WASM files
   async headers() {
     return [
