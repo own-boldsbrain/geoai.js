@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL("https://geobase-geoai-js-examples.vercel.app"),
   alternates: {
-    canonical: "/",
+    canonical: "/geoai-live",
   },
   openGraph: {
     title: "GeoAI.js - Interactive Examples",
@@ -78,16 +78,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Ensure relative URLs resolve from the base path in all routes */}
+        <base href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/`} />
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         />
         {/* Favicon and icons */}
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="manifest" href="/site.webmanifest" />
-        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/geoai-live/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/geoai-live/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/geoai-live/favicon-16x16.png" />
+        <link rel="manifest" href="/geoai-live/site.webmanifest" />
+        <link rel="shortcut icon" href="/geoai-live/favicon.ico" />
         <meta name="msapplication-TileColor" content="#ffffff" />
         <meta name="theme-color" content="#ffffff" />
         

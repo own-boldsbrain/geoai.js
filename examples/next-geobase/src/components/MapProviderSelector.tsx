@@ -30,8 +30,8 @@ export const MapProviderSelector: React.FC<MapProviderSelectorProps> = ({
           <option value="esri" className="bg-white">ESRI</option>
         </select>
         <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          {value === "geobase" ? (
-            <img src="/favicon-16x16.png" alt="Geobase" className="w-4 h-4" />
+            {value === "geobase" ? (
+            <img src="/geoai-live/favicon-16x16.png" alt="Geobase" className="w-4 h-4" />
           ) : value === "esri" ? (
             <span className="text-gray-500">🌍</span>
           ) : (

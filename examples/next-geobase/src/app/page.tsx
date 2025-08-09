@@ -98,10 +98,10 @@ export default function Home() {
       <header className="fixed w-full p-3 sm:p-5 z-50">
         <div className="bg-gray-800/80 border border-gray-600 rounded-2xl backdrop-blur-sm mx-auto max-w-6xl px-4 md:px-6 shadow-xl">
           <div className="flex items-center justify-between py-4 lg:py-6 relative">
-            <a className="text-white lg:absolute lg:left-0 lg:top-1/2 lg:-translate-y-1/2" href="/">
+            <a className="text-white lg:absolute lg:left-0 lg:top-1/2 lg:-translate-y-1/2" href="/geoai-live">
               <div className="flex items-center">
                 <img
-                  src="/javascript-logo.svg"
+                  src="/geoai-live/javascript-logo.svg"
                   alt="JavaScript logo"
                   className="h-6 w-auto mr-2"
                 />
@@ -172,12 +172,12 @@ export default function Home() {
               <h1 className="absolute left-1/2 w-full lg:w-[150%] top-1/2 -translate-x-1/2 -translate-y-1/2 text-center font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl leading-tight">
                 GeoAI for the modern
                 <br/>
-                <span className="text-green-500">Javascript</span> developer
+                <span className="text-green-500">JavaScript</span> developer
               </h1>
             </div>
             
             <p className="text-center font-normal text-lg sm:text-xl md:text-2xl text-gray-300 max-w-3xl">
-              Open-source GeoAI. No backend required. Run models right in your Javascript apps or edge devices!
+              Open-source GeoAI. No backend required. Run models right in your JavaScript apps or edge devices!
             </p>
             
             <div className="flex gap-4">
@@ -202,7 +202,7 @@ export default function Home() {
                 <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:border-green-500/50 transition-all duration-200 group flex-shrink-0">
                   <div className="flex flex-col items-center text-center">
                     <div className="h-8 w-20 flex items-center justify-center mb-3">
-                      <img src="/provider-logos/geobase.svg" alt="Geobase" className="h-full object-contain filter brightness-0 invert opacity-80 group-hover:opacity-100 transition-opacity" />
+                      <img src="/geoai-live/provider-logos/geobase.svg" alt="Geobase" className="h-full object-contain filter brightness-0 invert opacity-80 group-hover:opacity-100 transition-opacity" />
                     </div>
                     <span className="text-xs text-green-400 font-medium">Available</span>
                   </div>
@@ -212,7 +212,7 @@ export default function Home() {
                 <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:border-green-500/50 transition-all duration-200 group flex-shrink-0">
                   <div className="flex flex-col items-center text-center">
                     <div className="h-8 w-20 flex items-center justify-center mb-3">
-                      <img src="/provider-logos/mapbox.svg" alt="Mapbox" className="h-full object-contain filter brightness-0 invert opacity-80 group-hover:opacity-100 transition-opacity" />
+                      <img src="/geoai-live/provider-logos/mapbox.svg" alt="Mapbox" className="h-full object-contain filter brightness-0 invert opacity-80 group-hover:opacity-100 transition-opacity" />
                     </div>
                     <span className="text-xs text-green-400 font-medium">Available</span>
                   </div>
@@ -222,7 +222,7 @@ export default function Home() {
                 <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:border-green-500/50 transition-all duration-200 group flex-shrink-0">
                   <div className="flex flex-col items-center text-center">
                     <div className="h-8 w-20 flex items-center justify-center mb-3">
-                      <img src="/provider-logos/esri.svg" alt="ESRI" className="h-full object-contain filter brightness-0 invert opacity-60" style={{ transform: 'scale(0.8)' }} />
+                      <img src="/geoai-live/provider-logos/esri.svg" alt="ESRI" className="h-full object-contain filter brightness-0 invert opacity-60" style={{ transform: 'scale(0.8)' }} />
                     </div>
                     <span className="text-xs text-green-400 font-medium">Available</span>
                   </div>
@@ -232,7 +232,7 @@ export default function Home() {
                 <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-4 opacity-60 flex-shrink-0">
                   <div className="flex flex-col items-center text-center">
                     <div className="h-8 w-20 flex items-center justify-center mb-3">
-                      <img src="/provider-logos/google-maps.svg" alt="Google Maps" className="h-full object-contain filter brightness-0 invert opacity-60" />
+                      <img src="/geoai-live/provider-logos/google-maps.svg" alt="Google Maps" className="h-full object-contain filter brightness-0 invert opacity-60" />
                     </div>
                     <span className="text-xs text-gray-500 font-medium">Coming Soon</span>
                   </div>
@@ -311,8 +311,8 @@ const result = await pipeline.inference(polygon);`}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 
-            <a
-              href="/tasks/oil-storage-tank-detection"
+              <a
+                href="/geoai-live/tasks/oil-storage-tank-detection"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -322,7 +322,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/oil-storage-tank-detection.mp4" type="video/mp4" />
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/oil-storage-tank-detection.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Oil Storage Tank Detection
@@ -333,8 +333,8 @@ const result = await pipeline.inference(polygon);`}
             </a>
 
             
-            <a
-              href="/tasks/object-detection"
+              <a
+                href="/geoai-live/tasks/object-detection"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -344,7 +344,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/object-detection.mp4" type="video/mp4" />
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/object-detection.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Object Detection
@@ -354,8 +354,8 @@ const result = await pipeline.inference(polygon);`}
               </p>
             </a>
             
-            <a
-              href="/tasks/mask-generation"
+              <a
+                href="/geoai-live/tasks/mask-generation"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -365,7 +365,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/mask-generation.mp4" type="video/mp4" />
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/mask-generation.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Mask Generation
@@ -375,8 +375,8 @@ const result = await pipeline.inference(polygon);`}
               </p>
             </a>
             
-            <a
-              href="/tasks/building-detection"
+              <a
+                href="/geoai-live/tasks/building-detection"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -386,7 +386,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/building-detection.mp4" type="video/mp4" />
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/building-detection.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Building Detection
@@ -396,8 +396,8 @@ const result = await pipeline.inference(polygon);`}
               </p>
             </a>
             
-            <a
-              href="/tasks/car-detection"
+              <a
+                href="/geoai-live/tasks/car-detection"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -407,7 +407,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/car-detection-model.mp4" type="video/mp4" />
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/car-detection-model.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Car Detection
@@ -417,8 +417,8 @@ const result = await pipeline.inference(polygon);`}
               </p>
             </a>
             
-            <a
-              href="/tasks/wetland-segmentation"
+              <a
+                href="/geoai-live/tasks/wetland-segmentation"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -428,7 +428,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/wetland-segmentation.mp4" type="video/mp4" />
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/wetland-segmentation.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Wetland Detection
@@ -438,8 +438,8 @@ const result = await pipeline.inference(polygon);`}
               </p>
             </a>
             
-            <a
-              href="/tasks/solar-panel-detection"
+              <a
+                href="/geoai-live/tasks/solar-panel-detection"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -449,7 +449,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/solar-panel-detection.mp4" type="video/mp4" />
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/solar-panel-detection.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Solar Panel Detection
@@ -459,8 +459,8 @@ const result = await pipeline.inference(polygon);`}
               </p>
             </a>
             
-            <a
-              href="/tasks/ship-detection"
+              <a
+                href="/geoai-live/tasks/ship-detection"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -470,7 +470,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/ship-detection.mp4" type="video/mp4" />
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/ship-detection.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Ship Detection
@@ -480,8 +480,8 @@ const result = await pipeline.inference(polygon);`}
               </p>
             </a>
             
-            <a
-              href="/tasks/oriented-object-detection"
+              <a
+                href="/geoai-live/tasks/oriented-object-detection"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -491,7 +491,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/oriented-object-detection.mp4" type="video/mp4" />
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/oriented-object-detection.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Oriented Object Detection
@@ -501,8 +501,8 @@ const result = await pipeline.inference(polygon);`}
               </p>
             </a>
             
-            <a
-              href="/tasks/building-footprint-segmentation"
+              <a
+                href="/geoai-live/tasks/building-footprint-segmentation"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -512,7 +512,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/building-footprint-segmentation.mp4" type="video/mp4" />
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/building-footprint-segmentation.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Building Footprint Segmentation
@@ -522,8 +522,8 @@ const result = await pipeline.inference(polygon);`}
               </p>
             </a>
             
-            <a
-              href="/tasks/land-cover-classification"
+              <a
+                href="/geoai-live/tasks/land-cover-classification"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -533,7 +533,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/land-cover-classification.mp4" type="video/mp4" />
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/land-cover-classification.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Land Cover Classification
@@ -543,8 +543,8 @@ const result = await pipeline.inference(polygon);`}
               </p>
             </a>
             
-            <a
-              href="/tasks/zero-shot-object-detection"
+              <a
+                href="/geoai-live/tasks/zero-shot-object-detection"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -554,7 +554,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/zero-shot-object-detection.mp4" type="video/mp4" />
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/zero-shot-object-detection.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Zero Shot Object Detection
@@ -564,8 +564,8 @@ const result = await pipeline.inference(polygon);`}
               </p>
             </a>
             
-            <a
-              href="/tasks/zero-shot-segmentation"
+              <a
+                href="/geoai-live/tasks/zero-shot-segmentation"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
             >
               <video
@@ -575,7 +575,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/zero-shot-segmentation.mp4" type="video/mp4" />
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/zero-shot-segmentation.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Zero Shot Segmentation
@@ -598,7 +598,7 @@ const result = await pipeline.inference(polygon);`}
                 playsInline
                 className="w-full h-48 object-cover rounded-lg mb-6"
               >
-                <source src="/video/embedding-similarity-search.mp4" type="video/mp4" />
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/embedding-similarity-search.mp4" type="video/mp4" />
               </video>
               <h3 className="text-xl font-bold text-white mb-3">
                 Embedding Similarity Search
@@ -617,14 +617,14 @@ const result = await pipeline.inference(polygon);`}
               <div className="col-span-1 md:col-span-2">
                 <h3 className="text-2xl font-bold text-white mb-4 flex items-center">
                   <img
-                    src="/javascript-logo.svg"
+                    src="/geoai-live/javascript-logo.svg"
                     alt="JavaScript logo"
                     className="h-8 w-auto mr-3"
                   />
                   GeoAI.js
                 </h3>
                 <p className="text-gray-300 text-base max-w-md">
-                  Open-source GeoAI toolkit for Javascript developers. Run AI models directly in your browser or edge devices without any backend infrastructure.
+                  Open-source GeoAI toolkit for JavaScript developers. Run AI models directly in your browser or edge devices without any backend infrastructure.
                 </p>
               </div>
               <div>

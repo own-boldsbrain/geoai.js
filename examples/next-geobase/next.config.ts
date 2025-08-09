@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  basePath: "/geoai-live",
+  assetPrefix: "/geoai-live",
+  env: {
+    NEXT_PUBLIC_BASE_PATH: "/geoai-live",
+  },
   webpack: (config, { isServer }) => {
     // Configure webpack for WASM support
     config.experiments = {
@@ -15,6 +20,13 @@ const nextConfig: NextConfig = {
         test: /worker\.js$/,
         use: { loader: "workerize-loader" },
       });
+
+      // Ensure certain Node APIs are not polyfilled client-side
+      config.resolve = config.resolve || {};
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        worker_threads: false,
+      };
     }
 
     // Configure WASM file handling
@@ -26,6 +38,14 @@ const nextConfig: NextConfig = {
     return config;
   },
   transpilePackages: ["@geobase-js/geoai"],
+  // Mirror prior turbopack dev settings
+  turbopack: {
+    sourceMap: {
+      client: false,
+      server: false,
+    },
+    hmr: false,
+  },
   // Configure headers for WASM files
   async headers() {
     return [
@@ -34,7 +54,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cross-Origin-Embedder-Policy",
-            value: "require-corp",
+            value: "credentialless",
           },
           {
             key: "Cross-Origin-Opener-Policy",

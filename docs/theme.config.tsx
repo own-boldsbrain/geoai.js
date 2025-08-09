@@ -27,7 +27,7 @@ const config = {
   logo: (
     <div style={{ display: "flex", alignItems: "center" }}>
       <img
-        src="/javascript-logo.svg"
+        src="/geoai/javascript-logo.svg"
         alt="JavaScript logo"
         style={{
           height: "1.5rem",
