@@ -126,13 +126,9 @@ Create `test-imports.ts` in the example:
 import { geoai } from "@geobase-js/geoai";
 console.log("Core API:", geoai.tasks());
 
-// Test React import
-import { useGeoAIWorker } from "@geobase-js/geoai/react";
-console.log("React hook:", typeof useGeoAIWorker);
-
 export const testImports = () => {
-  console.log("✅ Both imports working!");
-  return { geoai, useGeoAIWorker };
+  console.log("✅ Import working!");
+  return { geoai };
 };
 ```
 
@@ -143,11 +139,9 @@ Update a component to test the imports:
 ```typescript
 // In src/app/test-page/page.tsx
 import { geoai } from "@geobase-js/geoai";
-import { useGeoAIWorker } from "@geobase-js/geoai/react";
 
 export default function TestPage() {
-  const { isInitialized } = useGeoAIWorker();
-
+  
   useEffect(() => {
     console.log("Available tasks:", geoai.tasks());
     console.log("Available models:", geoai.models().length);
@@ -201,9 +195,7 @@ ls -la node_modules/@geobase-js/geoai/
 
 # Should see:
 # - @geobase-js/geoai.js
-# - @geobase-js/geoai-react.js
 # - index.d.ts
-# - react.d.ts
 ```
 
 ### Import path issues
@@ -213,11 +205,9 @@ Make sure you're using the correct import paths:
 ```typescript
 // ✅ Correct
 import { geoai } from "@geobase-js/geoai";
-import { useGeoAIWorker } from "@geobase-js/geoai/react";
 
 // ❌ Wrong
 import { geoai } from "@geobase-js/geoai/dist";
-import { useGeoAIWorker } from "@geobase-js/geoai/src/react";
 ```
 
 ### Cache issues
@@ -231,8 +221,6 @@ pnpm dev
 
 ## Testing Different Scenarios
 
-### Test Core Only (No React)
-
 Create a Node.js script:
 
 ```javascript
@@ -243,30 +231,14 @@ console.log("Tasks:", geoai.tasks());
 console.log("Models:", geoai.models().length);
 ```
 
-### Test React Hooks
-
-```typescript
-// In a React component
-import { useGeoAIWorker } from "@geobase-js/geoai/react";
-
-function MyComponent() {
-  const worker = useGeoAIWorker();
-  // Test the hook functionality
-}
-```
-
 ### Test TypeScript Declarations
 
 ```typescript
 // Check autocomplete and type checking work
 import { geoai, ProviderParams } from "@geobase-js/geoai";
-import { UseGeoAIWorkerReturn } from "@geobase-js/geoai/react";
 
 const params: ProviderParams = {
   /* should autocomplete */
-};
-const result: UseGeoAIWorkerReturn = {
-  /* should type check */
 };
 ```
 
