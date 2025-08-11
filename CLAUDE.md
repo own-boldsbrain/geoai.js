@@ -28,10 +28,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Single Test Execution
 
-Use `vitest run <test-file-path>` to run individual tests, e.g.:
+Use `pnpm run test <test-file-path>` to run individual tests, e.g.:
 
-- `vitest run test/objectDetection.test.ts`
-- `vitest run test/buildingFootprint.test.ts`
+- `pnpm run test objectDetection.test.ts`
+- `pnpm run test buildingFootprint.test.ts`
+
+Or use the test name to run the specific test in the file. e.g:
+
+- `pnpm run test "geoai.objectDetection"`
 
 ## Architecture Overview
 
@@ -57,11 +61,6 @@ This is a TypeScript library for running geospatial AI models in frontend applic
 - Defines model configurations, chainable tasks, and factory functions
 - Includes both HuggingFace and custom GeoAI models
 
-**React Integration** (`src/react/`):
-
-- `useGeoAIWorker` hook for React applications with Web Workers
-- Provides optimized inference parameters for different tasks
-- Handles worker lifecycle and error management
 
 ### Model System
 
@@ -69,7 +68,7 @@ Models are organized in `src/models/` with a consistent interface pattern:
 
 - Each model implements a factory pattern with `getInstance()`
 - Models handle specific AI tasks (object detection, segmentation, classification)
-- Support for both ONNX and HuggingFace Transformers models
+- Support for both ONNX and HuggingFace Transformers.js models
 
 ### Data Providers
 
@@ -121,17 +120,11 @@ const chain = await geoai.pipeline(
 );
 ```
 
-### React Web Worker Pattern
-
-```typescript
-const { isInitialized, isProcessing, runInference } = useGeoAIWorker();
-```
-
 ## Build Configuration
 
 - **Vite** for bundling with Terser minification
 - **TypeScript** compilation with path aliases (`@` -> `src/`)
-- **External dependencies**: HuggingFace Transformers, ONNX Runtime Web
+- **External dependencies**: HuggingFace Transformers.js, ONNX Runtime Web
 - **Type generation** using dts-bundle-generator
 
 ## Testing Strategy
@@ -143,21 +136,12 @@ const { isInitialized, isProcessing, runInference } = useGeoAIWorker();
 
 ## Package Structure
 
-The library is built as two separate bundles:
-
 ### Core Package (`@geobase-js/geoai`)
 
 - **Import**: `import { geoai } from "@geobase-js/geoai"`
 - **Files**: `build/dist/@geobase-js/geoai.js`, `build/dist/index.d.ts`
-- **Dependencies**: HuggingFace Transformers, ONNX Runtime Web
+- **Dependencies**: HuggingFace Transformers.js, ONNX Runtime Web
 - **Usage**: Vanilla JS, Node.js, any framework
-
-### React Package (`@geobase-js/geoai/react`)
-
-- **Import**: `import { useGeoAIWorker } from "@geobase-js/geoai/react"`
-- **Files**: `build/dist/@geobase-js/geoai-react.js`, `build/dist/react.d.ts`
-- **Dependencies**: React (peer dependency), core package
-- **Usage**: React applications with Web Worker support
 
 ## Package Management
 
