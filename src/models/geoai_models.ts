@@ -152,10 +152,12 @@ abstract class BaseDetectionModel extends BaseModel {
       polygon,
       mapSourceParams?.zoomLevel,
       mapSourceParams?.bands,
-      mapSourceParams?.expression,
-      true // models require square image
+      mapSourceParams?.expression
     );
 
+    const task = this.model_id.split("/").pop()?.split(".")[0].split("_")[0];
+    const inferenceStartTime = performance.now();
+    console.log(`[${task}] starting inference...`);
     const inputs = await this.preProcessor(geoRawImage);
     let outputs;
     try {
@@ -169,6 +171,10 @@ abstract class BaseDetectionModel extends BaseModel {
     }
 
     outputs = await this.postProcessor(outputs, geoRawImage);
+    const inferenceEndTime = performance.now();
+    console.log(
+      `[${task}] inference completed. Time taken: ${(inferenceEndTime - inferenceStartTime).toFixed(2)}ms`
+    );
 
     return {
       detections: outputs,
@@ -389,6 +395,8 @@ export class WetLandSegmentation extends BaseModel {
       mapSourceParams?.bands,
       mapSourceParams?.expression
     );
+    const inferenceStartTime = performance.now();
+    console.log("[wetland-segmentation] starting inference...");
 
     const inputs = await this.preProcessor(geoRawImage);
     let outputs;
@@ -403,6 +411,10 @@ export class WetLandSegmentation extends BaseModel {
     }
 
     outputs = await this.postProcessor(outputs, geoRawImage);
+    const inferenceEndTime = performance.now();
+    console.log(
+      `[wetland-segmentation] inference completed. Time taken: ${(inferenceEndTime - inferenceStartTime).toFixed(2)}ms`
+    );
 
     return {
       detections: outputs,
@@ -416,7 +428,6 @@ export class WetLandSegmentation extends BaseModel {
   ): Promise<GeoJSON.FeatureCollection> {
     outputs = Object.values(outputs);
     const masks = outputs[1];
-    const labels = outputs[3];
     const scores = outputs[0].data as Float32Array;
     const threshold = 0.5;
 
@@ -460,7 +471,6 @@ export class WetLandSegmentation extends BaseModel {
             },
             properties: {
               score: scores[idx],
-              label: labels ? labels.data[idx] : undefined,
             },
           });
         }

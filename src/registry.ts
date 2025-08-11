@@ -8,7 +8,7 @@ import {
   ObjectDetectionResults,
 } from "@/core/types";
 import { ZeroShotObjectDetection } from "./models/zero_shot_object_detection";
-import { GenericSegmentation } from "./models/generic_segmentation";
+import { MaskGeneration } from "./models/mask_generation";
 import { ObjectDetection } from "./models/object_detection";
 import { OrientedObjectDetection } from "./models/oriented_object_detection";
 import { LandCoverClassification } from "./models/land_cover_classification";
@@ -49,9 +49,9 @@ export const modelRegistry: ModelConfig[] = [
       modelId: string = "Xenova/slimsam-77-uniform",
       modelParams?: PretrainedOptions
     ): Promise<{
-      instance: GenericSegmentation;
+      instance: MaskGeneration;
     }> => {
-      return GenericSegmentation.getInstance(modelId, params, modelParams);
+      return MaskGeneration.getInstance(modelId, params, modelParams);
     },
   },
   {
@@ -109,7 +109,7 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "solar-panel-detection",
     library: "@geobase-js/geoai",
-    description: "Land Cover Classification model.",
+    description: "Solar Panel Detection model.",
     ioConfig: {} as baseIOConfig,
     geobase_ai_pipeline: (
       params: ProviderParams,
@@ -124,7 +124,7 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "ship-detection",
     library: "@geobase-js/geoai",
-    description: "Land Cover Classification model.",
+    description: "Ship Detection model.",
     ioConfig: {} as baseIOConfig,
     geobase_ai_pipeline: (
       params: ProviderParams,
@@ -139,7 +139,7 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "car-detection",
     library: "@geobase-js/geoai",
-    description: "Land Cover Classification model.",
+    description: "Car Detection model.",
     ioConfig: {} as baseIOConfig,
     geobase_ai_pipeline: (
       params: ProviderParams,
@@ -154,7 +154,7 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "wetland-segmentation",
     library: "@geobase-js/geoai",
-    description: "Land Cover Classification model.",
+    description: "Wetland Segmentation model.",
     ioConfig: {} as baseIOConfig,
     geobase_ai_pipeline: (
       params: ProviderParams,
@@ -169,7 +169,7 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "building-detection",
     library: "@geobase-js/geoai",
-    description: "Land Cover Classification model.",
+    description: "Building Detection model.",
     ioConfig: {} as baseIOConfig,
     geobase_ai_pipeline: (
       params: ProviderParams,

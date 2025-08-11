@@ -116,6 +116,9 @@ export class BuildingFootPrintSegmentation extends BaseModel {
   public async inference(
     params: InferenceParams
   ): Promise<ObjectDetectionResults> {
+    const inferenceStartTime = performance.now();
+    console.log("[building-footprint-segmentation] starting inference...");
+
     const {
       inputs: { polygon },
       postProcessingParams: { confidenceThreshold = 0.5, minArea = 20 } = {},
@@ -263,12 +266,19 @@ export class BuildingFootPrintSegmentation extends BaseModel {
       originalImage.delete();
       paddedImage.delete();
       croppedPrediction.delete();
-      return await this.postProcessor(
+      // Post-processing timing
+      const results = await this.postProcessor(
         finalMat,
         geoRawImage,
         confidenceThreshold as number,
         minArea as number
       );
+      const inferenceEndTime = performance.now();
+      console.log(
+        `[building-footprint-segmentagtion] inference completed. Time taken: ${(inferenceEndTime - inferenceStartTime).toFixed(2)}ms`
+      );
+
+      return results;
     } catch (error) {
       // Clean up resources in case of error
       originalImage.delete();

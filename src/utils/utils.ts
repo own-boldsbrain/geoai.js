@@ -629,3 +629,32 @@ export const refineMasks = (
 
   return maskGeojson;
 };
+
+/**
+ * Compares two polygons to determine if they are the same
+ * @param polygon1 - First polygon to compare
+ * @param polygon2 - Second polygon to compare
+ * @returns true if polygons are the same, false otherwise
+ */
+export const polygonsEqual = (
+  polygon1: GeoJSON.Feature | null,
+  polygon2: GeoJSON.Feature | null
+): boolean => {
+  if (!polygon1 || !polygon2) return false;
+  if (!polygon1.geometry || !polygon2.geometry) return false;
+  if (polygon1.geometry.type !== polygon2.geometry.type) return false;
+
+  // Only handle Polygon type for now
+  if (
+    polygon1.geometry.type === "Polygon" &&
+    polygon2.geometry.type === "Polygon"
+  ) {
+    const poly1 = polygon1.geometry as GeoJSON.Polygon;
+    const poly2 = polygon2.geometry as GeoJSON.Polygon;
+    return (
+      JSON.stringify(poly1.coordinates) === JSON.stringify(poly2.coordinates)
+    );
+  }
+
+  return false;
+};

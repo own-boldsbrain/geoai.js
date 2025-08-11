@@ -92,6 +92,8 @@ export class ObjectDetection extends BaseModel {
       mapSourceParams?.expression
     );
 
+    const inferenceStartTime = performance.now();
+    console.log("[oriented-object-detection] starting inference...");
     let outputs;
     let inputs;
     try {
@@ -116,6 +118,10 @@ export class ObjectDetection extends BaseModel {
     );
 
     const detectionsGeoJson = detectionsToGeoJSON(results, geoRawImage);
+    const inferenceEndTime = performance.now();
+    console.log(
+      `[oriented-object-detection] inference completed. Time taken: ${(inferenceEndTime - inferenceStartTime).toFixed(2)}ms`
+    );
 
     return {
       detections: detectionsGeoJson,

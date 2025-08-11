@@ -85,7 +85,8 @@ export class ZeroShotObjectDetection extends BaseModel {
       mapSourceParams?.bands,
       mapSourceParams?.expression
     );
-
+    const inferenceStartTime = performance.now();
+    console.log("[zero-shot-object-detection] starting inference...");
     let outputs;
     try {
       const candidate_labels = Array.isArray(text) ? text : [text];
@@ -99,6 +100,10 @@ export class ZeroShotObjectDetection extends BaseModel {
     }
     this.rawDetections = outputs;
     const detectionsGeoJson = detectionsToGeoJSON(outputs, geoRawImage);
+    const inferenceEndTime = performance.now();
+    console.log(
+      `[zero-shot-object-detection] inference completed. Time taken: ${(inferenceEndTime - inferenceStartTime).toFixed(2)}ms`
+    );
     return {
       detections: detectionsGeoJson,
       geoRawImage,

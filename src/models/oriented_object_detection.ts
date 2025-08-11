@@ -158,17 +158,17 @@ export class OrientedObjectDetection extends BaseModel {
     if (!this.dataProvider) {
       throw new Error("Data provider not initialized");
     }
-
     const geoRawImage = await this.polygonToImage(
       polygon,
       mapSourceParams?.zoomLevel,
       mapSourceParams?.bands,
-      mapSourceParams?.expression,
-      true
+      mapSourceParams?.expression
     );
 
     const inputs = await this.preProcessor(geoRawImage);
     let outputs;
+    const inferenceStartTime = performance.now();
+    console.log("[oriented-object-detection] starting inference...");
     try {
       if (!this.model) {
         throw new Error("Model or processor not initialized");
@@ -183,6 +183,10 @@ export class OrientedObjectDetection extends BaseModel {
       outputs,
       geoRawImage,
       postProcessingParams as NMSOptions
+    );
+    const inferenceEndTime = performance.now();
+    console.log(
+      `[oriented-object-detection] inference completed. Time taken: ${(inferenceEndTime - inferenceStartTime).toFixed(2)}ms`
     );
 
     return {
@@ -486,7 +490,7 @@ export class OrientedObjectDetection extends BaseModel {
       pred_bbox,
       org_img_shape: [geoRawImage.width, geoRawImage.height],
       valid_scale,
-      conf_thresh: options.conf_thres || 0.5,
+      conf_thresh: options.conf_thres || 0.4,
     });
 
     if (predbboxes.length === 0) {

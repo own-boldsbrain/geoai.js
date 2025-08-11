@@ -4,10 +4,7 @@ import { GeoRawImage } from "@/types/images/GeoRawImage";
 
 // Model Types:
 // ==============================
-import {
-  GenericSegmentation,
-  SegmentationInput,
-} from "@/models/generic_segmentation";
+import { MaskGeneration, SegmentationInput } from "@/models/mask_generation";
 import {
   BuildingDetection,
   CarDetection,
@@ -42,6 +39,14 @@ export type GeobaseParams = {
   projectRef: string;
 };
 
+export type EsriParams = {
+  provider: "esri";
+  serviceUrl?: string;
+  serviceName?: string;
+  tileSize?: number;
+  attribution?: string;
+};
+
 export interface InferenceInputs {
   polygon: GeoJSON.Feature;
   classLabel?: string;
@@ -71,7 +76,11 @@ export interface mapSourceConfig {
 
 export type onnxModel = ort.InferenceSession;
 
-export type ProviderParams = MapboxParams | SentinelParams | GeobaseParams;
+export type ProviderParams =
+  | MapboxParams
+  | SentinelParams
+  | GeobaseParams
+  | EsriParams;
 
 export type HuggingFaceModelTask =
   | "mask-generation"
@@ -96,7 +105,7 @@ export type GeobaseAiModelTask =
   | "building-footprint-segmentation";
 
 export type ModelInstance =
-  | GenericSegmentation
+  | MaskGeneration
   | ZeroShotObjectDetection
   | ObjectDetection
   | OrientedObjectDetection
