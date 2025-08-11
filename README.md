@@ -1,6 +1,6 @@
 [![Main](https://github.com/decision-labs/geobase-ai.js/actions/workflows/main.yml/badge.svg)](https://github.com/decision-labs/geobase-ai.js/actions/workflows/main.yml)
 
-# @geobase-js/geoai
+# `@geobase-js/geoai`
 
 A Javascript library for running Geo AI models in frontend applications.
 
