@@ -33,7 +33,7 @@ if (isNode) {
 }
 
 // Node.js cache directory
-const getNodeCacheDir = (): string => {
+export const getNodeCacheDir = (): string => {
   if (!isNode || !path || !os || !fs)
     throw new Error("Node.js modules not available");
 
@@ -45,7 +45,7 @@ const getNodeCacheDir = (): string => {
 };
 
 // Generate cache key from URL
-const getCacheKey = (url: string): string => {
+export const getCacheKey = (url: string): string => {
   if (isNode && crypto) {
     return crypto.createHash("md5").update(url).digest("hex");
   } else {
