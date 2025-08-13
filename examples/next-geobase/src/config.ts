@@ -20,3 +20,11 @@ export const MAPBOX_CONFIG = {
   apiKey: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "test",
   style: "mapbox://styles/mapbox/satellite-v9",
 };
+
+export const TMS_CONFIG = {
+  provider: "tms" as const,
+  baseUrl: "https://tile.sentinelmap.eu/2016/summer/rgb",
+  extension: "jpg",
+  attribution: "Sentinel Maps",
+  apiKey: process.env.NEXT_PUBLIC_TMS_API_KEY || "875e6b1c0ef7a112d1267ec91353809d",
+};
