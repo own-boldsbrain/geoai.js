@@ -1,6 +1,6 @@
-# GeoBase AI Task Classifier
+# Geobase AI Task Classifier
 
-This module classifies natural language queries into specific geospatial AI task types for the GeoBase AI system.
+This module classifies natural language queries into specific geospatial AI task types for the Geobase AI system.
 
 ## Task Categories
 
