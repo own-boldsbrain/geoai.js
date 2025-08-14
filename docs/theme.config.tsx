@@ -37,7 +37,7 @@ const config = {
         }}
       />
       <pre style={{ fontSize: "1.2rem", fontWeight: "bold" }}>
-        @geobase/geoai.js
+        @geobase-js/geoai
       </pre>
     </div>
   ),
