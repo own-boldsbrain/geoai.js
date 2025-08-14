@@ -106,7 +106,7 @@ export default function Home() {
                   className="h-6 w-auto mr-2"
                 />
                 <pre className="text-xl font-bold text-white font-mono">
-                  @geobase/geoai.js
+                  @geobase-js/geoai
                 </pre>
               </div>
             </a>

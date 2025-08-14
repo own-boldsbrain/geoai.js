@@ -101,7 +101,7 @@ def save_model(model, tokenizer, output_dir, label_to_id):
     logger.info(f"Model saved to {output_dir}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Train a text classifier for GeoBase AI task classification")
+    parser = argparse.ArgumentParser(description="Train a text classifier for Geobase AI task classification")
     parser.add_argument("--config", type=str, default="../config/training_config.yaml", help="Path to config file")
     parser.add_argument("--data_path", type=str, default="../data/queries.json", help="Path to training data")
     parser.add_argument("--output-dir", type=str, default="./output", help="Directory to save the model")
