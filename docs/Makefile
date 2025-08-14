@@ -1,4 +1,4 @@
-# Makefile for GeoBase AI Documentation CI/CD
+# Makefile for Geobase AI Documentation CI/CD
 
 .PHONY: list-models check-videos help
 
@@ -11,7 +11,7 @@ help:
 
 # List all models available in the library
 list-models:
-	@echo "Available models in GeoBase AI library:"
+	@echo "Available models in Geobase AI library:"
 	@echo "======================================"
 	@grep -E 'task: "' ../src/registry.ts | sed 's/.*task: "\([^"]*\)".*/- \1/' | sort
 	@echo ""

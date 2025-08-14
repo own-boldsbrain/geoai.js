@@ -31,7 +31,7 @@ graph TD
     I --> J[Results]
     
     %% Provider System
-    G --> K[GeoBase Provider]
+    G --> K[Geobase Provider]
     G --> L[Mapbox Provider]
     
     %% Model Types
@@ -53,10 +53,10 @@ graph TD
 
 ## 3. [Map Source Provider](../map-providers)
 
-Map source providers abstract the process of fetching satellite imagery from different sources (GeoBase, Mapbox, etc.). They handle tile-based image retrieval, coordinate transformations, and provide a unified interface for accessing geospatial imagery regardless of the underlying provider.
+Map source providers abstract the process of fetching satellite imagery from different sources (Geobase, Mapbox, etc.). They handle tile-based image retrieval, coordinate transformations, and provide a unified interface for accessing geospatial imagery regardless of the underlying provider.
 
 <Callout type="info">
-  **Supported Providers:** GeoBase (custom COG imagery), Mapbox (global satellite), with Google Maps and Esri ArcGIS coming soon.
+  **Supported Providers:** Geobase (custom COG imagery), Mapbox (global satellite), with Google Maps and Esri ArcGIS coming soon.
 </Callout>
 
 ## 4. [Model Pipeline](./concepts/model-pipeline)
