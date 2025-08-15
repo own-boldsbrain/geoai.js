@@ -32,9 +32,9 @@ export class Tms extends MapSource {
 
     // TMS uses bottom-left origin, but Web Mercator uses top-left
     // We need to flip the Y coordinate for Web Mercator compatibility
-    const tmsY = Math.pow(2, z) - 1 - y;
+    // const tmsY = Math.pow(2, z) - 1 - y;
 
-    let url = `${instance.baseUrl}/${z}/${x}/${tmsY}.${instance.extension}`;
+    let url = `${instance.baseUrl}/${z}/${x}/${y}.${instance.extension}`;
 
     // Add API key as query parameter if provided
     if (instance.apiKey) {

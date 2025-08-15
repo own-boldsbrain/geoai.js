@@ -19,7 +19,11 @@ GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/r
 const mapInitConfig = {
   // center: [-117.59159209938863, 47.65325850830081] as [number, number],
   // berlin:
-  center: [13.38, 52.51] as [number, number],
+  // center: [13.38, 52.51] as [number, number],
+  // canada:
+  // center: [-99.9711924791336,50.640180601706064] as [number, number],
+  // center: [13.38, 52.51] as [number, number],
+  center: [-70.51998227834702,44.540098537658245] as [number, number],
   zoom: 18,
 }
 

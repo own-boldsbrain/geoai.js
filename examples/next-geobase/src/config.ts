@@ -23,8 +23,8 @@ export const MAPBOX_CONFIG: ProviderParams = {
 
 export const TMS_CONFIG: ProviderParams = {
   provider: "tms" as const,
-  baseUrl: "https://tile.sentinelmap.eu/2016/summer/rgb",
-  extension: "jpg",
-  attribution: "Sentinel Maps",
-  apiKey: process.env.NEXT_PUBLIC_TMS_API_KEY || "875e6b1c0ef7a112d1267ec91353809d",
+  baseUrl: "https://apps.kontur.io/raster-tiler/oam/mosaic",
+  extension: "png",
+  attribution: "OpenAerialMap",
+  apiKey: process.env.NEXT_PUBLIC_TMS_API_KEY || "",
 };
