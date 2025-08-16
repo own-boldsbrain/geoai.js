@@ -45,7 +45,7 @@
   },
   "types": "./index.d.ts",
   "peerDependencies": {
-    "@huggingface/transformers": "^3.3.3",
+    "@huggingface/transformers": "^3.7.2",
     "@techstark/opencv-js": "^4.10.0-release.1",
     "onnxruntime-web": "^1.21.0"
   },

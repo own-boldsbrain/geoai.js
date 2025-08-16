@@ -6,6 +6,7 @@ import {
   ProviderParams,
   zeroShotModelIOConfig,
   ObjectDetectionResults,
+  imageFeatureExtractionIOConfig,
 } from "@/core/types";
 import { ZeroShotObjectDetection } from "./models/zero_shot_object_detection";
 import { MaskGeneration } from "./models/mask_generation";
@@ -21,6 +22,7 @@ import {
 } from "./models/geoai_models";
 import { OilStorageTankDetection } from "./models/oil_storage_tank_detection";
 import { BuildingFootPrintSegmentation } from "./models/building_footprint_segmentation";
+import { ImageFeatureExtraction } from "./models/image_feature_extraction";
 
 export const modelRegistry: ModelConfig[] = [
   {
@@ -328,6 +330,33 @@ export const modelRegistry: ModelConfig[] = [
         params,
         modelParams
       );
+    },
+  },
+  {
+    task: "image-feature-extraction",
+    library: "@huggingface/transformers",
+    description:
+      "Extracts dense feature representations from satellite or aerial imagery using DINOv3. Useful for visual similarity analysis, feature-based image search, and semantic feature exploration. Provides patch-level features and similarity matrices for advanced image understanding.",
+    examples: [
+      "Extract visual features from this satellite image for similarity analysis.",
+      "Find regions with similar visual characteristics in this aerial photo.",
+      "Analyze the feature patterns in this urban area.",
+      "Extract semantic features for content-aware image processing.",
+      "Generate feature vectors for machine learning applications.",
+    ],
+    chainableTasks: ["object-detection", "mask-generation"],
+    ioConfig: {} as imageFeatureExtractionIOConfig,
+    geobase_ai_pipeline: (
+      params: ProviderParams,
+      modelId: string = "onnx-community/dinov3-vits16-pretrain-lvd1689m-ONNX",
+      modelParams: PretrainedModelOptions = {
+        device: "wasm",
+        dtype: "q8",
+      }
+    ): Promise<{
+      instance: ImageFeatureExtraction;
+    }> => {
+      return ImageFeatureExtraction.getInstance(modelId, params, modelParams);
     },
   },
 ];

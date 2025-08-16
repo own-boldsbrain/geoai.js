@@ -10,5 +10,7 @@ export { MapProviderSelector } from './MapProviderSelector';
 export { DetectionControls } from './DetectionControls';
 export { ZeroShotControls } from './ZeroShotControls';
 export { ZeroShotSegmentationControls } from './ZeroShotSegmentationControls';
+export { ImageFeatureExtractionControls } from './ImageFeatureExtractionControls';
+export { FeatureVisualization } from './FeatureVisualization';
 export { GeoAIMap } from './GeoAIMap';
 export { BackgroundEffects } from './BackgroundEffects';
