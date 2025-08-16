@@ -465,7 +465,6 @@ export default function ImageFeatureExtraction() {
     initializeModel({
       tasks: [{
         task: "image-feature-extraction",
-        modelId: "onnx-community/dinov3-vits16-pretrain-lvd1689m-ONNX"
       }],
       providerParams,
     });
