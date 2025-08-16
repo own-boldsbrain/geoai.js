@@ -7,7 +7,6 @@ interface FeatureVisualizationProps {
   similarityMatrix: number[][] | null;
   patchSize: number | null;
   geoRawImage: any;
-  visualizationMode: 'heatmap' | 'overlay' | 'patches';
   similarityThreshold: number;
 }
 
@@ -17,7 +16,6 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
   similarityMatrix,
   patchSize,
   geoRawImage,
-  visualizationMode,
   similarityThreshold,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -101,7 +99,6 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
     console.log('SimilarityMatrix:', similarityMatrix?.length);
     console.log('PatchSize:', patchSize);
     console.log('GeoRawImage:', geoRawImage);
-    console.log('VisualizationMode:', visualizationMode);
     console.log('SimilarityThreshold:', similarityThreshold);
 
     if (!map || !features || !similarityMatrix || !patchSize || !geoRawImage) {
@@ -257,7 +254,7 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
     return () => {
       cleanupLayers();
     };
-  }, [map, features, similarityMatrix, patchSize, geoRawImage, visualizationMode, similarityThreshold]);
+  }, [map, features, similarityMatrix, patchSize, geoRawImage, similarityThreshold]);
 
   return (
     <canvas

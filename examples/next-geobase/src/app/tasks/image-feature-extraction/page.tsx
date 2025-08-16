@@ -53,7 +53,6 @@ export default function ImageFeatureExtraction() {
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
   const [similarityThreshold, setSimilarityThreshold] = useState<number>(0.5);
   const [maxFeatures, setMaxFeatures] = useState<number>(100);
-  const [visualizationMode, setVisualizationMode] = useState<'heatmap' | 'overlay' | 'patches'>('heatmap');
   const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false);
 
   // Debounced handlers for performance optimization
@@ -392,7 +391,6 @@ export default function ImageFeatureExtraction() {
             error={error}
             similarityThreshold={similarityThreshold}
             maxFeatures={maxFeatures}
-            visualizationMode={visualizationMode}
             onStartDrawing={handleStartDrawing}
             onExtractFeatures={handleExtractFeatures}
             onReset={handleReset}
@@ -400,7 +398,6 @@ export default function ImageFeatureExtraction() {
             onMapProviderChange={debouncedMapProviderChange}
             onSimilarityThresholdChange={debouncedSimilarityThresholdChange}
             onMaxFeaturesChange={debouncedMaxFeaturesChange}
-            onVisualizationModeChange={setVisualizationMode}
           />
         </div>
       </aside>
@@ -427,7 +424,6 @@ export default function ImageFeatureExtraction() {
                 similarityMatrix={lastResult.similarityMatrix}
                 patchSize={lastResult.patchSize}
                 geoRawImage={lastResult.geoRawImage}
-                visualizationMode={visualizationMode}
                 similarityThreshold={similarityThreshold}
               />
             );
