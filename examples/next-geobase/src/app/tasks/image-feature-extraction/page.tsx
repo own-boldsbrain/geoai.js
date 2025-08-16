@@ -6,6 +6,7 @@ import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
 import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { useDebounce } from "../../../hooks/useDebounce";
+import { Pencil, Target, Trash2, Loader2 } from "lucide-react";
 import { 
   ImageFeatureExtractionControls,
   BackgroundEffects,
@@ -54,6 +55,7 @@ export default function ImageFeatureExtraction() {
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
   const [similarityThreshold, setSimilarityThreshold] = useState<number>(0.5);
   const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false);
+  const [isResetting, setIsResetting] = useState<boolean>(false);
 
   // Debounced handlers for performance optimization
   const debouncedZoomChange = useDebounce((newZoom: number) => {
@@ -106,24 +108,30 @@ export default function ImageFeatureExtraction() {
     }
   }, 200);
 
-  const handleReset = () => {
-    // Clear all drawn features
-    if (draw.current) {
-      draw.current.deleteAll();
-    }
-
-    // Clear map layers using utility function
-    if (map.current) {
-      MapUtils.clearAllLayers(map.current);
-    }
-
-    // Reset states
-    setPolygon(null);
-    setFeatures(undefined);
-    clearError();
+  const handleReset = async () => {
+    setIsResetting(true);
     
-    // Reset worker to clear FeatureVisualization
-    resetWorker();
+    try {
+      // Clear all drawn features
+      if (draw.current) {
+        draw.current.deleteAll();
+      }
+
+      // Clear map layers using utility function
+      if (map.current) {
+        MapUtils.clearAllLayers(map.current);
+      }
+
+      // Reset states
+      setPolygon(null);
+      setFeatures(undefined);
+      clearError();
+      
+      // Reset worker to clear FeatureVisualization
+      resetWorker();
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const handleZoomChange = (newZoom: number) => {
@@ -456,8 +464,8 @@ export default function ImageFeatureExtraction() {
         <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-10">
           <button
             onClick={isDrawingMode ? handleStartDrawing : (polygon ? handleReset : handleStartDrawing)}
-            disabled={!isInitialized}
-            className={`px-6 py-3 rounded-lg shadow-2xl backdrop-blur-lg font-semibold transition-all duration-200 ${
+            disabled={!isInitialized || isResetting}
+            className={`px-6 py-3 rounded-lg shadow-2xl backdrop-blur-lg font-semibold transition-all duration-200 flex items-center space-x-2 ${
               isDrawingMode 
                 ? 'bg-green-500 text-white hover:bg-green-600 disabled:opacity-50' 
                 : polygon
@@ -465,12 +473,27 @@ export default function ImageFeatureExtraction() {
                 : 'bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed'
             }`}
           >
-            {isDrawingMode 
-              ? '🎯 Drawing Active' 
-              : polygon 
-              ? '🗑️ Reset' 
-              : '✏️ Start Drawing'
-            }
+            {isResetting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Resetting...</span>
+              </>
+            ) : isDrawingMode ? (
+              <>
+                <Target className="w-5 h-5" />
+                <span>Drawing Active</span>
+              </>
+            ) : polygon ? (
+              <>
+                <Trash2 className="w-5 h-5" />
+                <span>Reset</span>
+              </>
+            ) : (
+              <>
+                <Pencil className="w-5 h-5" />
+                <span>Start Drawing</span>
+              </>
+            )}
           </button>
         </div>
         
