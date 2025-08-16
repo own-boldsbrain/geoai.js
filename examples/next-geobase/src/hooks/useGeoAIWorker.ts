@@ -47,6 +47,7 @@ export interface UseGeoAIWorkerReturn {
   runInference: (params: InferenceParams) => void;
   getEmbeddings: (params: InferenceParams) => void;
   clearError: () => void;
+  clearResult: () => void;
   reset: () => void;
 }
 
@@ -236,6 +237,11 @@ export function useGeoAIWorker(): UseGeoAIWorkerReturn {
     setError(null);
   }, []);
 
+  // Clear only the result without resetting the model
+  const clearResult = useCallback(() => {
+    setLastResult(null);
+  }, []);
+
   // Reset all state
   const reset = useCallback(() => {
     if (workerRef.current) {
@@ -266,6 +272,7 @@ export function useGeoAIWorker(): UseGeoAIWorkerReturn {
     runInference,
     getEmbeddings,
     clearError,
+    clearResult,
     reset,
   };
 }

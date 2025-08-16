@@ -46,7 +46,7 @@ export default function ImageFeatureExtraction() {
     initializeModel,
     runInference,
     clearError,
-    reset: resetWorker,
+    clearResult,
   } = useGeoAIWorker();
 
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
@@ -127,8 +127,8 @@ export default function ImageFeatureExtraction() {
       setFeatures(undefined);
       clearError();
       
-      // Reset worker to clear FeatureVisualization
-      resetWorker();
+      // Clear result to remove FeatureVisualization without resetting model
+      clearResult();
     } finally {
       setIsResetting(false);
     }
