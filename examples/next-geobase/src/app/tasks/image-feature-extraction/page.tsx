@@ -386,9 +386,7 @@ export default function ImageFeatureExtraction() {
             lastResult={lastResult}
             error={error}
             similarityThreshold={similarityThreshold}
-            onStartDrawing={handleStartDrawing}
             onExtractFeatures={handleExtractFeatures}
-            onReset={handleReset}
             onZoomChange={handleZoomChange}
             onMapProviderChange={debouncedMapProviderChange}
             onSimilarityThresholdChange={debouncedSimilarityThresholdChange}
@@ -450,17 +448,25 @@ export default function ImageFeatureExtraction() {
           </div>
         )}
         
-        {/* Fallback Drawing Button - Always visible */}
-        <div className="absolute bottom-6 left-6 z-10">
+        {/* Start Drawing / Reset Button - Top middle of map */}
+        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-10">
           <button
-            onClick={handleStartDrawing}
-            className={`px-4 py-2 rounded-lg shadow-lg backdrop-blur-lg font-semibold transition-all duration-200 ${
+            onClick={isDrawingMode ? handleStartDrawing : (polygon ? handleReset : handleStartDrawing)}
+            disabled={!isInitialized}
+            className={`px-6 py-3 rounded-lg shadow-2xl backdrop-blur-lg font-semibold transition-all duration-200 ${
               isDrawingMode 
-                ? 'bg-green-500 text-white hover:bg-green-600' 
-                : 'bg-blue-500 text-white hover:bg-blue-600'
+                ? 'bg-green-500 text-white hover:bg-green-600 disabled:opacity-50' 
+                : polygon
+                ? 'bg-red-500 text-white hover:bg-red-600 disabled:opacity-50'
+                : 'bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed'
             }`}
           >
-            {isDrawingMode ? '🎯 Drawing Active' : '✏️ Start Drawing'}
+            {isDrawingMode 
+              ? '🎯 Drawing Active' 
+              : polygon 
+              ? '🗑️ Reset' 
+              : '✏️ Start Drawing'
+            }
           </button>
         </div>
         

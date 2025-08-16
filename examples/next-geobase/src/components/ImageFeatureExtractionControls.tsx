@@ -11,9 +11,7 @@ interface ImageFeatureExtractionControlsProps {
   lastResult: any;
   error: string | null;
   similarityThreshold: number;
-  onStartDrawing: () => void;
   onExtractFeatures: () => void;
-  onReset: () => void;
   onZoomChange: (zoom: number) => void;
   onMapProviderChange: (provider: MapProvider) => void;
   onSimilarityThresholdChange: (threshold: number) => void;
@@ -28,9 +26,7 @@ export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionCont
   lastResult,
   error,
   similarityThreshold,
-  onStartDrawing,
   onExtractFeatures,
-  onReset,
   onZoomChange,
   onMapProviderChange,
   onSimilarityThresholdChange,
@@ -114,25 +110,13 @@ export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionCont
         {/* Action Buttons */}
         <div className="space-y-2">
           <button
-            onClick={onStartDrawing}
-            disabled={!isInitialized}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Start Drawing
-          </button>
-          <button
             onClick={onExtractFeatures}
             disabled={!polygon || !isInitialized || isProcessing}
             className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Extract Features
           </button>
-          <button
-            onClick={onReset}
-            className="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-          >
-            Reset
-          </button>
+
         </div>
 
         {/* Results */}
