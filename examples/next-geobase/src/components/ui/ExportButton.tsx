@@ -8,6 +8,13 @@ interface ExportButtonProps {
   provider?: string;
   disabled?: boolean;
   className?: string;
+  // New props for embeddings
+  embeddings?: {
+    features: number[][];
+    similarityMatrix: number[][];
+    patchSize: number;
+    allPatches: GeoJSON.Feature<GeoJSON.Polygon>[];
+  };
 }
 
 export const ExportButton: React.FC<ExportButtonProps> = ({
@@ -17,9 +24,31 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
   provider = 'unknown',
   disabled = false,
   className = '',
+  embeddings,
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Compression function using HTML Compression API
+  const compress = async (file: File, encoding: CompressionFormat = 'gzip') => {
+    try {
+      return {
+        data: await new Response(file.stream().pipeThrough(new CompressionStream(encoding)), {
+          headers: {
+            'Content-Type': file.type
+          },
+        }).blob(),
+        encoding,
+      };
+    } catch (error) {
+      // If error, return the file uncompressed
+      console.error((error as Error).message);
+      return {
+        data: file,
+        encoding: null
+      };
+    }
+  };
 
   const handleDownloadGeoJSON = () => {
     if (!detections || !detections.features.length) return;
@@ -56,9 +85,49 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
     }
   };
 
+  // New function to export embeddings as compressed GeoJSON
+  const handleExportEmbeddings = async () => {
+    if (!embeddings || !embeddings.allPatches || embeddings.allPatches.length === 0) {
+      console.warn('No embeddings available for export');
+      return;
+    }
+
+    // Create GeoJSON FeatureCollection
+    const geojsonData: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: embeddings.allPatches
+    };
+
+    // Convert to JSON string
+    const jsonString = JSON.stringify(geojsonData, null, 2);
+    
+    // Create a File object
+    const file = new File([jsonString], 'embeddings.geojson', { type: 'application/json' });
+    
+    // Compress the file
+    const compressed = await compress(file, 'gzip');
+    
+    // Create download link
+    const url = URL.createObjectURL(compressed.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = compressed.encoding ? 'embeddings-compressed.geojson.gz' : 'embeddings.geojson';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // Log compression info
+    const savings = ((1 - compressed.data.size / file.size) * 100).toFixed(0);
+    console.log(`Compressed with ${compressed.encoding || 'none'}. Source: ${file.size} bytes, compressed: ${compressed.data.size} bytes, saving ${savings}%`);
+    
+    setShowDropdown(false);
+  };
+
   const hasDetections = detections && detections.features && detections.features.length > 0;
   const hasGeoImage = !!geoRawImage;
-  const hasExportableData = hasDetections || hasGeoImage;
+  const hasEmbeddings = embeddings && embeddings.allPatches && embeddings.allPatches.length > 0;
+  const hasExportableData = hasDetections || hasGeoImage || hasEmbeddings;
 
   return (
     <div className="relative">
@@ -135,6 +204,21 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
                 </div>
               </button>
             )}
+
+            {hasEmbeddings && (
+              <button
+                onClick={handleExportEmbeddings}
+                className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-purple-50/60 rounded-md transition-colors duration-200 text-gray-700 text-sm"
+              >
+                <svg className="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <div>
+                  <div className="font-medium text-sm">Export Embeddings</div>
+                  <div className="text-xs text-gray-500">Save embeddings as compressed .geojson</div>
+                </div>
+              </button>
+            )}
           </div>
           
           {/* Export info */}
@@ -143,6 +227,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
               {hasDetections && detections.features && `${detections.features.length} detection${detections.features.length !== 1 ? 's' : ''}`}
               {hasDetections && hasGeoImage && ' • '}
               {hasGeoImage && geoRawImage && `${geoRawImage.width}×${geoRawImage.height} image`}
+              {hasEmbeddings && embeddings.allPatches && `${embeddings.allPatches.length} patch${embeddings.allPatches.length !== 1 ? 'es' : ''}`}
             </div>
           </div>
         </div>

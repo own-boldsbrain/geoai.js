@@ -8,6 +8,7 @@ interface FeatureVisualizationProps {
   patchSize: number | null;
   geoRawImage: any;
   similarityThreshold: number;
+  onPatchesReady?: (patches: GeoJSON.Feature<GeoJSON.Polygon>[]) => void;
 }
 
 export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
@@ -17,70 +18,13 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
   patchSize,
   geoRawImage,
   similarityThreshold,
+  onPatchesReady,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sourceRef = useRef<string | null>(null);
   const layerRef = useRef<string | null>(null);
   const hoveredPatchRef = useRef<number | null>(null);
   const allPatchesRef = useRef<GeoJSON.Feature<GeoJSON.Polygon>[]>([]);
-
-  // Compression function using HTML Compression API
-  const compress = async (file: File, encoding: CompressionFormat = 'gzip') => {
-    try {
-      return {
-        data: await new Response(file.stream().pipeThrough(new CompressionStream(encoding)), {
-          headers: {
-            'Content-Type': file.type
-          },
-        }).blob(),
-        encoding,
-      };
-    } catch (error) {
-      // If error, return the file uncompressed
-      console.error((error as Error).message);
-      return {
-        data: file,
-        encoding: null
-      };
-    }
-  };
-
-  // Export function for allPatches
-  const handleExportPatches = async () => {
-    if (!allPatchesRef.current || allPatchesRef.current.length === 0) {
-      console.warn('No patches available for export');
-      return;
-    }
-
-    // Create GeoJSON FeatureCollection
-    const geojsonData: GeoJSON.FeatureCollection = {
-      type: "FeatureCollection",
-      features: allPatchesRef.current
-    };
-
-    // Convert to JSON string
-    const jsonString = JSON.stringify(geojsonData, null, 2);
-    
-    // Create a File object
-    const file = new File([jsonString], 'patches.geojson', { type: 'application/json' });
-    
-    // Compress the file
-    const compressed = await compress(file, 'gzip');
-    
-    // Create download link
-    const url = URL.createObjectURL(compressed.data);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = compressed.encoding ? 'patches-compressed.geojson.gz' : 'patches.geojson';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    // Log compression info
-    const savings = ((1 - compressed.data.size / file.size) * 100).toFixed(0);
-    console.log(`Compressed with ${compressed.encoding || 'none'}. Source: ${file.size} bytes, compressed: ${compressed.data.size} bytes, saving ${savings}%`);
-  };
 
   // Helper function to update layer styling based on hovered patch
   const updateLayerStyling = (hoveredPatchIndex: number | null) => {
@@ -236,6 +180,11 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
     }
 
     allPatchesRef.current = allPatches; // Store all patches for export
+    
+    // Notify parent component that patches are ready
+    if (onPatchesReady) {
+      onPatchesReady(allPatches);
+    }
 
     // Create single source and layer for all patches
     const sourceId = `feature-patches-${Date.now()}`;
@@ -288,21 +237,6 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
 
   return (
     <div className="relative">
-      {/* Export Button */}
-      {allPatchesRef.current.length > 0 && (
-        <div className="absolute top-4 right-4 z-10">
-          <button
-            onClick={handleExportPatches}
-            className="flex items-center gap-2 px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-md shadow-md hover:shadow-lg transition-all duration-200"
-            title="Export all patches as compressed GeoJSON"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Export Patches
-          </button>
-        </div>
-      )}
       
       <canvas
         ref={canvasRef}

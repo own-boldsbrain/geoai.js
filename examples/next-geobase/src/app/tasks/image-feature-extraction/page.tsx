@@ -57,6 +57,7 @@ export default function ImageFeatureExtraction() {
   const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false);
   const [isResetting, setIsResetting] = useState<boolean>(false);
   const [isExtractingFeatures, setIsExtractingFeatures] = useState<boolean>(false);
+  const [allPatches, setAllPatches] = useState<GeoJSON.Feature<GeoJSON.Polygon>[]>([]);
   
   // Contextual menu state
   const [showContextMenu, setShowContextMenu] = useState<boolean>(false);
@@ -94,6 +95,11 @@ export default function ImageFeatureExtraction() {
       }
     });
   }, 500);
+
+  // Callback to receive patches from FeatureVisualization
+  const handlePatchesReady = useCallback((patches: GeoJSON.Feature<GeoJSON.Polygon>[]) => {
+    setAllPatches(patches);
+  }, []);
 
   // Direct feature extraction function that doesn't rely on polygon state
   const extractFeaturesDirectly = (polygonFeature: GeoJSON.Feature) => {
@@ -550,6 +556,7 @@ export default function ImageFeatureExtraction() {
                 patchSize={lastResult.patchSize}
                 geoRawImage={lastResult.geoRawImage}
                 similarityThreshold={similarityThreshold}
+                onPatchesReady={handlePatchesReady}
               />
             );
           } else {
@@ -690,6 +697,12 @@ export default function ImageFeatureExtraction() {
               geoRawImage={lastResult?.geoRawImage}
               task="image-feature-extraction"
               provider={mapProvider}
+              embeddings={lastResult?.features && lastResult?.similarityMatrix && lastResult?.patchSize && allPatches.length > 0 ? {
+                features: lastResult.features,
+                similarityMatrix: lastResult.similarityMatrix,
+                patchSize: lastResult.patchSize,
+                allPatches: allPatches
+              } : undefined}
             />
           )}
         </div>
