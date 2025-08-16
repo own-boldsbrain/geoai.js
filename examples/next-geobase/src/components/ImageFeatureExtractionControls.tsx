@@ -9,9 +9,7 @@ interface ImageFeatureExtractionControlsProps {
   mapProvider: MapProvider;
   lastResult: any;
   error: string | null;
-  similarityThreshold: number;
   onMapProviderChange: (provider: MapProvider) => void;
-  onSimilarityThresholdChange: (threshold: number) => void;
 }
 
 export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionControlsProps> = ({
@@ -21,9 +19,7 @@ export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionCont
   mapProvider,
   lastResult,
   error,
-  similarityThreshold,
   onMapProviderChange,
-  onSimilarityThresholdChange,
 }) => {
   return (
     <div className="p-6">
@@ -34,8 +30,6 @@ export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionCont
         Extract dense feature representations from satellite imagery using DINOv3
       </p>
 
-
-
       {/* Controls */}
       <div className="space-y-4">
         {/* Map Provider */}
@@ -43,33 +37,6 @@ export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionCont
           value={mapProvider}
           onChange={onMapProviderChange}
         />
-
-
-
-        {/* Similarity Threshold */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Similarity Threshold: {similarityThreshold}
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.1"
-            value={similarityThreshold}
-            onChange={(e) => onSimilarityThresholdChange(parseFloat(e.target.value))}
-            className="w-full"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Higher values filter out less similar features
-          </p>
-        </div>
-
-
-
-
-
-
 
         {/* Results */}
         {lastResult?.features && (

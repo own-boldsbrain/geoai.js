@@ -6,7 +6,7 @@ import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
 import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { useDebounce } from "../../../hooks/useDebounce";
-import { Pencil, Target, Trash2, Loader2 } from "lucide-react";
+import { Pencil, Target, Trash2, Loader2, X } from "lucide-react";
 import { 
   ImageFeatureExtractionControls,
   BackgroundEffects,
@@ -56,6 +56,11 @@ export default function ImageFeatureExtraction() {
   const [similarityThreshold, setSimilarityThreshold] = useState<number>(0.5);
   const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false);
   const [isResetting, setIsResetting] = useState<boolean>(false);
+  
+  // Contextual menu state
+  const [showContextMenu, setShowContextMenu] = useState<boolean>(false);
+  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const [contextMenuThreshold, setContextMenuThreshold] = useState<number>(0.5);
 
   // Debounced handlers for performance optimization
   const debouncedZoomChange = useDebounce((newZoom: number) => {
@@ -67,8 +72,6 @@ export default function ImageFeatureExtraction() {
   const debouncedSimilarityThresholdChange = useDebounce((threshold: number) => {
     setSimilarityThreshold(threshold);
   }, 300);
-
-
 
   const debouncedMapProviderChange = useDebounce((provider: MapProvider) => {
     setMapProvider(provider);
@@ -85,7 +88,7 @@ export default function ImageFeatureExtraction() {
         zoomLevel,
       },
       postProcessingParams: {
-        similarityThreshold,
+        similarityThreshold: contextMenuThreshold,
       }
     });
   }, 500);
@@ -101,9 +104,64 @@ export default function ImageFeatureExtraction() {
         zoomLevel,
       },
       postProcessingParams: {
-        similarityThreshold,
+        similarityThreshold: contextMenuThreshold,
       }
     });
+  };
+
+  // Function to show contextual menu at polygon center
+  const showContextMenuAtPolygon = useCallback((polygonFeature: GeoJSON.Feature) => {
+    if (!map.current || !polygonFeature.geometry || polygonFeature.geometry.type !== 'Polygon') {
+      return;
+    }
+
+    // Calculate the center of the polygon
+    const coordinates = polygonFeature.geometry.coordinates[0];
+    let centerLng = 0;
+    let centerLat = 0;
+    
+    for (const coord of coordinates) {
+      centerLng += coord[0];
+      centerLat += coord[1];
+    }
+    
+    centerLng /= coordinates.length;
+    centerLat /= coordinates.length;
+
+    // Convert to screen coordinates
+    const point = map.current.project([centerLng, centerLat]);
+    
+    // Get map container bounds
+    const container = map.current.getContainer();
+    const rect = container.getBoundingClientRect();
+    
+    // Position menu near the polygon center, but ensure it's within viewport
+    const x = Math.max(20, Math.min(rect.width - 300, point.x));
+    const y = Math.max(20, Math.min(rect.height - 200, point.y));
+    
+    setContextMenuPosition({ x, y });
+    setContextMenuThreshold(similarityThreshold);
+    setShowContextMenu(true);
+  }, [similarityThreshold]);
+
+  // Function to hide contextual menu
+  const hideContextMenu = () => {
+    setShowContextMenu(false);
+    setContextMenuPosition(null);
+  };
+
+  // Function to handle contextual menu feature extraction
+  const handleContextMenuExtractFeatures = () => {
+    if (!polygon) return;
+    
+    // Update the main similarity threshold
+    setSimilarityThreshold(contextMenuThreshold);
+    
+    // Run inference with the contextual menu threshold
+    extractFeaturesDirectly(polygon);
+    
+    // Hide the menu after extraction starts
+    hideContextMenu();
   };
 
   // Debounced zoom handler for map events
@@ -149,6 +207,9 @@ export default function ImageFeatureExtraction() {
       
       // Clear result to remove FeatureVisualization without resetting model
       clearResult();
+      
+      // Hide contextual menu
+      hideContextMenu();
     } finally {
       setIsResetting(false);
     }
@@ -174,6 +235,9 @@ export default function ImageFeatureExtraction() {
       setIsDrawingMode(true);
       console.log('🎯 Drawing mode activated');
       console.log('🎯 Current draw mode:', draw.current.getMode());
+      
+      // Hide contextual menu when starting to draw
+      hideContextMenu();
     } else {
       console.error('❌ Draw control not initialized');
     }
@@ -292,22 +356,18 @@ export default function ImageFeatureExtraction() {
     map.current.on("draw.create", (e) => {
       console.log('🎯 Polygon created event triggered');
       updatePolygon();
-      // Auto-run inference when polygon is created
-      console.log('🎯 Checking auto-run conditions:', { isInitialized, isProcessing });
-      if (isInitialized && !isProcessing) {
-        setTimeout(() => {
-          const features = draw.current?.getAll();
-          console.log('🎯 Features after timeout:', features);
-          if (features && features.features.length > 0) {
-            console.log('🎯 Auto-running inference on polygon creation');
-            extractFeaturesDirectly(features.features[0]);
-          } else {
-            console.log('❌ No features found for auto-inference');
-          }
-        }, 100); // Small delay to ensure polygon is fully set
-      } else {
-        console.log('❌ Auto-run conditions not met:', { isInitialized, isProcessing });
-      }
+      
+      // Show contextual menu instead of auto-running inference
+      setTimeout(() => {
+        const features = draw.current?.getAll();
+        console.log('🎯 Features after timeout:', features);
+        if (features && features.features.length > 0) {
+          console.log('🎯 Showing contextual menu for polygon creation');
+          showContextMenuAtPolygon(features.features[0]);
+        } else {
+          console.log('❌ No features found for contextual menu');
+        }
+      }, 100); // Small delay to ensure polygon is fully set
     });
     map.current.on("draw.update", (e) => {
       console.log('🎯 Draw update event:', e);
@@ -316,6 +376,7 @@ export default function ImageFeatureExtraction() {
     map.current.on("draw.delete", (e) => {
       console.log('🎯 Draw delete event:', e);
       setPolygon(null);
+      hideContextMenu();
     });
     
     // Listen for all draw events for debugging
@@ -350,7 +411,7 @@ export default function ImageFeatureExtraction() {
       // Clean up any pending debounced calls
       debouncedUpdatePolygon.cancel?.();
     };
-  }, [mapProvider]);
+  }, [mapProvider, showContextMenuAtPolygon]);
 
   // Initialize the model when the map provider changes
   useEffect(() => {
@@ -451,9 +512,7 @@ export default function ImageFeatureExtraction() {
             mapProvider={mapProvider}
             lastResult={lastResult}
             error={error}
-            similarityThreshold={similarityThreshold}
             onMapProviderChange={debouncedMapProviderChange}
-            onSimilarityThresholdChange={debouncedSimilarityThresholdChange}
           />
         </div>
       </aside>
@@ -468,6 +527,65 @@ export default function ImageFeatureExtraction() {
             style={{ zIndex: 1 }}
           />
         </div>
+        
+        {/* Contextual Menu */}
+        {showContextMenu && contextMenuPosition && (
+          <div 
+            className="absolute z-50 bg-white/95 backdrop-blur-md border border-gray-200 rounded-lg shadow-2xl p-4 min-w-[280px]"
+            style={{
+              left: contextMenuPosition.x,
+              top: contextMenuPosition.y,
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-800">Extract Features</h3>
+              <button
+                onClick={hideContextMenu}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            {/* Similarity Threshold Slider */}
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-gray-700 mb-2">
+                Similarity Threshold: {contextMenuThreshold}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={contextMenuThreshold}
+                onChange={(e) => setContextMenuThreshold(parseFloat(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Higher values filter out less similar features
+              </p>
+            </div>
+            
+            {/* Extract Features Button */}
+            <button
+              onClick={handleContextMenuExtractFeatures}
+              disabled={!isInitialized || isProcessing}
+              className="w-full px-4 py-2 bg-teal-600 text-white rounded-md shadow-lg font-medium text-sm hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 border border-teal-500"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  <Target className="w-4 h-4" />
+                  <span>Extract Features</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
         
         {/* Feature Visualization */}
         {(() => {
@@ -500,7 +618,7 @@ export default function ImageFeatureExtraction() {
             </span>
           </div>
           {isDrawingMode && (
-            <p className="text-xs text-gray-600 mt-1">Draw a polygon to automatically extract features</p>
+            <p className="text-xs text-gray-600 mt-1">Draw a polygon to extract features</p>
           )}
           {error && (
             <p className="text-xs text-red-600 mt-1">{error}</p>
@@ -578,18 +696,6 @@ export default function ImageFeatureExtraction() {
                   <span>Draw & Extract</span>
                 </>
               )}
-            </button>
-          )}
-
-          {/* Feature Extraction Button */}
-          {polygon && !lastResult?.features && !isProcessing && (
-            <button
-              onClick={handleExtractFeatures}
-              disabled={!isInitialized || isProcessing}
-              className="px-4 py-2 bg-teal-600 text-white rounded-md shadow-xl backdrop-blur-sm font-medium text-sm hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2 border border-teal-500"
-            >
-              <Target className="w-4 h-4" />
-              <span>Extract Features</span>
             </button>
           )}
 
