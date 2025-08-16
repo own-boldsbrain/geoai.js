@@ -1,6 +1,6 @@
 import { RawImage } from "@huggingface/transformers";
 
-interface Bounds {
+export interface Bounds {
   north: number; // max latitude
   south: number; // min latitude
   east: number; // max longitude

@@ -1,5 +1,5 @@
 import { GeoRawImage, Bounds } from "../images/GeoRawImage";
-import { Tensor, matmul } from "@huggingface/transformers";
+import { Tensor } from "@huggingface/transformers";
 
 interface Patch {
   index: number;
@@ -12,7 +12,6 @@ export class GeoEmbeddings {
   private patchSize: number | null;
   private patchGrid: Patch[][] | null;
   private pooledFeatures: Tensor | null;
-  private similarityMatrix: Tensor | null;
   private modelId?: string;
   private input_source?: string;
 
@@ -25,30 +24,37 @@ export class GeoEmbeddings {
     input_source?: string
   ) {
     this.geoRawImage = geoRawImage;
-    this.patchSize = patchSize;
+    this.patchSize = patchSize || 16;
     this.pooledFeatures = pooledFeatures;
     this.modelId = modelId;
     this.input_source = input_source;
 
     if (patchFeatures && patchSize) {
-      this.patchGrid = this.buildPatchGrid(patchFeatures, patchSize);
-      this.similarityMatrix = this.computeSimilarityMatrix(patchFeatures);
+      this.patchGrid = this.buildPatchGrid(patchFeatures);
     } else {
       this.patchGrid = null;
-      this.similarityMatrix = null;
     }
   }
 
   /**
    * Build patch grid: divide image bounds into sub-bounds for each patch
    */
-  private buildPatchGrid(patchFeatures: Tensor, patchSize: number): Patch[][] {
-    const patchesPerRow = Math.ceil(this.geoRawImage.width / patchSize);
-    const patchesPerCol = Math.ceil(this.geoRawImage.height / patchSize);
+  private buildPatchGrid(patchFeatures: Tensor): Patch[][] {
+    if (
+      !this.geoRawImage ||
+      this.geoRawImage.width == null ||
+      this.geoRawImage.height == null ||
+      this.patchSize == null
+    ) {
+      throw new Error(
+        "geoRawImage, geoRawImage.width, geoRawImage.height, and patchSize must be defined"
+      );
+    }
+    const patchesPerRow = Math.ceil(this.geoRawImage.width / this.patchSize);
+    const patchesPerCol = Math.ceil(this.geoRawImage.height / this.patchSize);
 
-    const lonStep =
-      (this.geoRawImage.getBounds().east - this.geoRawImage.getBounds().west) /
-      patchesPerRow;
+    const bounds = this.geoRawImage.getBounds();
+    const lonStep = (bounds.east - bounds.west) / patchesPerRow;
     const latStep =
       (this.geoRawImage.getBounds().north -
         this.geoRawImage.getBounds().south) /
@@ -79,18 +85,6 @@ export class GeoEmbeddings {
       grid.push(patchRow);
     }
     return grid;
-  }
-
-  /**
-   * Compute cosine similarity matrix with Tensor ops
-   */
-  private async computeSimilarityMatrix(patchFeatures: Tensor): Tensor {
-    // Normalize features along last dimension
-    const normalized = patchFeatures.normalize(2, -1); // [numPatches, dim]
-
-    // Cosine sim = normalized @ normalized^T
-    const sim = await matmul(normalized, normalized.transpose(0, 1)); // [numPatches, numPatches]
-    return sim;
   }
 
   /**
