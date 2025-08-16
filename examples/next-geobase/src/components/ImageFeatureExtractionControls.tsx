@@ -11,14 +11,12 @@ interface ImageFeatureExtractionControlsProps {
   lastResult: any;
   error: string | null;
   similarityThreshold: number;
-  maxFeatures: number;
   onStartDrawing: () => void;
   onExtractFeatures: () => void;
   onReset: () => void;
   onZoomChange: (zoom: number) => void;
   onMapProviderChange: (provider: MapProvider) => void;
   onSimilarityThresholdChange: (threshold: number) => void;
-  onMaxFeaturesChange: (maxFeatures: number) => void;
 }
 
 export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionControlsProps> = ({
@@ -30,14 +28,12 @@ export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionCont
   lastResult,
   error,
   similarityThreshold,
-  maxFeatures,
   onStartDrawing,
   onExtractFeatures,
   onReset,
   onZoomChange,
   onMapProviderChange,
   onSimilarityThresholdChange,
-  onMaxFeaturesChange,
 }) => {
   return (
     <div className="p-6">
@@ -111,24 +107,7 @@ export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionCont
           </p>
         </div>
 
-        {/* Max Features */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Max Features: {maxFeatures}
-          </label>
-          <input
-            type="range"
-            min="10"
-            max="500"
-            step="10"
-            value={maxFeatures}
-            onChange={(e) => onMaxFeaturesChange(parseInt(e.target.value))}
-            className="w-full"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Limit the number of features returned
-          </p>
-        </div>
+
 
 
 

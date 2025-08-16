@@ -52,7 +52,6 @@ export default function ImageFeatureExtraction() {
   const [zoomLevel, setZoomLevel] = useState<number>(22);
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
   const [similarityThreshold, setSimilarityThreshold] = useState<number>(0.5);
-  const [maxFeatures, setMaxFeatures] = useState<number>(100);
   const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false);
 
   // Debounced handlers for performance optimization
@@ -66,9 +65,7 @@ export default function ImageFeatureExtraction() {
     setSimilarityThreshold(threshold);
   }, 300);
 
-  const debouncedMaxFeaturesChange = useDebounce((maxFeatures: number) => {
-    setMaxFeatures(maxFeatures);
-  }, 300);
+
 
   const debouncedMapProviderChange = useDebounce((provider: MapProvider) => {
     setMapProvider(provider);
@@ -86,7 +83,6 @@ export default function ImageFeatureExtraction() {
       },
       postProcessingParams: {
         similarityThreshold,
-        maxFeatures,
       }
     });
   }, 500);
@@ -390,14 +386,12 @@ export default function ImageFeatureExtraction() {
             lastResult={lastResult}
             error={error}
             similarityThreshold={similarityThreshold}
-            maxFeatures={maxFeatures}
             onStartDrawing={handleStartDrawing}
             onExtractFeatures={handleExtractFeatures}
             onReset={handleReset}
             onZoomChange={handleZoomChange}
             onMapProviderChange={debouncedMapProviderChange}
             onSimilarityThresholdChange={debouncedSimilarityThresholdChange}
-            onMaxFeaturesChange={debouncedMaxFeaturesChange}
           />
         </div>
       </aside>
