@@ -27,29 +27,20 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
 
   // Helper function to update layer styling based on hovered patch
   const updateLayerStyling = (hoveredPatchIndex: number | null) => {
-    if (!map || !layerRef.current || !similarityMatrix) return;
+    if (!map || !layerRef.current) return;
     
     hoveredPatchRef.current = hoveredPatchIndex;
     
     if (hoveredPatchIndex !== null) {
       console.log('🔥 Updating layer styling for hovered patch:', hoveredPatchIndex);
       
-      // Get similarities for the hovered patch
-      const similarities = similarityMatrix[hoveredPatchIndex];
-      if (!similarities) return;
-      
-      // Create a map of patch index to similarity for this hovered patch
-      const similarityMap = new Map<number, number>();
-      for (let i = 0; i < similarities.length; i++) {
-        similarityMap.set(i, similarities[i]);
-      }
-      
-      // Update the layer paint properties dynamically using expressions
+      // Use pre-computed similarity data with Maplibre expressions
+      // No source data updates needed - just change paint properties
       map.setPaintProperty(layerRef.current, 'fill-color', [
         'case',
         ['==', ['get', 'patchIndex'], hoveredPatchIndex], '#ff0000', // Hovered patch = red
         ['interpolate', ['linear'], 
-          ['coalesce', ['get', 'similarity'], 0], // Use similarity from properties, default to 0
+          ['get', `sim_${hoveredPatchIndex}`], // Use pre-computed similarity
           0, '#0000ff',   // Blue for low similarity
           1, '#ff0000'    // Red for high similarity
         ]
@@ -59,60 +50,17 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
         'case',
         ['==', ['get', 'patchIndex'], hoveredPatchIndex], 1, // Hovered patch = fully opaque
         ['interpolate', ['linear'], 
-          ['coalesce', ['get', 'similarity'], 0], // Use similarity from properties, default to 0
+          ['get', `sim_${hoveredPatchIndex}`], // Use pre-computed similarity
           0, 0.1,  // Low opacity for low similarity
           1, 0.8   // High opacity for high similarity
         ]
       ]);
-      
-      // Update the source data to include similarity values for the hovered patch
-      const source = map.getSource(sourceRef.current!) as maplibregl.GeoJSONSource;
-      if (source) {
-        const currentData = source.serialize().data as any;
-        const updatedFeatures = currentData.features.map((feature: any) => {
-          const patchIndex = feature.properties.patchIndex;
-          const similarity = similarityMap.get(patchIndex) || 0;
-          return {
-            ...feature,
-            properties: {
-              ...feature.properties,
-              similarity: similarity,
-            }
-          };
-        });
-        
-        source.setData({
-          type: 'FeatureCollection',
-          features: updatedFeatures,
-        });
-      }
     } else {
       console.log('🔄 Resetting layer styling');
       
-      // Reset to default styling
+      // Reset to default styling - no source data updates needed
       map.setPaintProperty(layerRef.current, 'fill-color', '#888888');
       map.setPaintProperty(layerRef.current, 'fill-opacity', 0.3);
-      
-      // Reset the source data to remove similarity values
-      const source = map.getSource(sourceRef.current!) as maplibregl.GeoJSONSource;
-      if (source) {
-        const currentData = source.serialize().data as any;
-        const resetFeatures = currentData.features.map((feature: any) => ({
-          ...feature,
-          properties: {
-            patchIndex: feature.properties.patchIndex,
-            i: feature.properties.i,
-            j: feature.properties.j,
-            featureVector: feature.properties.featureVector,
-            similarities: feature.properties.similarities,
-          }
-        }));
-        
-        source.setData({
-          type: 'FeatureCollection',
-          features: resetFeatures,
-        });
-      }
     }
   };
 
@@ -209,7 +157,7 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
           const patchNorth = geoBounds.north - i * patchHeight;
           const patchSouth = geoBounds.north - (i + 1) * patchHeight;
 
-          // Create patch polygon with similarity data
+          // Create patch polygon with ALL pre-computed similarity data
           const patchPolygon: GeoJSON.Feature<GeoJSON.Polygon> = {
             type: "Feature",
             properties: {
@@ -217,8 +165,14 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
               i,
               j,
               featureVector: features[patchIndex],
-              // Pre-calculate similarities for this patch
+              // Pre-compute ALL similarities for this patch to avoid runtime calculation
               similarities: similarityMatrix[patchIndex],
+              // Pre-compute similarity values for all other patches
+              ...Object.fromEntries(
+                similarityMatrix[patchIndex].map((similarity, targetIndex) => [
+                  `sim_${targetIndex}`, similarity
+                ])
+              ),
             },
             geometry: {
               type: "Polygon",
