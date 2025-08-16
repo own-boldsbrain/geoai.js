@@ -45,6 +45,7 @@ export default function ImageFeatureExtraction() {
     initializeModel,
     runInference,
     clearError,
+    reset: resetWorker,
   } = useGeoAIWorker();
 
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
@@ -120,6 +121,9 @@ export default function ImageFeatureExtraction() {
     setPolygon(null);
     setFeatures(undefined);
     clearError();
+    
+    // Reset worker to clear FeatureVisualization
+    resetWorker();
   };
 
   const handleZoomChange = (newZoom: number) => {
