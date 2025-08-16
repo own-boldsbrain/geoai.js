@@ -276,14 +276,28 @@ export default function ImageFeatureExtraction() {
 
   // Handle results from the worker
   useEffect(() => {
+    console.log('🔄 lastResult changed:', lastResult);
+    
     if (lastResult?.features && map.current) {
+      console.log('✅ Processing lastResult with features');
+      console.log('Features count:', lastResult.features.length);
+      console.log('Similarity matrix:', lastResult.similarityMatrix?.length);
+      console.log('Patch size:', lastResult.patchSize);
+      console.log('GeoRawImage type:', typeof lastResult.geoRawImage);
+      console.log('GeoRawImage:', lastResult.geoRawImage);
+      console.log('GeoRawImage methods:', lastResult.geoRawImage ? Object.getOwnPropertyNames(lastResult.geoRawImage) : 'null');
+      console.log('GeoRawImage prototype:', lastResult.geoRawImage ? Object.getPrototypeOf(lastResult.geoRawImage) : 'null');
+      
       // Display feature extraction results
       setFeatures(lastResult.features);
       
       // Display the inference bounds
       if (lastResult.geoRawImage?.bounds) {
+        console.log('🗺️ Displaying inference bounds');
         MapUtils.displayInferenceBounds(map.current, lastResult.geoRawImage.bounds);
       }
+    } else {
+      console.log('❌ Missing features or map for result processing');
     }
   }, [lastResult]);
 
@@ -368,17 +382,25 @@ export default function ImageFeatureExtraction() {
         </div>
         
         {/* Feature Visualization */}
-        {lastResult?.features && lastResult?.similarityMatrix && (
-          <FeatureVisualization
-            map={map.current}
-            features={lastResult.features}
-            similarityMatrix={lastResult.similarityMatrix}
-            patchSize={lastResult.patchSize}
-            geoRawImage={lastResult.geoRawImage}
-            visualizationMode={visualizationMode}
-            similarityThreshold={similarityThreshold}
-          />
-        )}
+        {(() => {
+          if (lastResult?.features && lastResult?.similarityMatrix) {
+            console.log('🎨 Rendering FeatureVisualization component');
+            return (
+              <FeatureVisualization
+                map={map.current}
+                features={lastResult.features}
+                similarityMatrix={lastResult.similarityMatrix}
+                patchSize={lastResult.patchSize}
+                geoRawImage={lastResult.geoRawImage}
+                visualizationMode={visualizationMode}
+                similarityThreshold={similarityThreshold}
+              />
+            );
+          } else {
+            console.log('❌ FeatureVisualization not rendered - missing features or similarity matrix');
+            return null;
+          }
+        })()}
         
         {/* Export Button - Floating in top right corner */}
         <div className="absolute top-6 right-6 z-10">

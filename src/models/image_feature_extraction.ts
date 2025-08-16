@@ -7,6 +7,7 @@ import { InferenceParams, ImageFeatureExtractionResults } from "@/core/types";
 
 export class ImageFeatureExtraction extends BaseModel {
   protected static instance: ImageFeatureExtraction | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private extractor: any | undefined;
   private patchSize: number | undefined;
 
@@ -160,7 +161,7 @@ export class ImageFeatureExtraction extends BaseModel {
         `[image-feature-extraction] inference completed. Time taken: ${(inferenceEndTime - inferenceStartTime).toFixed(2)}ms`
       );
 
-      return {
+      const result = {
         features: filteredFeatures,
         similarityMatrix: filteredSimilarityMatrix,
         patchSize: this.patchSize,
@@ -171,6 +172,16 @@ export class ImageFeatureExtraction extends BaseModel {
           modelId: this.model_id,
         },
       };
+
+      console.log("[image-feature-extraction] Result structure:", {
+        featuresLength: result.features.length,
+        similarityMatrixLength: result.similarityMatrix.length,
+        patchSize: result.patchSize,
+        geoRawImageBounds: result.geoRawImage?.getBounds(),
+        metadata: result.metadata,
+      });
+
+      return result;
     } catch (error) {
       console.error("Feature extraction error:", error);
       throw new Error(
