@@ -27,57 +27,69 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
 
   // Helper function to update layer styling based on hovered patch
   const updateLayerStyling = (hoveredPatchIndex: number | null) => {
-    if (!map || !layerRef.current) return;
+    if (!map || !map.getStyle || !layerRef.current) return;
     
     hoveredPatchRef.current = hoveredPatchIndex;
     
     if (hoveredPatchIndex !== null) {
       console.log('🔥 Updating layer styling for hovered patch:', hoveredPatchIndex);
       
-      // Use pre-computed similarity data with Maplibre expressions
-      // No source data updates needed - just change paint properties
-      map.setPaintProperty(layerRef.current, 'fill-color', [
-        'case',
-        ['==', ['get', 'patchIndex'], hoveredPatchIndex], '#fcfdbf', // Hovered patch = bright yellow-white
-        ['interpolate', ['linear'], 
-          ['get', `sim_${hoveredPatchIndex}`], // Use pre-computed similarity
-          0, '#000004',   // Black for low similarity
-          0.2, '#3b0f70', // Dark purple for low-medium similarity
-          0.4, '#8c2981', // Purple for medium similarity
-          0.6, '#de4968', // Pink-red for medium-high similarity
-          0.8, '#fe9f6d', // Orange for high similarity
-          1, '#fcfdbf'    // Bright yellow-white for highest similarity
-        ]
-      ]);
-      
-      map.setPaintProperty(layerRef.current, 'fill-opacity', [
-        'case',
-        ['==', ['get', 'patchIndex'], hoveredPatchIndex], 1, // Hovered patch = fully opaque
-        ['interpolate', ['linear'], 
-          ['get', `sim_${hoveredPatchIndex}`], // Use pre-computed similarity
-          0, 0.2,  // Higher opacity for low similarity
-          1, 0.9   // Higher opacity for high similarity
-        ]
-      ]);
+      try {
+        // Use pre-computed similarity data with Maplibre expressions
+        // No source data updates needed - just change paint properties
+        map.setPaintProperty(layerRef.current, 'fill-color', [
+          'case',
+          ['==', ['get', 'patchIndex'], hoveredPatchIndex], '#fcfdbf', // Hovered patch = bright yellow-white
+          ['interpolate', ['linear'], 
+            ['get', `sim_${hoveredPatchIndex}`], // Use pre-computed similarity
+            0, '#000004',   // Black for low similarity
+            0.2, '#3b0f70', // Dark purple for low-medium similarity
+            0.4, '#8c2981', // Purple for medium similarity
+            0.6, '#de4968', // Pink-red for medium-high similarity
+            0.8, '#fe9f6d', // Orange for high similarity
+            1, '#fcfdbf'    // Bright yellow-white for highest similarity
+          ]
+        ]);
+        
+        map.setPaintProperty(layerRef.current, 'fill-opacity', [
+          'case',
+          ['==', ['get', 'patchIndex'], hoveredPatchIndex], 1, // Hovered patch = fully opaque
+          ['interpolate', ['linear'], 
+            ['get', `sim_${hoveredPatchIndex}`], // Use pre-computed similarity
+            0, 0.2,  // Higher opacity for low similarity
+            1, 0.9   // Higher opacity for high similarity
+          ]
+        ]);
+      } catch (error) {
+        console.warn('Error updating layer styling:', error);
+      }
     } else {
       console.log('🔄 Resetting layer styling');
       
-      // Reset to default styling - no source data updates needed
-      map.setPaintProperty(layerRef.current, 'fill-color', '#8c2981'); // Magma purple
-      map.setPaintProperty(layerRef.current, 'fill-opacity', 0.4); // Slightly higher opacity
+      try {
+        // Reset to default styling - no source data updates needed
+        map.setPaintProperty(layerRef.current, 'fill-color', '#8c2981'); // Magma purple
+        map.setPaintProperty(layerRef.current, 'fill-opacity', 0.4); // Slightly higher opacity
+      } catch (error) {
+        console.warn('Error resetting layer styling:', error);
+      }
     }
   };
 
   // Helper function to cleanup layers
   const cleanupLayers = () => {
-    if (!map) return;
+    if (!map || !map.getStyle) return;
 
     if (sourceRef.current && layerRef.current) {
-      if (map.getLayer(layerRef.current)) {
-        map.removeLayer(layerRef.current);
-      }
-      if (map.getSource(sourceRef.current)) {
-        map.removeSource(sourceRef.current);
+      try {
+        if (map.getLayer(layerRef.current)) {
+          map.removeLayer(layerRef.current);
+        }
+        if (map.getSource(sourceRef.current)) {
+          map.removeSource(sourceRef.current);
+        }
+      } catch (error) {
+        console.warn('Error during layer cleanup:', error);
       }
     }
   };
