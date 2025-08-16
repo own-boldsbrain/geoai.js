@@ -8,10 +8,10 @@ import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { Pencil, Target, Trash2, Loader2, X } from "lucide-react";
 import { 
-  ImageFeatureExtractionControls,
   BackgroundEffects,
   ExportButton,
-  FeatureVisualization
+  FeatureVisualization,
+  MapProviderSelector
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
@@ -56,6 +56,7 @@ export default function ImageFeatureExtraction() {
   const [similarityThreshold, setSimilarityThreshold] = useState<number>(0.5);
   const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false);
   const [isResetting, setIsResetting] = useState<boolean>(false);
+  const [isExtractingFeatures, setIsExtractingFeatures] = useState<boolean>(false);
   
   // Contextual menu state
   const [showContextMenu, setShowContextMenu] = useState<boolean>(false);
@@ -80,6 +81,7 @@ export default function ImageFeatureExtraction() {
   const debouncedExtractFeatures = useDebounce(() => {
     if (!polygon) return;
     
+    setIsExtractingFeatures(true);
     runInference({
       inputs: {
         polygon: polygon
@@ -96,6 +98,7 @@ export default function ImageFeatureExtraction() {
   // Direct feature extraction function that doesn't rely on polygon state
   const extractFeaturesDirectly = (polygonFeature: GeoJSON.Feature) => {
     console.log('🎯 Running direct feature extraction');
+    setIsExtractingFeatures(true);
     runInference({
       inputs: {
         polygon: polygonFeature
@@ -203,6 +206,7 @@ export default function ImageFeatureExtraction() {
       // Reset states
       setPolygon(null);
       setFeatures(undefined);
+      setIsExtractingFeatures(false);
       clearError();
       
       // Clear result to remove FeatureVisualization without resetting model
@@ -449,6 +453,11 @@ export default function ImageFeatureExtraction() {
       // Display feature extraction results
       setFeatures(lastResult.features);
       
+      // Set extracting features to false when results are available
+      if (lastResult.similarityMatrix) {
+        setIsExtractingFeatures(false);
+      }
+      
       // Display the inference bounds
       if (lastResult.geoRawImage?.bounds) {
         console.log('🗺️ Displaying inference bounds');
@@ -460,7 +469,7 @@ export default function ImageFeatureExtraction() {
   }, [lastResult]);
 
   return (
-    <main className="w-full h-screen flex overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100 relative">
+    <main className="w-full h-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100 relative">
       <BackgroundEffects />
       
       {/* Global styles for draw controls */}
@@ -501,24 +510,8 @@ export default function ImageFeatureExtraction() {
         }
       `}</style>
 
-      {/* Sidebar */}
-      <aside className="w-96 h-full flex flex-col overflow-hidden relative">
-        {/* Glassmorphism sidebar */}
-        <div className="backdrop-blur-xl bg-white/80 border-r border-gray-200/30 h-full shadow-2xl">
-          <ImageFeatureExtractionControls
-            polygon={polygon}
-            isInitialized={isInitialized}
-            isProcessing={isProcessing}
-            mapProvider={mapProvider}
-            lastResult={lastResult}
-            error={error}
-            onMapProviderChange={debouncedMapProviderChange}
-          />
-        </div>
-      </aside>
-
       {/* Map Container */}
-      <div className="flex-1 h-full relative">
+      <div className="w-full h-full relative">
         {/* Map overlay with subtle border */}
         <div className="absolute inset-2 rounded-lg overflow-hidden border border-gray-200/50 shadow-2xl">
           <div 
@@ -625,6 +618,34 @@ export default function ImageFeatureExtraction() {
           )}
         </div>
 
+        {/* Task Info - Bottom Right */}
+        <div className="absolute bottom-6 right-6 z-10 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-md shadow-md p-3">
+          <div className="text-right">
+            <h3 className="text-sm font-semibold text-gray-800 mb-1">
+              Image Feature Extraction
+            </h3>
+            {lastResult?.metadata?.modelId && (
+              <p className="text-xs text-gray-600 font-mono">
+                {lastResult.metadata.modelId}
+              </p>
+            )}
+            {!lastResult?.metadata?.modelId && isInitialized && (
+              <p className="text-xs text-gray-500 italic">
+                DINOv3 Model
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Map Provider Selector - Top Left */}
+        <div className="absolute top-6 left-6 z-20 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-md shadow-md p-2">
+          <MapProviderSelector
+            value={mapProvider}
+            onChange={debouncedMapProviderChange}
+            className=""
+          />
+        </div>
+
         {/* Zoom Control - Top Right */}
         <div className="absolute top-6 right-6 z-10 bg-white/90 text-gray-800 px-3 py-2 rounded-md shadow-md backdrop-blur-sm border border-gray-200">
           <div className="flex items-center space-x-3">
@@ -667,9 +688,10 @@ export default function ImageFeatureExtraction() {
           ) : (
             <button
               onClick={isDrawingMode ? handleStartDrawing : (polygon ? handleReset : handleStartDrawing)}
-              disabled={isResetting}
+              disabled={isResetting || isExtractingFeatures}
               className={`px-4 py-2 rounded-md shadow-xl backdrop-blur-sm font-medium text-sm transition-all duration-200 flex items-center space-x-2 border ${
                 isResetting ? 'bg-gray-400 text-white border-gray-300' : // Resetting state
+                isExtractingFeatures ? 'bg-gray-400 text-white border-gray-300' : // Extracting features
                 isDrawingMode ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-500' : // Drawing active
                 polygon ? 'bg-rose-600 text-white hover:bg-rose-700 border-rose-500' : // Polygon drawn (Reset)
                 'bg-blue-600 text-white hover:bg-blue-700 border-blue-500' // Initial (Start Drawing)
@@ -679,6 +701,11 @@ export default function ImageFeatureExtraction() {
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Resetting...</span>
+                </>
+              ) : isExtractingFeatures ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Extracting Features...</span>
                 </>
               ) : isDrawingMode ? (
                 <>

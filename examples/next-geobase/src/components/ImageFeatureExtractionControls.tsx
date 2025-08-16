@@ -1,6 +1,5 @@
 import React from 'react';
 import { MapProvider } from '../types';
-import { MapProviderSelector } from './MapProviderSelector';
 
 interface ImageFeatureExtractionControlsProps {
   polygon: GeoJSON.Feature | null;
@@ -32,12 +31,6 @@ export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionCont
 
       {/* Controls */}
       <div className="space-y-4">
-        {/* Map Provider */}
-        <MapProviderSelector
-          value={mapProvider}
-          onChange={onMapProviderChange}
-        />
-
         {/* Results */}
         {lastResult?.features && (
           <div className="mt-6 p-4 bg-gray-50 rounded-md">
