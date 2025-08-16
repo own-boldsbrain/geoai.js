@@ -99,6 +99,41 @@ export default function ImageFeatureExtraction() {
   // Callback to receive patches from FeatureVisualization
   const handlePatchesReady = useCallback((patches: GeoJSON.Feature<GeoJSON.Polygon>[]) => {
     setAllPatches(patches);
+    
+    // Make the original polygon unfilled after embeddings are drawn
+    if (map.current && draw.current && patches.length > 0) {
+      // Remove the polygon fill by adding a custom layer that overrides the fill
+      const sourceId = 'unfilled-polygon-override';
+      const layerId = 'unfilled-polygon-layer';
+      
+      // Remove existing override layers if they exist
+      if (map.current.getLayer(layerId)) {
+        map.current.removeLayer(layerId);
+      }
+      if (map.current.getSource(sourceId)) {
+        map.current.removeSource(sourceId);
+      }
+      
+      // Get the current polygon from draw control
+      const allFeatures = draw.current.getAll();
+      if (allFeatures && allFeatures.features.length > 0) {
+        // Add a transparent fill layer that covers the original polygon
+        map.current.addSource(sourceId, {
+          type: 'geojson',
+          data: allFeatures
+        });
+        
+        map.current.addLayer({
+          id: layerId,
+          type: 'fill',
+          source: sourceId,
+          paint: {
+            'fill-color': '#ffffff',
+            'fill-opacity': 0 // Completely transparent
+          }
+        }, 'gl-draw-polygon-fill-inactive'); // Insert before the original fill layer
+      }
+    }
   }, []);
 
   // Direct feature extraction function that doesn't rely on polygon state
@@ -369,6 +404,18 @@ export default function ImageFeatureExtraction() {
     map.current.on("draw.delete", (e) => {
       setPolygon(null);
       hideContextMenu();
+      
+      // Remove the unfilled polygon override layer
+      if (map.current) {
+        const layerId = 'unfilled-polygon-layer';
+        const sourceId = 'unfilled-polygon-override';
+        if (map.current.getLayer(layerId)) {
+          map.current.removeLayer(layerId);
+        }
+        if (map.current.getSource(sourceId)) {
+          map.current.removeSource(sourceId);
+        }
+      }
     });
     
     // Listen for drawing mode changes
@@ -388,6 +435,15 @@ export default function ImageFeatureExtraction() {
 
     return () => {
       if (map.current) {
+        // Remove the unfilled polygon override layer before removing the map
+        const layerId = 'unfilled-polygon-layer';
+        const sourceId = 'unfilled-polygon-override';
+        if (map.current.getLayer(layerId)) {
+          map.current.removeLayer(layerId);
+        }
+        if (map.current.getSource(sourceId)) {
+          map.current.removeSource(sourceId);
+        }
         map.current.remove();
       }
       // Clean up any pending debounced calls
@@ -472,6 +528,12 @@ export default function ImageFeatureExtraction() {
         .maplibregl-draw .maplibregl-draw-trash:hover {
           background: #dc3545 !important;
           color: #fff !important;
+        }
+        
+        /* Style for unfilled polygons */
+        .maplibregl-draw .maplibregl-draw-polygon-fill-inactive[data-unfilled="true"],
+        .maplibregl-draw .maplibregl-draw-polygon-fill-active[data-unfilled="true"] {
+          fill-opacity: 0 !important;
         }
       `}</style>
 
