@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
 import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
+import { useDebounce } from "../../../hooks/useDebounce";
 import { 
   ImageFeatureExtractionControls,
   BackgroundEffects,
@@ -55,6 +56,60 @@ export default function ImageFeatureExtraction() {
   const [visualizationMode, setVisualizationMode] = useState<'heatmap' | 'overlay' | 'patches'>('heatmap');
   const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false);
 
+  // Debounced handlers for performance optimization
+  const debouncedZoomChange = useDebounce((newZoom: number) => {
+    if (map.current) {
+      MapUtils.setZoom(map.current, newZoom);
+    }
+  }, 150);
+
+  const debouncedSimilarityThresholdChange = useDebounce((threshold: number) => {
+    setSimilarityThreshold(threshold);
+  }, 300);
+
+  const debouncedMaxFeaturesChange = useDebounce((maxFeatures: number) => {
+    setMaxFeatures(maxFeatures);
+  }, 300);
+
+  const debouncedMapProviderChange = useDebounce((provider: MapProvider) => {
+    setMapProvider(provider);
+  }, 200);
+
+  const debouncedExtractFeatures = useDebounce(() => {
+    if (!polygon) return;
+    
+    runInference({
+      inputs: {
+        polygon: polygon
+      },
+      mapSourceParams: {
+        zoomLevel,
+      },
+      postProcessingParams: {
+        similarityThreshold,
+        maxFeatures,
+      }
+    });
+  }, 500);
+
+  // Debounced zoom handler for map events
+  const debouncedZoomHandler = useDebounce(() => {
+    if (map.current) {
+      const currentZoom = Math.round(map.current.getZoom());
+      setZoomLevel(currentZoom);
+    }
+  }, 100);
+
+  // Debounced polygon update to prevent excessive re-renders during drawing
+  const debouncedUpdatePolygon = useDebounce(() => {
+    const features = draw.current?.getAll();
+    if (features && features.features.length > 0) {
+      setPolygon(features.features[0]);
+    } else {
+      setPolygon(null);
+    }
+  }, 200);
+
   const handleReset = () => {
     // Clear all drawn features
     if (draw.current) {
@@ -74,27 +129,15 @@ export default function ImageFeatureExtraction() {
 
   const handleZoomChange = (newZoom: number) => {
     setZoomLevel(newZoom);
-    // Also update the map zoom to match the slider
-    if (map.current) {
-      MapUtils.setZoom(map.current, newZoom);
-    }
+    // Use debounced map zoom update for better performance
+    debouncedZoomChange(newZoom);
   };
 
   const handleExtractFeatures = () => {
     if (!polygon) return;
     
-    runInference({
-      inputs: {
-        polygon: polygon
-      },
-      mapSourceParams: {
-        zoomLevel,
-      },
-      postProcessingParams: {
-        similarityThreshold,
-        maxFeatures,
-      }
-    });
+    // Use debounced feature extraction to prevent rapid successive calls
+    debouncedExtractFeatures();
   };
 
   const handleStartDrawing = () => {
@@ -229,29 +272,21 @@ export default function ImageFeatureExtraction() {
     });
 
     // Listen for zoom changes to sync with slider
-    map.current.on("zoom", () => {
-      if (map.current) {
-        const currentZoom = Math.round(map.current.getZoom());
-        setZoomLevel(currentZoom);
-      }
-    });
+    map.current.on("zoom", debouncedZoomHandler);
 
     // Initialize zoom level with current map zoom
     setZoomLevel(Math.round(map.current.getZoom()));
 
     function updatePolygon() {
-      const features = draw.current?.getAll();
-      if (features && features.features.length > 0) {
-        setPolygon(features.features[0]);
-      } else {
-        setPolygon(null);
-      }
+      debouncedUpdatePolygon();
     }
 
     return () => {
       if (map.current) {
         map.current.remove();
       }
+      // Clean up any pending debounced calls
+      debouncedUpdatePolygon.cancel?.();
     };
   }, [mapProvider]);
 
@@ -362,9 +397,9 @@ export default function ImageFeatureExtraction() {
             onExtractFeatures={handleExtractFeatures}
             onReset={handleReset}
             onZoomChange={handleZoomChange}
-            onMapProviderChange={setMapProvider}
-            onSimilarityThresholdChange={setSimilarityThreshold}
-            onMaxFeaturesChange={setMaxFeatures}
+            onMapProviderChange={debouncedMapProviderChange}
+            onSimilarityThresholdChange={debouncedSimilarityThresholdChange}
+            onMaxFeaturesChange={debouncedMaxFeaturesChange}
             onVisualizationModeChange={setVisualizationMode}
           />
         </div>

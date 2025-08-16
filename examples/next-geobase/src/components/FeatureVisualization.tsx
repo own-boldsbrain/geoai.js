@@ -38,11 +38,15 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
       // No source data updates needed - just change paint properties
       map.setPaintProperty(layerRef.current, 'fill-color', [
         'case',
-        ['==', ['get', 'patchIndex'], hoveredPatchIndex], '#ff0000', // Hovered patch = red
+        ['==', ['get', 'patchIndex'], hoveredPatchIndex], '#fcfdbf', // Hovered patch = bright yellow-white
         ['interpolate', ['linear'], 
           ['get', `sim_${hoveredPatchIndex}`], // Use pre-computed similarity
-          0, '#0000ff',   // Blue for low similarity
-          1, '#ff0000'    // Red for high similarity
+          0, '#000004',   // Black for low similarity
+          0.2, '#3b0f70', // Dark purple for low-medium similarity
+          0.4, '#8c2981', // Purple for medium similarity
+          0.6, '#de4968', // Pink-red for medium-high similarity
+          0.8, '#fe9f6d', // Orange for high similarity
+          1, '#fcfdbf'    // Bright yellow-white for highest similarity
         ]
       ]);
       
@@ -51,16 +55,16 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
         ['==', ['get', 'patchIndex'], hoveredPatchIndex], 1, // Hovered patch = fully opaque
         ['interpolate', ['linear'], 
           ['get', `sim_${hoveredPatchIndex}`], // Use pre-computed similarity
-          0, 0.1,  // Low opacity for low similarity
-          1, 0.8   // High opacity for high similarity
+          0, 0.2,  // Higher opacity for low similarity
+          1, 0.9   // Higher opacity for high similarity
         ]
       ]);
     } else {
       console.log('🔄 Resetting layer styling');
       
       // Reset to default styling - no source data updates needed
-      map.setPaintProperty(layerRef.current, 'fill-color', '#888888');
-      map.setPaintProperty(layerRef.current, 'fill-opacity', 0.3);
+      map.setPaintProperty(layerRef.current, 'fill-color', '#8c2981'); // Magma purple
+      map.setPaintProperty(layerRef.current, 'fill-opacity', 0.4); // Slightly higher opacity
     }
   };
 
@@ -212,8 +216,8 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
       type: 'fill',
       source: sourceId,
       paint: {
-        'fill-color': '#888888',
-        'fill-opacity': 0.3,
+        'fill-color': '#8c2981', // Magma purple
+        'fill-opacity': 0.4, // Slightly higher opacity
       },
     });
 
@@ -223,7 +227,7 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
         const patchIndex = feature.properties?.patchIndex;
     
         if (patchIndex !== undefined && patchIndex !== hoveredPatchRef.current) {
-          map.getCanvas().style.cursor = 'pointer';
+          map.getCanvas().style.cursor = 'crosshair';
           updateLayerStyling(patchIndex);
         }
       } else {
