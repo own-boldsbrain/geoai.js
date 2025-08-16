@@ -217,22 +217,24 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
       },
     });
 
-    // Add hover functionality
-    map.on('mouseenter', layerId, (e) => {
+    map.on('mousemove', layerId, (e) => {
       if (e.features && e.features.length > 0) {
         const feature = e.features[0];
         const patchIndex = feature.properties?.patchIndex;
-        if (patchIndex !== undefined) {
+    
+        if (patchIndex !== undefined && patchIndex !== hoveredPatchRef.current) {
           map.getCanvas().style.cursor = 'pointer';
           updateLayerStyling(patchIndex);
         }
+      } else {
+        // Cursor not on any patch
+        if (hoveredPatchRef.current !== null) {
+          map.getCanvas().style.cursor = '';
+          updateLayerStyling(null);
+        }
       }
     });
-
-    map.on('mouseleave', layerId, () => {
-      map.getCanvas().style.cursor = '';
-      updateLayerStyling(null);
-    });
+    
 
     console.log('✅ Single interactive layer created with', allPatches.length, 'patches');
 
