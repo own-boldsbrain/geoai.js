@@ -90,6 +90,22 @@ export default function ImageFeatureExtraction() {
     });
   }, 500);
 
+  // Direct feature extraction function that doesn't rely on polygon state
+  const extractFeaturesDirectly = (polygonFeature: GeoJSON.Feature) => {
+    console.log('🎯 Running direct feature extraction');
+    runInference({
+      inputs: {
+        polygon: polygonFeature
+      },
+      mapSourceParams: {
+        zoomLevel,
+      },
+      postProcessingParams: {
+        similarityThreshold,
+      }
+    });
+  };
+
   // Debounced zoom handler for map events
   const debouncedZoomHandler = useDebounce(() => {
     if (map.current) {
@@ -100,10 +116,14 @@ export default function ImageFeatureExtraction() {
 
   // Debounced polygon update to prevent excessive re-renders during drawing
   const debouncedUpdatePolygon = useDebounce(() => {
+    console.log('🎯 debouncedUpdatePolygon executing');
     const features = draw.current?.getAll();
+    console.log('🎯 Features in debounced update:', features);
     if (features && features.features.length > 0) {
+      console.log('🎯 Setting polygon state');
       setPolygon(features.features[0]);
     } else {
+      console.log('🎯 Clearing polygon state');
       setPolygon(null);
     }
   }, 200);
@@ -149,12 +169,13 @@ export default function ImageFeatureExtraction() {
 
   const handleStartDrawing = () => {
     if (draw.current) {
-      console.log('Starting drawing mode...');
+      console.log('🎯 Starting drawing mode...');
       draw.current.changeMode("draw_polygon");
       setIsDrawingMode(true);
-      console.log('Drawing mode activated');
+      console.log('🎯 Drawing mode activated');
+      console.log('🎯 Current draw mode:', draw.current.getMode());
     } else {
-      console.error('Draw control not initialized');
+      console.error('❌ Draw control not initialized');
     }
   };
 
@@ -268,14 +289,47 @@ export default function ImageFeatureExtraction() {
     }, 100);
 
     // Listen for polygon creation
-    map.current.on("draw.create", updatePolygon);
-    map.current.on("draw.update", updatePolygon);
-    map.current.on("draw.delete", () => setPolygon(null));
+    map.current.on("draw.create", (e) => {
+      console.log('🎯 Polygon created event triggered');
+      updatePolygon();
+      // Auto-run inference when polygon is created
+      console.log('🎯 Checking auto-run conditions:', { isInitialized, isProcessing });
+      if (isInitialized && !isProcessing) {
+        setTimeout(() => {
+          const features = draw.current?.getAll();
+          console.log('🎯 Features after timeout:', features);
+          if (features && features.features.length > 0) {
+            console.log('🎯 Auto-running inference on polygon creation');
+            extractFeaturesDirectly(features.features[0]);
+          } else {
+            console.log('❌ No features found for auto-inference');
+          }
+        }, 100); // Small delay to ensure polygon is fully set
+      } else {
+        console.log('❌ Auto-run conditions not met:', { isInitialized, isProcessing });
+      }
+    });
+    map.current.on("draw.update", (e) => {
+      console.log('🎯 Draw update event:', e);
+      updatePolygon();
+    });
+    map.current.on("draw.delete", (e) => {
+      console.log('🎯 Draw delete event:', e);
+      setPolygon(null);
+    });
+    
+    // Listen for all draw events for debugging
+    map.current.on("draw", (e) => {
+      console.log('🎯 Draw event:', e.type, e);
+    });
     
     // Listen for drawing mode changes
     map.current.on("draw.modechange", (e: any) => {
       console.log('Draw mode changed:', e.mode);
       setIsDrawingMode(e.mode === 'draw_polygon');
+      
+      // Debug: log all draw events
+      console.log('🎯 Current draw features:', draw.current?.getAll());
     });
 
     // Listen for zoom changes to sync with slider
@@ -285,6 +339,7 @@ export default function ImageFeatureExtraction() {
     setZoomLevel(Math.round(map.current.getZoom()));
 
     function updatePolygon() {
+      console.log('🎯 updatePolygon called');
       debouncedUpdatePolygon();
     }
 
@@ -393,13 +448,10 @@ export default function ImageFeatureExtraction() {
             polygon={polygon}
             isInitialized={isInitialized}
             isProcessing={isProcessing}
-            zoomLevel={zoomLevel}
             mapProvider={mapProvider}
             lastResult={lastResult}
             error={error}
             similarityThreshold={similarityThreshold}
-            onExtractFeatures={handleExtractFeatures}
-            onZoomChange={handleZoomChange}
             onMapProviderChange={debouncedMapProviderChange}
             onSimilarityThresholdChange={debouncedSimilarityThresholdChange}
           />
@@ -437,64 +489,119 @@ export default function ImageFeatureExtraction() {
           }
         })()}
         
-        {/* Export Button - Floating in top right corner */}
-        <div className="absolute top-6 right-6 z-10">
-          <ExportButton
-            detections={features ? { type: "FeatureCollection", features: [] } : undefined}
-            geoRawImage={lastResult?.geoRawImage}
-            task="image-feature-extraction"
-            provider={mapProvider}
-            disabled={!features && !lastResult?.geoRawImage}
-            className="shadow-2xl backdrop-blur-lg"
-          />
+
+        
+        {/* Status Message - Bottom Left */}
+        <div className="absolute bottom-6 left-6 z-10 bg-white/90 text-gray-800 px-3 py-2 rounded-md shadow-md backdrop-blur-sm border border-gray-200">
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${isInitialized ? 'bg-green-500' : 'bg-yellow-500'} ${isProcessing ? 'animate-pulse' : ''}`}></div>
+            <span className="text-sm font-medium">
+              {isProcessing ? 'Processing...' : isInitialized ? 'Model Ready' : 'Initializing...'}
+            </span>
+          </div>
+          {isDrawingMode && (
+            <p className="text-xs text-gray-600 mt-1">Draw a polygon to automatically extract features</p>
+          )}
+          {error && (
+            <p className="text-xs text-red-600 mt-1">{error}</p>
+          )}
+        </div>
+
+        {/* Zoom Control - Top Right */}
+        <div className="absolute top-6 right-6 z-10 bg-white/90 text-gray-800 px-3 py-2 rounded-md shadow-md backdrop-blur-sm border border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="flex flex-col items-center space-y-1">
+              <button
+                onClick={() => handleZoomChange(zoomLevel + 1)}
+                disabled={zoomLevel >= 22}
+                className="w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 rounded text-gray-600 transition-colors"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </button>
+              <button
+                onClick={() => handleZoomChange(zoomLevel - 1)}
+                disabled={zoomLevel <= 15}
+                className="w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 rounded text-gray-600 transition-colors"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-xs text-gray-500 font-medium">ZOOM</span>
+              <span className="text-sm font-semibold text-gray-800">{zoomLevel}</span>
+            </div>
+          </div>
         </div>
         
-        {/* Drawing Mode Indicator */}
-        {isDrawingMode && (
-          <div className="absolute top-6 left-6 z-10 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg backdrop-blur-lg">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-              <span className="font-semibold">Drawing Mode Active</span>
+        {/* Action Buttons - Top middle of map */}
+        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-10 flex items-center space-x-2">
+          {/* Start Drawing / Reset Button */}
+          {!isInitialized ? (
+            // Loading state when model is initializing
+            <div className="px-4 py-2 rounded-md shadow-xl backdrop-blur-sm font-medium text-sm flex items-center space-x-2 border bg-blue-600 text-white border-blue-500">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Loading Model...</span>
             </div>
-            <p className="text-sm opacity-90 mt-1">Click on the map to draw a polygon</p>
-          </div>
-        )}
-        
-        {/* Start Drawing / Reset Button - Top middle of map */}
-        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-10">
-          <button
-            onClick={isDrawingMode ? handleStartDrawing : (polygon ? handleReset : handleStartDrawing)}
-            disabled={!isInitialized || isResetting}
-            className={`px-6 py-3 rounded-lg shadow-2xl backdrop-blur-lg font-semibold transition-all duration-200 flex items-center space-x-2 ${
-              isDrawingMode 
-                ? 'bg-green-500 text-white hover:bg-green-600 disabled:opacity-50' 
-                : polygon
-                ? 'bg-red-500 text-white hover:bg-red-600 disabled:opacity-50'
-                : 'bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed'
-            }`}
-          >
-            {isResetting ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Resetting...</span>
-              </>
-            ) : isDrawingMode ? (
-              <>
-                <Target className="w-5 h-5" />
-                <span>Drawing Active</span>
-              </>
-            ) : polygon ? (
-              <>
-                <Trash2 className="w-5 h-5" />
-                <span>Reset</span>
-              </>
-            ) : (
-              <>
-                <Pencil className="w-5 h-5" />
-                <span>Start Drawing</span>
-              </>
-            )}
-          </button>
+          ) : (
+            <button
+              onClick={isDrawingMode ? handleStartDrawing : (polygon ? handleReset : handleStartDrawing)}
+              disabled={isResetting}
+              className={`px-4 py-2 rounded-md shadow-xl backdrop-blur-sm font-medium text-sm transition-all duration-200 flex items-center space-x-2 border ${
+                isResetting ? 'bg-gray-400 text-white border-gray-300' : // Resetting state
+                isDrawingMode ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-500' : // Drawing active
+                polygon ? 'bg-rose-600 text-white hover:bg-rose-700 border-rose-500' : // Polygon drawn (Reset)
+                'bg-blue-600 text-white hover:bg-blue-700 border-blue-500' // Initial (Start Drawing)
+              }`}
+            >
+              {isResetting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Resetting...</span>
+                </>
+              ) : isDrawingMode ? (
+                <>
+                  <Target className="w-4 h-4" />
+                  <span>Drawing Active</span>
+                </>
+              ) : polygon ? (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  <span>Reset</span>
+                </>
+              ) : (
+                <>
+                  <Pencil className="w-4 h-4" />
+                  <span>Draw & Extract</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Feature Extraction Button */}
+          {polygon && !lastResult?.features && !isProcessing && (
+            <button
+              onClick={handleExtractFeatures}
+              disabled={!isInitialized || isProcessing}
+              className="px-4 py-2 bg-teal-600 text-white rounded-md shadow-xl backdrop-blur-sm font-medium text-sm hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2 border border-teal-500"
+            >
+              <Target className="w-4 h-4" />
+              <span>Extract Features</span>
+            </button>
+          )}
+
+          {/* Export Button */}
+          {lastResult?.features && (
+            <ExportButton
+              detections={lastResult.features}
+              geoRawImage={lastResult?.geoRawImage}
+              task="image-feature-extraction"
+              provider={mapProvider}
+            />
+          )}
         </div>
         
         {/* Corner decorations */}

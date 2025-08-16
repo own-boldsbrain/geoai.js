@@ -6,13 +6,10 @@ interface ImageFeatureExtractionControlsProps {
   polygon: GeoJSON.Feature | null;
   isInitialized: boolean;
   isProcessing: boolean;
-  zoomLevel: number;
   mapProvider: MapProvider;
   lastResult: any;
   error: string | null;
   similarityThreshold: number;
-  onExtractFeatures: () => void;
-  onZoomChange: (zoom: number) => void;
   onMapProviderChange: (provider: MapProvider) => void;
   onSimilarityThresholdChange: (threshold: number) => void;
 }
@@ -21,13 +18,10 @@ export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionCont
   polygon,
   isInitialized,
   isProcessing,
-  zoomLevel,
   mapProvider,
   lastResult,
   error,
   similarityThreshold,
-  onExtractFeatures,
-  onZoomChange,
   onMapProviderChange,
   onSimilarityThresholdChange,
 }) => {
@@ -40,26 +34,7 @@ export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionCont
         Extract dense feature representations from satellite imagery using DINOv3
       </p>
 
-      {/* Status */}
-      <div className="mb-6">
-        <div className="flex items-center space-x-2 mb-2">
-          <div className={`w-3 h-3 rounded-full ${isInitialized ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-          <span className="text-sm text-gray-600">
-            {isInitialized ? 'Model Ready' : 'Initializing...'}
-          </span>
-        </div>
-        {isProcessing && (
-          <div className="flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-            <span className="text-sm text-blue-600">Processing...</span>
-          </div>
-        )}
-        {error && (
-          <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-            {error}
-          </div>
-        )}
-      </div>
+
 
       {/* Controls */}
       <div className="space-y-4">
@@ -69,20 +44,7 @@ export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionCont
           onChange={onMapProviderChange}
         />
 
-        {/* Zoom Level */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Zoom Level: {zoomLevel}
-          </label>
-          <input
-            type="range"
-            min="15"
-            max="22"
-            value={zoomLevel}
-            onChange={(e) => onZoomChange(parseInt(e.target.value))}
-            className="w-full"
-          />
-        </div>
+
 
         {/* Similarity Threshold */}
         <div>
@@ -107,17 +69,7 @@ export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionCont
 
 
 
-        {/* Action Buttons */}
-        <div className="space-y-2">
-          <button
-            onClick={onExtractFeatures}
-            disabled={!polygon || !isInitialized || isProcessing}
-            className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Extract Features
-          </button>
 
-        </div>
 
         {/* Results */}
         {lastResult?.features && (
