@@ -53,8 +53,14 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
 
     if (visualizationMode === 'heatmap') {
       // Create similarity heatmap
-      const maxSimilarity = Math.max(...similarityMatrix.flat());
-      const minSimilarity = Math.min(...similarityMatrix.flat());
+      let maxSimilarity = -Infinity;
+      let minSimilarity = Infinity;
+      for (const row of similarityMatrix) {
+        for (const val of row) {
+          if (val > maxSimilarity) maxSimilarity = val;
+          if (val < minSimilarity) minSimilarity = val;
+        }
+      }
 
       for (let i = 0; i < patchesPerCol; i++) {
         for (let j = 0; j < patchesPerRow; j++) {

@@ -53,6 +53,7 @@ export default function ImageFeatureExtraction() {
   const [similarityThreshold, setSimilarityThreshold] = useState<number>(0.5);
   const [maxFeatures, setMaxFeatures] = useState<number>(100);
   const [visualizationMode, setVisualizationMode] = useState<'heatmap' | 'overlay' | 'patches'>('heatmap');
+  const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false);
 
   const handleReset = () => {
     // Clear all drawn features
@@ -98,7 +99,12 @@ export default function ImageFeatureExtraction() {
 
   const handleStartDrawing = () => {
     if (draw.current) {
+      console.log('Starting drawing mode...');
       draw.current.changeMode("draw_polygon");
+      setIsDrawingMode(true);
+      console.log('Drawing mode activated');
+    } else {
+      console.error('Draw control not initialized');
     }
   };
 
@@ -199,10 +205,28 @@ export default function ImageFeatureExtraction() {
     });
     map.current.addControl(draw.current as any, "top-left");
 
+    // Ensure draw controls are visible with proper z-index
+    setTimeout(() => {
+      const drawControls = map.current?.getContainer().querySelector('.maplibregl-draw');
+      if (drawControls) {
+        (drawControls as HTMLElement).style.zIndex = '1000';
+        (drawControls as HTMLElement).style.position = 'relative';
+        console.log('Draw controls added successfully');
+      } else {
+        console.warn('Draw controls not found');
+      }
+    }, 100);
+
     // Listen for polygon creation
     map.current.on("draw.create", updatePolygon);
     map.current.on("draw.update", updatePolygon);
     map.current.on("draw.delete", () => setPolygon(null));
+    
+    // Listen for drawing mode changes
+    map.current.on("draw.modechange", (e: any) => {
+      console.log('Draw mode changed:', e.mode);
+      setIsDrawingMode(e.mode === 'draw_polygon');
+    });
 
     // Listen for zoom changes to sync with slider
     map.current.on("zoom", () => {
@@ -266,6 +290,44 @@ export default function ImageFeatureExtraction() {
   return (
     <main className="w-full h-screen flex overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100 relative">
       <BackgroundEffects />
+      
+      {/* Global styles for draw controls */}
+      <style jsx global>{`
+        .maplibregl-draw {
+          z-index: 1000 !important;
+          position: relative !important;
+        }
+        .maplibregl-draw .maplibregl-draw-polygon {
+          background: #fff !important;
+          border: 2px solid #007cbf !important;
+          border-radius: 4px !important;
+          color: #007cbf !important;
+          font-weight: bold !important;
+          padding: 8px 12px !important;
+          margin: 4px !important;
+          cursor: pointer !important;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+        }
+        .maplibregl-draw .maplibregl-draw-polygon:hover {
+          background: #007cbf !important;
+          color: #fff !important;
+        }
+        .maplibregl-draw .maplibregl-draw-trash {
+          background: #fff !important;
+          border: 2px solid #dc3545 !important;
+          border-radius: 4px !important;
+          color: #dc3545 !important;
+          font-weight: bold !important;
+          padding: 8px 12px !important;
+          margin: 4px !important;
+          cursor: pointer !important;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+        }
+        .maplibregl-draw .maplibregl-draw-trash:hover {
+          background: #dc3545 !important;
+          color: #fff !important;
+        }
+      `}</style>
 
       {/* Sidebar */}
       <aside className="w-96 h-full flex flex-col overflow-hidden relative">
@@ -298,7 +360,11 @@ export default function ImageFeatureExtraction() {
       <div className="flex-1 h-full relative">
         {/* Map overlay with subtle border */}
         <div className="absolute inset-2 rounded-lg overflow-hidden border border-gray-200/50 shadow-2xl">
-          <div ref={mapContainer} className="w-full h-full" />
+          <div 
+            ref={mapContainer} 
+            className="w-full h-full relative" 
+            style={{ zIndex: 1 }}
+          />
         </div>
         
         {/* Feature Visualization */}
@@ -324,6 +390,31 @@ export default function ImageFeatureExtraction() {
             disabled={!features && !lastResult?.geoRawImage}
             className="shadow-2xl backdrop-blur-lg"
           />
+        </div>
+        
+        {/* Drawing Mode Indicator */}
+        {isDrawingMode && (
+          <div className="absolute top-6 left-6 z-10 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg backdrop-blur-lg">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+              <span className="font-semibold">Drawing Mode Active</span>
+            </div>
+            <p className="text-sm opacity-90 mt-1">Click on the map to draw a polygon</p>
+          </div>
+        )}
+        
+        {/* Fallback Drawing Button - Always visible */}
+        <div className="absolute bottom-6 left-6 z-10">
+          <button
+            onClick={handleStartDrawing}
+            className={`px-4 py-2 rounded-lg shadow-lg backdrop-blur-lg font-semibold transition-all duration-200 ${
+              isDrawingMode 
+                ? 'bg-green-500 text-white hover:bg-green-600' 
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+            }`}
+          >
+            {isDrawingMode ? '🎯 Drawing Active' : '✏️ Start Drawing'}
+          </button>
         </div>
         
         {/* Corner decorations */}

@@ -211,13 +211,55 @@ export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionCont
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Feature Statistics</h4>
                 <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-                  <div>Min similarity: {Math.min(...lastResult.similarityMatrix.flat()).toFixed(3)}</div>
-                  <div>Max similarity: {Math.max(...lastResult.similarityMatrix.flat()).toFixed(3)}</div>
-                  <div>Avg similarity: {(lastResult.similarityMatrix.flat().reduce((a: number, b: number) => a + b, 0) / lastResult.similarityMatrix.flat().length).toFixed(3)}</div>
+                  <div>Min similarity: {(() => {
+                    let min = Infinity;
+                    for (const row of lastResult.similarityMatrix) {
+                      for (const val of row) {
+                        if (val < min) min = val;
+                      }
+                    }
+                    return min.toFixed(3);
+                  })()}</div>
+                  <div>Max similarity: {(() => {
+                    let max = -Infinity;
+                    for (const row of lastResult.similarityMatrix) {
+                      for (const val of row) {
+                        if (val > max) max = val;
+                      }
+                    }
+                    return max.toFixed(3);
+                  })()}</div>
+                  <div>Avg similarity: {(() => {
+                    let sum = 0;
+                    let count = 0;
+                    for (const row of lastResult.similarityMatrix) {
+                      for (const val of row) {
+                        sum += val;
+                        count++;
+                      }
+                    }
+                    return (sum / count).toFixed(3);
+                  })()}</div>
                   <div>Std dev: {(() => {
-                    const values = lastResult.similarityMatrix.flat();
-                    const mean = values.reduce((a: number, b: number) => a + b, 0) / values.length;
-                    const variance = values.reduce((a: number, b: number) => a + Math.pow(b - mean, 2), 0) / values.length;
+                    // Calculate mean first
+                    let sum = 0;
+                    let count = 0;
+                    for (const row of lastResult.similarityMatrix) {
+                      for (const val of row) {
+                        sum += val;
+                        count++;
+                      }
+                    }
+                    const mean = sum / count;
+                    
+                    // Calculate variance
+                    let varianceSum = 0;
+                    for (const row of lastResult.similarityMatrix) {
+                      for (const val of row) {
+                        varianceSum += Math.pow(val - mean, 2);
+                      }
+                    }
+                    const variance = varianceSum / count;
                     return Math.sqrt(variance).toFixed(3);
                   })()}</div>
                 </div>
