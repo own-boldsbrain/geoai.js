@@ -1,5 +1,6 @@
 import React from 'react';
 import { MapProvider } from '../types';
+import { MapProviderSelector } from './MapProviderSelector';
 
 interface ImageFeatureExtractionControlsProps {
   polygon: GeoJSON.Feature | null;
@@ -71,20 +72,10 @@ export const ImageFeatureExtractionControls: React.FC<ImageFeatureExtractionCont
       {/* Controls */}
       <div className="space-y-4">
         {/* Map Provider */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Map Provider
-          </label>
-          <select
-            value={mapProvider}
-            onChange={(e) => onMapProviderChange(e.target.value as MapProvider)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="geobase">Geobase</option>
-            <option value="mapbox">Mapbox</option>
-            <option value="esri">ESRI</option>
-          </select>
-        </div>
+        <MapProviderSelector
+          value={mapProvider}
+          onChange={onMapProviderChange}
+        />
 
         {/* Zoom Level */}
         <div>
