@@ -97,7 +97,6 @@ export default function ImageFeatureExtraction() {
 
   // Direct feature extraction function that doesn't rely on polygon state
   const extractFeaturesDirectly = (polygonFeature: GeoJSON.Feature) => {
-    console.log('🎯 Running direct feature extraction');
     setIsExtractingFeatures(true);
     runInference({
       inputs: {
@@ -177,14 +176,10 @@ export default function ImageFeatureExtraction() {
 
   // Debounced polygon update to prevent excessive re-renders during drawing
   const debouncedUpdatePolygon = useDebounce(() => {
-    console.log('🎯 debouncedUpdatePolygon executing');
     const features = draw.current?.getAll();
-    console.log('🎯 Features in debounced update:', features);
     if (features && features.features.length > 0) {
-      console.log('🎯 Setting polygon state');
       setPolygon(features.features[0]);
     } else {
-      console.log('🎯 Clearing polygon state');
       setPolygon(null);
     }
   }, 200);
@@ -234,11 +229,8 @@ export default function ImageFeatureExtraction() {
 
   const handleStartDrawing = () => {
     if (draw.current) {
-      console.log('🎯 Starting drawing mode...');
       draw.current.changeMode("draw_polygon");
       setIsDrawingMode(true);
-      console.log('🎯 Drawing mode activated');
-      console.log('🎯 Current draw mode:', draw.current.getMode());
       
       // Hide contextual menu when starting to draw
       hideContextMenu();
@@ -350,51 +342,32 @@ export default function ImageFeatureExtraction() {
       if (drawControls) {
         (drawControls as HTMLElement).style.zIndex = '1000';
         (drawControls as HTMLElement).style.position = 'relative';
-        console.log('Draw controls added successfully');
-      } else {
-        console.warn('Draw controls not found');
       }
     }, 100);
 
     // Listen for polygon creation
     map.current.on("draw.create", (e) => {
-      console.log('🎯 Polygon created event triggered');
       updatePolygon();
       
       // Show contextual menu instead of auto-running inference
       setTimeout(() => {
         const features = draw.current?.getAll();
-        console.log('🎯 Features after timeout:', features);
         if (features && features.features.length > 0) {
-          console.log('🎯 Showing contextual menu for polygon creation');
           showContextMenuAtPolygon(features.features[0]);
-        } else {
-          console.log('❌ No features found for contextual menu');
         }
       }, 100); // Small delay to ensure polygon is fully set
     });
     map.current.on("draw.update", (e) => {
-      console.log('🎯 Draw update event:', e);
       updatePolygon();
     });
     map.current.on("draw.delete", (e) => {
-      console.log('🎯 Draw delete event:', e);
       setPolygon(null);
       hideContextMenu();
     });
     
-    // Listen for all draw events for debugging
-    map.current.on("draw", (e) => {
-      console.log('🎯 Draw event:', e.type, e);
-    });
-    
     // Listen for drawing mode changes
     map.current.on("draw.modechange", (e: any) => {
-      console.log('Draw mode changed:', e.mode);
       setIsDrawingMode(e.mode === 'draw_polygon');
-      
-      // Debug: log all draw events
-      console.log('🎯 Current draw features:', draw.current?.getAll());
     });
 
     // Listen for zoom changes to sync with slider
@@ -404,7 +377,6 @@ export default function ImageFeatureExtraction() {
     setZoomLevel(Math.round(map.current.getZoom()));
 
     function updatePolygon() {
-      console.log('🎯 updatePolygon called');
       debouncedUpdatePolygon();
     }
 
@@ -430,7 +402,8 @@ export default function ImageFeatureExtraction() {
 
     initializeModel({
       tasks: [{
-        task: "image-feature-extraction"
+        task: "image-feature-extraction",
+        modelId: "onnx-community/dinov3-vits16-pretrain-lvd1689m-ONNX"
       }],
       providerParams,
     });
@@ -438,18 +411,7 @@ export default function ImageFeatureExtraction() {
 
   // Handle results from the worker
   useEffect(() => {
-    console.log('🔄 lastResult changed:', lastResult);
-    
     if (lastResult?.features && map.current) {
-      console.log('✅ Processing lastResult with features');
-      console.log('Features count:', lastResult.features.length);
-      console.log('Similarity matrix:', lastResult.similarityMatrix?.length);
-      console.log('Patch size:', lastResult.patchSize);
-      console.log('GeoRawImage type:', typeof lastResult.geoRawImage);
-      console.log('GeoRawImage:', lastResult.geoRawImage);
-      console.log('GeoRawImage methods:', lastResult.geoRawImage ? Object.getOwnPropertyNames(lastResult.geoRawImage) : 'null');
-      console.log('GeoRawImage prototype:', lastResult.geoRawImage ? Object.getPrototypeOf(lastResult.geoRawImage) : 'null');
-      
       // Display feature extraction results
       setFeatures(lastResult.features);
       
@@ -460,11 +422,8 @@ export default function ImageFeatureExtraction() {
       
       // Display the inference bounds
       if (lastResult.geoRawImage?.bounds) {
-        console.log('🗺️ Displaying inference bounds');
         MapUtils.displayInferenceBounds(map.current, lastResult.geoRawImage.bounds);
       }
-    } else {
-      console.log('❌ Missing features or map for result processing');
     }
   }, [lastResult]);
 
@@ -583,7 +542,6 @@ export default function ImageFeatureExtraction() {
         {/* Feature Visualization */}
         {(() => {
           if (lastResult?.features && lastResult?.similarityMatrix) {
-            console.log('🎨 Rendering FeatureVisualization component');
             return (
               <FeatureVisualization
                 map={map.current}
@@ -595,7 +553,6 @@ export default function ImageFeatureExtraction() {
               />
             );
           } else {
-            console.log('❌ FeatureVisualization not rendered - missing features or similarity matrix');
             return null;
           }
         })()}

@@ -30,8 +30,6 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
     hoveredPatchRef.current = hoveredPatchIndex;
     
     if (hoveredPatchIndex !== null) {
-      console.log('🔥 Updating layer styling for hovered patch:', hoveredPatchIndex);
-      
       try {
         // Use pre-computed similarity data with Maplibre expressions
         // No source data updates needed - just change paint properties
@@ -62,8 +60,6 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
         console.warn('Error updating layer styling:', error);
       }
     } else {
-      console.log('🔄 Resetting layer styling');
-      
       try {
         // Reset to default styling - no source data updates needed
         map.setPaintProperty(layerRef.current, 'fill-color', '#8c2981'); // Magma purple
@@ -93,20 +89,9 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
   };
 
   useEffect(() => {
-    console.log('🔍 FeatureVisualization useEffect triggered');
-    console.log('Map:', !!map);
-    console.log('Features:', features?.length);
-    console.log('SimilarityMatrix:', similarityMatrix?.length);
-    console.log('PatchSize:', patchSize);
-    console.log('GeoRawImage:', geoRawImage);
-    console.log('SimilarityThreshold:', similarityThreshold);
-
     if (!map || !features || !similarityMatrix || !patchSize || !geoRawImage) {
-      console.log('❌ Missing required props, returning early');
       return;
     }
-
-    console.log('✅ All props present, proceeding with visualization');
 
     // Cleanup existing layers
     cleanupLayers();
@@ -114,48 +99,35 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
     // Create canvas for visualization
     const canvas = canvasRef.current;
     if (!canvas) {
-      console.log('❌ Canvas ref not available');
       return;
     }
 
     const ctx = canvas.getContext('2d');
     if (!ctx) {
-      console.log('❌ Could not get 2D context');
       return;
     }
-
-    console.log('✅ Canvas and context ready');
 
     // Set canvas size based on image dimensions
     canvas.width = geoRawImage.width;
     canvas.height = geoRawImage.height;
 
-    console.log('📐 Canvas size set to:', canvas.width, 'x', canvas.height);
-
     // Calculate patches per row and column
     const patchesPerRow = Math.floor(geoRawImage.width / patchSize);
     const patchesPerCol = Math.floor(geoRawImage.height / patchSize);
-
-    console.log('🔢 Patches grid:', patchesPerRow, 'x', patchesPerCol);
-    console.log('📊 Total patches:', patchesPerRow * patchesPerCol);
 
     // Clear existing layers and sources
     cleanupLayers();
     
     // Get geographic bounds
     const geoBounds = geoRawImage.bounds;
-    console.log('🗺️ GeoRawImage bounds:', geoBounds);
     
     if (!geoBounds || !geoBounds.west || !geoBounds.east || !geoBounds.north || !geoBounds.south) {
-      console.error('❌ Invalid bounds structure:', geoBounds);
       return;
     }
 
     // Calculate geographic coordinates for each patch
     const patchWidth = (geoBounds.east - geoBounds.west) / patchesPerRow;
     const patchHeight = (geoBounds.north - geoBounds.south) / patchesPerCol;
-
-    console.log('📍 Creating interactive patch layers for hover similarity visualization');
 
     // Create a single layer with all patches
     const allPatches: GeoJSON.Feature<GeoJSON.Polygon>[] = [];
@@ -247,9 +219,6 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
         }
       }
     });
-    
-
-    console.log('✅ Single interactive layer created with', allPatches.length, 'patches');
 
     return () => {
       cleanupLayers();
