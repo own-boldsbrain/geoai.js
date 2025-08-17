@@ -123,6 +123,10 @@ export default function ImageFeatureExtraction() {
           data: allFeatures
         });
         
+        // Check if the target layer exists before inserting before it
+        const targetLayer = 'gl-draw-polygon-fill-inactive';
+        const beforeLayer = map.current.getLayer(targetLayer) ? targetLayer : undefined;
+        
         map.current.addLayer({
           id: layerId,
           type: 'fill',
@@ -131,7 +135,7 @@ export default function ImageFeatureExtraction() {
             'fill-color': '#ffffff',
             'fill-opacity': 0 // Completely transparent
           }
-        }, 'gl-draw-polygon-fill-inactive'); // Insert before the original fill layer
+        }, beforeLayer); // Insert before the target layer if it exists, otherwise add at the end
       }
     }
   }, []);
