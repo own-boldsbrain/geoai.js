@@ -7,7 +7,6 @@ interface FeatureVisualizationProps {
   similarityMatrix: number[][] | null;
   patchSize: number | null;
   geoRawImage: any;
-  similarityThreshold: number;
   onPatchesReady?: (patches: GeoJSON.Feature<GeoJSON.Polygon>[]) => void;
 }
 
@@ -17,13 +16,11 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
   similarityMatrix,
   patchSize,
   geoRawImage,
-  similarityThreshold,
   onPatchesReady,
 }) => {
   const sourceRef = useRef<string | null>(null);
   const layerRef = useRef<string | null>(null);
   const hoveredPatchRef = useRef<number | null>(null);
-  const allPatchesRef = useRef<GeoJSON.Feature<GeoJSON.Polygon>[]>([]);
 
   // Helper function to update layer styling based on hovered patch
   const updateLayerStyling = (hoveredPatchIndex: number | null) => {
@@ -97,15 +94,13 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
 
     const startTime = Date.now();
     console.log("FeatureVisualization - Update hook started");
+    
     // Cleanup existing layers
     cleanupLayers();
 
     // Calculate patches per row and column
     const patchesPerRow = Math.floor(geoRawImage.width / patchSize);
     const patchesPerCol = Math.floor(geoRawImage.height / patchSize);
-
-    // Clear existing layers and sources
-    cleanupLayers();
     
     // Get geographic bounds
     const geoBounds = geoRawImage.bounds;
@@ -165,7 +160,7 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
       }
     }
 
-    allPatchesRef.current = allPatches; // Store all patches for export
+    // Store all patches for export (no longer needed since we pass directly to onPatchesReady)
     
     // Notify parent component that patches are ready
     if (onPatchesReady) {
@@ -222,7 +217,7 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
     return () => {
       cleanupLayers();
     };
-  }, [features, similarityMatrix, patchSize, geoRawImage, similarityThreshold]);
+  }, [features, similarityMatrix, patchSize, geoRawImage]);
 
   return null;
 };
