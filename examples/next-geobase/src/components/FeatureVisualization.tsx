@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
+import { detectGPU, type GPUInfo } from '../utils/gpuUtils';
+import { createColorExpression, createOpacityExpression } from '../utils/maplibreUtils';
 
 interface FeatureVisualizationProps {
   map: maplibregl.Map | null;
@@ -21,6 +23,19 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
   const sourceRef = useRef<string | null>(null);
   const layerRef = useRef<string | null>(null);
   const hoveredPatchRef = useRef<number | null>(null);
+  
+  // GPU capabilities for performance optimization
+  const gpuInfo = useRef<GPUInfo>({
+    hasWebGPU: false,
+    isHighPerformance: false,
+  });
+  
+  // Initialize GPU detection on mount
+  useEffect(() => {
+    detectGPU().then((info) => {
+      gpuInfo.current = info;
+    });
+  }, []);
 
   // Helper function to update layer styling based on hovered patch
   const updateLayerStyling = (hoveredPatchIndex: number | null) => {
@@ -30,31 +45,20 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
     
     if (hoveredPatchIndex !== null) {
       try {
-        // Use pre-computed similarity data with Maplibre expressions
-        // No source data updates needed - just change paint properties
-        map.setPaintProperty(layerRef.current, 'fill-color', [
-          'case',
-          ['==', ['get', 'patchIndex'], hoveredPatchIndex], '#fcfdbf', // Hovered patch = bright yellow-white
-          ['interpolate', ['linear'], 
-            ['get', `sim_${hoveredPatchIndex}`], // Use pre-computed similarity
-            0, '#000004',   // Black for low similarity
-            0.2, '#3b0f70', // Dark purple for low-medium similarity
-            0.4, '#8c2981', // Purple for medium similarity
-            0.6, '#de4968', // Pink-red for medium-high similarity
-            0.8, '#fe9f6d', // Orange for high similarity
-            1, '#fcfdbf'    // Bright yellow-white for highest similarity
-          ]
-        ]);
+        // Use utility function to create optimal color expression based on GPU capabilities
+        const colorExpression = createColorExpression(
+          gpuInfo.current,
+          `sim_${hoveredPatchIndex}`,
+          hoveredPatchIndex
+        );
         
-        map.setPaintProperty(layerRef.current, 'fill-opacity', [
-          'case',
-          ['==', ['get', 'patchIndex'], hoveredPatchIndex], 1, // Hovered patch = fully opaque
-          ['interpolate', ['linear'], 
-            ['get', `sim_${hoveredPatchIndex}`], // Use pre-computed similarity
-            0, 0.2,  // Higher opacity for low similarity
-            1, 0.9   // Higher opacity for high similarity
-          ]
-        ]);
+        map.setPaintProperty(layerRef.current, 'fill-color', colorExpression);
+        
+        const opacityExpression = createOpacityExpression(
+          `sim_${hoveredPatchIndex}`,
+          hoveredPatchIndex
+        );
+        map.setPaintProperty(layerRef.current, 'fill-opacity', opacityExpression);
       } catch (error) {
         console.warn('Error updating layer styling:', error);
       }

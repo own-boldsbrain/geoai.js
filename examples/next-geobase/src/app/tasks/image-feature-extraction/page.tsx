@@ -621,7 +621,6 @@ export default function ImageFeatureExtraction() {
                 similarityMatrix={lastResult.similarityMatrix}
                 patchSize={lastResult.patchSize}
                 geoRawImage={lastResult.geoRawImage}
-                similarityThreshold={similarityThreshold}
                 onPatchesReady={handlePatchesReady}
               />
             );
