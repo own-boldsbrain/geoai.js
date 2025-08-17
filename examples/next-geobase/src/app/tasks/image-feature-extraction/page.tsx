@@ -3,18 +3,21 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
-import type { StyleSpecification } from "maplibre-gl";
+
 import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { Pencil, Target, Trash2, Loader2, X, Info } from "lucide-react";
 import { 
   BackgroundEffects,
+  FeatureExtractionDemoLayerHint,
   ExportButton,
   FeatureVisualization,
+  MVTCachedFeatureSimilarityLayer,
   MapProviderSelector,
   InfoTooltip
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
+import { createImageFeatureExtractionMapStyle } from "../../../utils/mapStyleUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 import { MapProvider } from "../../../types";
 
@@ -22,7 +25,7 @@ GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/
 
 const mapInitConfig = {
   center: [114.84857638295142, -3.449805712621256] as [number, number],
-  zoom: 20,
+  zoom: 18,
 };
 
 // Add validation for required environment variables
@@ -59,6 +62,9 @@ export default function ImageFeatureExtraction() {
   const [isResetting, setIsResetting] = useState<boolean>(false);
   const [isExtractingFeatures, setIsExtractingFeatures] = useState<boolean>(false);
   const [allPatches, setAllPatches] = useState<GeoJSON.Feature<GeoJSON.Polygon>[]>([]);
+  const [isLoadingDemoLayer, setIsLoadingDemoLayer] = useState<boolean>(false);
+  const [showDemoLayerHint, setShowDemoLayerHint] = useState<boolean>(false);
+  const [hasShownDemoHint, setHasShownDemoHint] = useState<boolean>(false);
   
   // Contextual menu state
   const [showContextMenu, setShowContextMenu] = useState<boolean>(false);
@@ -198,6 +204,10 @@ export default function ImageFeatureExtraction() {
     setContextMenuPosition(null);
   };
 
+  const closeDemoLayerHint = () => {
+    setShowDemoLayerHint(false);
+  };
+
   // Function to handle contextual menu feature extraction
   const handleContextMenuExtractFeatures = () => {
     if (!polygon) return;
@@ -255,6 +265,12 @@ export default function ImageFeatureExtraction() {
       
       // Hide contextual menu
       hideContextMenu();
+      
+      // Show demo layer hint again after reset (but only if not shown before)
+      if (!hasShownDemoHint) {
+        setShowDemoLayerHint(true);
+        setHasShownDemoHint(true);
+      }
     } finally {
       setIsResetting(false);
     }
@@ -280,6 +296,8 @@ export default function ImageFeatureExtraction() {
       
       // Hide contextual menu when starting to draw
       hideContextMenu();
+      // Hide demo layer hint when starting to draw
+      setShowDemoLayerHint(false);
     } else {
       console.error('❌ Draw control not initialized');
     }
@@ -288,82 +306,11 @@ export default function ImageFeatureExtraction() {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    const mapStyle: StyleSpecification = {
-      version: 8 as const,
-      sources: {
-        "mapbox-base": {
-          type: "raster",
-          tiles: [
-            `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${MAPBOX_CONFIG.apiKey}`,
-          ],
-          tileSize: 512,
-        },
-        "geobase-tiles": {
-          type: "raster",
-          tiles: [
-            `https://${GEOBASE_CONFIG.projectRef}.geobase.app/titiler/v1/cog/tiles/WebMercatorQuad/{z}/{x}/{y}?url=${GEOBASE_CONFIG.cogImagery}&apikey=${GEOBASE_CONFIG.apikey}`,
-          ],
-          tileSize: 256,
-        },
-        "mapbox-tiles": {
-          type: "raster",
-          tiles: [
-            `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=${MAPBOX_CONFIG.apiKey}`,
-          ],
-          tileSize: 512,
-        },
-        "esri-tiles": {
-          type: "raster",
-          tiles: [
-            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-          ],
-          tileSize: 256,
-          attribution: "ESRI World Imagery",
-        },
-      },
-      layers: [
-        {
-          id: "mapbox-base-layer",
-          type: "raster",
-          source: "mapbox-base",
-          minzoom: 0,
-          maxzoom: 23,
-          layout: {
-            visibility: mapProvider === "geobase" ? "visible" : "none",
-          },
-        },
-        {
-          id: "geobase-layer",
-          type: "raster",
-          source: "geobase-tiles",
-          minzoom: 0,
-          maxzoom: 23,
-          layout: {
-            visibility: mapProvider === "geobase" ? "visible" : "none",
-          },
-        },
-        {
-          id: "mapbox-layer",
-          type: "raster",
-          source: "mapbox-tiles",
-          minzoom: 0,
-          maxzoom: 23,
-          layout: {
-            visibility: mapProvider === "mapbox" ? "visible" : "none",
-          },
-        },
-        {
-          id: "esri-layer",
-          type: "raster",
-          source: "esri-tiles",
-          minzoom: 0,
-          maxzoom: 23,
-          layout: {
-            visibility: mapProvider === "esri" ? "visible" : "none",
-          },
-        },
-      ],
-    };
+    const mapStyle = createImageFeatureExtractionMapStyle({
+      mapProvider,
+      geobaseConfig: GEOBASE_CONFIG,
+      mapboxConfig: MAPBOX_CONFIG,
+    });
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
@@ -628,6 +575,21 @@ export default function ImageFeatureExtraction() {
             return null;
           }
         })()}
+
+        {/* Cached Feature Similarity Layer - Show when no features are extracted */}
+        {!lastResult?.features && (
+          <MVTCachedFeatureSimilarityLayer 
+            map={map.current} 
+            onLoadingChange={(isLoading) => {
+              setIsLoadingDemoLayer(isLoading);
+              if (!isLoading && !hasShownDemoHint) {
+                // Show hint after loading completes, but only once
+                setShowDemoLayerHint(true);
+                setHasShownDemoHint(true);
+              }
+            }}
+          />
+        )}
         
 
         
@@ -646,6 +608,25 @@ export default function ImageFeatureExtraction() {
             <p className="text-xs text-red-600 mt-1">{error}</p>
           )}
         </div>
+
+        {/* Demo Layer Loading Message - Center */}
+        {isLoadingDemoLayer && isInitialized && (
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 bg-white/95 backdrop-blur-md border border-gray-200 rounded-lg shadow-2xl px-6 py-4">
+            <div className="flex items-center space-x-3">
+              <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+              <span className="text-sm font-medium text-gray-800">Loading demo layer...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Feature Extraction Demo Layer Hint */}
+        {showDemoLayerHint && !lastResult?.features && (
+          <FeatureExtractionDemoLayerHint
+            isVisible={showDemoLayerHint}
+            onClose={closeDemoLayerHint}
+            duration={3000}
+          />
+        )}
 
         {/* Task Info - Bottom Right */}
         <div className="absolute bottom-6 right-6 z-10 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-md shadow-md p-3">
