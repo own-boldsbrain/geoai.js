@@ -6,27 +6,37 @@ import MaplibreDraw from "maplibre-gl-draw";
 
 import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { useDebounce } from "../../../hooks/useDebounce";
-import { Pencil, Target, Trash2, Loader2, X, Info } from "lucide-react";
+
 import { 
   BackgroundEffects,
-  FeatureExtractionDemoLayerHint,
   ExportButton,
-  FeatureVisualization,
-  MVTCachedFeatureSimilarityLayer,
+  ImageFeatureExtractionVisualization,
+  ImageFeatureExtractionSimilarityLayer,
   MapProviderSelector,
-  InfoTooltip
+  InfoTooltip,
+  ImageFeatureExtractionContextualMenu,
+  ModelStatusMessage,
+  TaskInfo,
+  ZoomControl,
+  ActionButtons,
+  LoadingMessage,
+  CornerDecorations
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
 import { createImageFeatureExtractionMapStyle } from "../../../utils/mapStyleUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 import { MapProvider } from "../../../types";
+import styles from "./page.module.css";
 
 GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/67ba1d2bec9237a9ebd358a3/0/67ba1d2bec9237a9ebd358a4.tif";
 
-const mapInitConfig = {
-  center: [114.84857638295142, -3.449805712621256] as [number, number],
-  zoom: 18,
+// Initial demo location for precomputed embeddings
+const INITIAL_DEMO_LOCATION = {
+  center: [114.84901, -3.449806] as [number, number],
+  zoom: 18.2,
 };
+
+const mapInitConfig = INITIAL_DEMO_LOCATION;
 
 // Add validation for required environment variables
 if (!GEOBASE_CONFIG.projectRef || !GEOBASE_CONFIG.apikey) {
@@ -53,23 +63,32 @@ export default function ImageFeatureExtraction() {
     clearResult,
   } = useGeoAIWorker();
 
+  // Map and drawing state
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
-  const [features, setFeatures] = useState<any>();
   const [zoomLevel, setZoomLevel] = useState<number>(22);
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
-  const [similarityThreshold, setSimilarityThreshold] = useState<number>(0.5);
   const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false);
+  
+  // Processing state
   const [isResetting, setIsResetting] = useState<boolean>(false);
   const [isExtractingFeatures, setIsExtractingFeatures] = useState<boolean>(false);
   const [allPatches, setAllPatches] = useState<GeoJSON.Feature<GeoJSON.Polygon>[]>([]);
-  const [isLoadingDemoLayer, setIsLoadingDemoLayer] = useState<boolean>(false);
-  const [showDemoLayerHint, setShowDemoLayerHint] = useState<boolean>(false);
-  const [hasShownDemoHint, setHasShownDemoHint] = useState<boolean>(false);
+  
+  // Precomputed embeddings state
+  const [isLoadingPrecomputedEmbeddings, setIsLoadingPrecomputedEmbeddings] = useState<boolean>(false);
+  const [precomputedEmbeddingsRef, setPrecomputedEmbeddingsRef] = useState<{ cleanup: () => void } | null>(null);
+  const [showPrecomputedEmbeddingsMessage, setShowPrecomputedEmbeddingsMessage] = useState<boolean>(false);
+  const [showPrecomputedEmbeddings, setShowPrecomputedEmbeddings] = useState<boolean>(true);
+  const [isPrecomputedMessageDismissed, setIsPrecomputedMessageDismissed] = useState<boolean>(false);
   
   // Contextual menu state
   const [showContextMenu, setShowContextMenu] = useState<boolean>(false);
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [contextMenuThreshold, setContextMenuThreshold] = useState<number>(0.5);
+
+  // Computed values for button states
+  const isButtonDisabled = isResetting || isExtractingFeatures || (isLoadingPrecomputedEmbeddings && showPrecomputedEmbeddings);
+  const isButtonLoading = isResetting || (isLoadingPrecomputedEmbeddings && showPrecomputedEmbeddings);
 
   // Debounced handlers for performance optimization
   const debouncedZoomChange = useDebounce((newZoom: number) => {
@@ -78,9 +97,7 @@ export default function ImageFeatureExtraction() {
     }
   }, 150);
 
-  const debouncedSimilarityThresholdChange = useDebounce((threshold: number) => {
-    setSimilarityThreshold(threshold);
-  }, 300);
+
 
   const debouncedMapProviderChange = useDebounce((provider: MapProvider) => {
     setMapProvider(provider);
@@ -103,7 +120,7 @@ export default function ImageFeatureExtraction() {
     });
   }, 500);
 
-  // Callback to receive patches from FeatureVisualization
+  // Callback to receive patches from ImageFeatureExtractionVisualization
   const handlePatchesReady = useCallback((patches: GeoJSON.Feature<GeoJSON.Polygon>[]) => {
     setAllPatches(patches);
     
@@ -194,9 +211,9 @@ export default function ImageFeatureExtraction() {
     const y = Math.max(20, Math.min(rect.height - 200, point.y));
     
     setContextMenuPosition({ x, y });
-    setContextMenuThreshold(similarityThreshold);
+    setContextMenuThreshold(0.5); // Default threshold
     setShowContextMenu(true);
-  }, [similarityThreshold]);
+  }, []);
 
   // Function to hide contextual menu
   const hideContextMenu = () => {
@@ -204,16 +221,15 @@ export default function ImageFeatureExtraction() {
     setContextMenuPosition(null);
   };
 
-  const closeDemoLayerHint = () => {
-    setShowDemoLayerHint(false);
-  };
+
+
+  const handleCleanupReady = useCallback((cleanup: () => void) => {
+          setPrecomputedEmbeddingsRef({ cleanup });
+  }, []);
 
   // Function to handle contextual menu feature extraction
   const handleContextMenuExtractFeatures = () => {
     if (!polygon) return;
-    
-    // Update the main similarity threshold
-    setSimilarityThreshold(contextMenuThreshold);
     
     // Run inference with the contextual menu threshold
     extractFeaturesDirectly(polygon);
@@ -240,40 +256,73 @@ export default function ImageFeatureExtraction() {
     }
   }, 200);
 
+  // Common reset logic
+  const clearCurrentState = () => {
+    // Clear all drawn features
+    if (draw.current) {
+      draw.current.deleteAll();
+    }
+
+    // Clear map layers using utility function
+    if (map.current) {
+      MapUtils.clearAllLayers(map.current);
+    }
+
+    // Reset states
+    setPolygon(null);
+    setIsExtractingFeatures(false);
+    clearError();
+    
+    // Clear result to remove ImageFeatureExtractionVisualization without resetting model
+    clearResult();
+    
+    // Hide contextual menu
+    hideContextMenu();
+    
+    // Reset drawing mode
+    setIsDrawingMode(false);
+    
+    // Hide precomputed embeddings when resetting
+    setShowPrecomputedEmbeddings(false);
+    setIsPrecomputedMessageDismissed(false);
+  };
+
   const handleReset = async () => {
     setIsResetting(true);
     
     try {
-      // Clear all drawn features
-      if (draw.current) {
-        draw.current.deleteAll();
-      }
-
-      // Clear map layers using utility function
-      if (map.current) {
-        MapUtils.clearAllLayers(map.current);
-      }
-
-      // Reset states
-      setPolygon(null);
-      setFeatures(undefined);
-      setIsExtractingFeatures(false);
-      clearError();
-      
-      // Clear result to remove FeatureVisualization without resetting model
-      clearResult();
-      
-      // Hide contextual menu
-      hideContextMenu();
-      
-      // Show demo layer hint again after reset (but only if not shown before)
-      if (!hasShownDemoHint) {
-        setShowDemoLayerHint(true);
-        setHasShownDemoHint(true);
-      }
+      clearCurrentState();
     } finally {
       setIsResetting(false);
     }
+  };
+
+  const handleResetToDemo = async () => {
+    setIsResetting(true);
+    
+    try {
+      clearCurrentState();
+      
+      // Reset to initial demo location
+      if (map.current) {
+        map.current.flyTo({
+          center: INITIAL_DEMO_LOCATION.center,
+          zoom: INITIAL_DEMO_LOCATION.zoom,
+          duration: 1000
+        });
+        setZoomLevel(INITIAL_DEMO_LOCATION.zoom);
+      }
+      
+      // Show precomputed embeddings when resetting to demo
+      setShowPrecomputedEmbeddings(true);
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  // Handler to dismiss precomputed embeddings message
+  const handleDismissPrecomputedMessage = () => {
+    setIsPrecomputedMessageDismissed(true);
   };
 
   const handleZoomChange = (newZoom: number) => {
@@ -282,22 +331,21 @@ export default function ImageFeatureExtraction() {
     debouncedZoomChange(newZoom);
   };
 
-  const handleExtractFeatures = () => {
-    if (!polygon) return;
-    
-    // Use debounced feature extraction to prevent rapid successive calls
-    debouncedExtractFeatures();
-  };
+
 
   const handleStartDrawing = () => {
     if (draw.current) {
+      // Clear precomputed embeddings when starting to draw
+      if (precomputedEmbeddingsRef) {
+        precomputedEmbeddingsRef.cleanup();
+        setPrecomputedEmbeddingsRef(null);
+      }
+      
       draw.current.changeMode("draw_polygon");
       setIsDrawingMode(true);
       
       // Hide contextual menu when starting to draw
       hideContextMenu();
-      // Hide demo layer hint when starting to draw
-      setShowDemoLayerHint(false);
     } else {
       console.error('❌ Draw control not initialized');
     }
@@ -422,12 +470,32 @@ export default function ImageFeatureExtraction() {
     });
   }, [mapProvider, initializeModel]);
 
+  // Disable/enable draw controls based on precomputed embeddings loading state
+  useEffect(() => {
+    if (draw.current) {
+      const drawControls = map.current?.getContainer().querySelector('.maplibregl-draw');
+      if (drawControls) {
+        const polygonButton = drawControls.querySelector('.maplibregl-draw-polygon') as HTMLElement;
+        const trashButton = drawControls.querySelector('.maplibregl-draw-trash') as HTMLElement;
+        
+        if (polygonButton) {
+          polygonButton.style.opacity = isLoadingPrecomputedEmbeddings ? '0.5' : '1';
+          polygonButton.style.pointerEvents = isLoadingPrecomputedEmbeddings ? 'none' : 'auto';
+          polygonButton.style.cursor = isLoadingPrecomputedEmbeddings ? 'not-allowed' : 'pointer';
+        }
+        
+        if (trashButton) {
+          trashButton.style.opacity = isLoadingPrecomputedEmbeddings ? '0.5' : '1';
+          trashButton.style.pointerEvents = isLoadingPrecomputedEmbeddings ? 'none' : 'auto';
+          trashButton.style.cursor = isLoadingPrecomputedEmbeddings ? 'not-allowed' : 'pointer';
+        }
+      }
+    }
+  }, [isLoadingPrecomputedEmbeddings]);
+
   // Handle results from the worker
   useEffect(() => {
     if (lastResult?.features && map.current) {
-      // Display feature extraction results
-      setFeatures(lastResult.features);
-      
       // Set extracting features to false when results are available
       if (lastResult.similarityMatrix) {
         setIsExtractingFeatures(false);
@@ -444,49 +512,7 @@ export default function ImageFeatureExtraction() {
     <main className="w-full h-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100 relative">
       <BackgroundEffects />
       
-      {/* Global styles for draw controls */}
-      <style jsx global>{`
-        .maplibregl-draw {
-          z-index: 1000 !important;
-          position: relative !important;
-        }
-        .maplibregl-draw .maplibregl-draw-polygon {
-          background: #fff !important;
-          border: 2px solid #007cbf !important;
-          border-radius: 4px !important;
-          color: #007cbf !important;
-          font-weight: bold !important;
-          padding: 8px 12px !important;
-          margin: 4px !important;
-          cursor: pointer !important;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-        }
-        .maplibregl-draw .maplibregl-draw-polygon:hover {
-          background: #007cbf !important;
-          color: #fff !important;
-        }
-        .maplibregl-draw .maplibregl-draw-trash {
-          background: #fff !important;
-          border: 2px solid #dc3545 !important;
-          border-radius: 4px !important;
-          color: #dc3545 !important;
-          font-weight: bold !important;
-          padding: 8px 12px !important;
-          margin: 4px !important;
-          cursor: pointer !important;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-        }
-        .maplibregl-draw .maplibregl-draw-trash:hover {
-          background: #dc3545 !important;
-          color: #fff !important;
-        }
-        
-        /* Style for unfilled polygons */
-        .maplibregl-draw .maplibregl-draw-polygon-fill-inactive[data-unfilled="true"],
-        .maplibregl-draw .maplibregl-draw-polygon-fill-active[data-unfilled="true"] {
-          fill-opacity: 0 !important;
-        }
-      `}</style>
+
 
       {/* Map Container */}
       <div className="w-full h-full relative">
@@ -500,151 +526,81 @@ export default function ImageFeatureExtraction() {
         </div>
         
         {/* Contextual Menu */}
-        {showContextMenu && contextMenuPosition && (
-          <div 
-            className="absolute z-50 bg-white/95 backdrop-blur-md border border-gray-200 rounded-lg shadow-2xl p-4 min-w-[280px]"
-            style={{
-              left: contextMenuPosition.x,
-              top: contextMenuPosition.y,
-            }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-800">Extract Features</h3>
-              <button
-                onClick={hideContextMenu}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            
-            {/* Similarity Threshold Slider */}
-            <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-700 mb-2">
-                Similarity Threshold: {contextMenuThreshold}
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={contextMenuThreshold}
-                onChange={(e) => setContextMenuThreshold(parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Higher values filter out less similar features
-              </p>
-            </div>
-            
-            {/* Extract Features Button */}
-            <button
-              onClick={handleContextMenuExtractFeatures}
-              disabled={!isInitialized || isProcessing}
-              className="w-full px-4 py-2 bg-teal-600 text-white rounded-md shadow-lg font-medium text-sm hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 border border-teal-500"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Processing...</span>
-                </>
-              ) : (
-                <>
-                  <Target className="w-4 h-4" />
-                  <span>Extract Features</span>
-                </>
-              )}
-            </button>
-          </div>
-        )}
+        <ImageFeatureExtractionContextualMenu
+          position={showContextMenu ? contextMenuPosition : null}
+          threshold={contextMenuThreshold}
+          isInitialized={isInitialized}
+          isProcessing={isProcessing}
+          onThresholdChange={setContextMenuThreshold}
+          onExtractFeatures={handleContextMenuExtractFeatures}
+          onClose={hideContextMenu}
+        />
         
         {/* Feature Visualization */}
-        {(() => {
-          if (lastResult?.features && lastResult?.similarityMatrix) {
-            return (
-              <FeatureVisualization
-                map={map.current}
-                features={lastResult.features}
-                similarityMatrix={lastResult.similarityMatrix}
-                patchSize={lastResult.patchSize}
-                geoRawImage={lastResult.geoRawImage}
-                onPatchesReady={handlePatchesReady}
-              />
-            );
-          } else {
-            return null;
-          }
-        })()}
-
-        {/* Cached Feature Similarity Layer - Show when no features are extracted */}
-        {!lastResult?.features && (
-          <MVTCachedFeatureSimilarityLayer 
-            map={map.current} 
-            onLoadingChange={(isLoading) => {
-              setIsLoadingDemoLayer(isLoading);
-              if (!isLoading && !hasShownDemoHint) {
-                // Show hint after loading completes, but only once
-                setShowDemoLayerHint(true);
-                setHasShownDemoHint(true);
-              }
-            }}
+        {lastResult?.features && lastResult?.similarityMatrix && (
+          <ImageFeatureExtractionVisualization
+            map={map.current}
+            features={lastResult.features}
+            similarityMatrix={lastResult.similarityMatrix}
+            patchSize={lastResult.patchSize}
+            geoRawImage={lastResult.geoRawImage}
+            onPatchesReady={handlePatchesReady}
           />
+        )}
+
+        {/* Precomputed Embeddings Layer - Show when no features are extracted and embeddings should be shown */}
+        {!lastResult?.features && showPrecomputedEmbeddings && (
+          <>
+            <ImageFeatureExtractionSimilarityLayer 
+              map={map.current} 
+              onLoadingChange={(isLoading) => {
+                setIsLoadingPrecomputedEmbeddings(isLoading);
+                setShowPrecomputedEmbeddingsMessage(true);
+                
+                if (!isLoading) {
+                  // Show completion message briefly, then hide
+                  setTimeout(() => {
+                    setShowPrecomputedEmbeddingsMessage(false);
+                  }, 2000); // Show for 2 seconds
+                }
+              }}
+              onCleanupReady={handleCleanupReady}
+            />
+            
+
+            
+
+          </>
         )}
         
 
         
         {/* Status Message - Bottom Left */}
-        <div className="absolute bottom-6 left-6 z-10 bg-white/90 text-gray-800 px-3 py-2 rounded-md shadow-md backdrop-blur-sm border border-gray-200">
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${isInitialized ? 'bg-green-500' : 'bg-yellow-500'} ${isProcessing ? 'animate-pulse' : ''}`}></div>
-            <span className="text-sm font-medium">
-              {isProcessing ? 'Processing...' : isInitialized ? 'Model Ready' : 'Initializing...'}
-            </span>
-          </div>
-          {isDrawingMode && (
-            <p className="text-xs text-gray-600 mt-1">Draw a polygon to extract features</p>
-          )}
-          {error && (
-            <p className="text-xs text-red-600 mt-1">{error}</p>
-          )}
+        <div className="absolute bottom-6 left-6 z-10">
+          <ModelStatusMessage
+            isInitialized={isInitialized}
+            isProcessing={isProcessing}
+            isDrawingMode={isDrawingMode}
+            error={error}
+          />
         </div>
 
-        {/* Demo Layer Loading Message - Center */}
-        {isLoadingDemoLayer && isInitialized && (
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 bg-white/95 backdrop-blur-md border border-gray-200 rounded-lg shadow-2xl px-6 py-4">
-            <div className="flex items-center space-x-3">
-              <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-              <span className="text-sm font-medium text-gray-800">Loading demo layer...</span>
-            </div>
-          </div>
-        )}
+        {/* Precomputed Embeddings Loading/Completion Message - Center */}
+        <LoadingMessage
+          isLoading={isLoadingPrecomputedEmbeddings}
+          isVisible={showPrecomputedEmbeddingsMessage && isInitialized && showPrecomputedEmbeddings && !isPrecomputedMessageDismissed}
+          onDismiss={handleDismissPrecomputedMessage}
+        />
 
-        {/* Feature Extraction Demo Layer Hint */}
-        {showDemoLayerHint && !lastResult?.features && (
-          <FeatureExtractionDemoLayerHint
-            isVisible={showDemoLayerHint}
-            onClose={closeDemoLayerHint}
-            duration={3000}
-          />
-        )}
+
 
         {/* Task Info - Bottom Right */}
-        <div className="absolute bottom-6 right-6 z-10 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-md shadow-md p-3">
-          <div className="text-right">
-            <h3 className="text-sm font-semibold text-gray-800 mb-1">
-              Image Feature Extraction
-            </h3>
-            {lastResult?.metadata?.modelId && (
-              <p className="text-xs text-gray-600 font-mono">
-                {lastResult.metadata.modelId}
-              </p>
-            )}
-            {!lastResult?.metadata?.modelId && isInitialized && (
-              <p className="text-xs text-gray-500 italic">
-                DINOv3 Model
-              </p>
-            )}
-          </div>
+        <div className="absolute bottom-6 right-6 z-10">
+          <TaskInfo
+            taskName="Image Feature Extraction"
+            modelId={lastResult?.metadata?.modelId}
+            isInitialized={isInitialized}
+          />
         </div>
 
         {/* Map Provider Selector - Top Left */}
@@ -657,113 +613,38 @@ export default function ImageFeatureExtraction() {
         </div>
 
         {/* Zoom Control - Top Right */}
-        <div className="absolute top-6 right-6 z-10 bg-white/90 text-gray-800 px-3 py-2 rounded-md shadow-md backdrop-blur-sm border border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="flex flex-col items-center space-y-1">
-              <button
-                onClick={() => handleZoomChange(zoomLevel + 1)}
-                disabled={zoomLevel >= 22}
-                className="w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 rounded text-gray-600 transition-colors"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-              </button>
-              <button
-                onClick={() => handleZoomChange(zoomLevel - 1)}
-                disabled={zoomLevel <= 15}
-                className="w-6 h-6 flex items-center justify-center bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 rounded text-gray-600 transition-colors"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                </svg>
-              </button>
-            </div>
-            <div className="flex flex-col items-center">
-                              <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-500 font-medium">ZOOM</span>
-                  <InfoTooltip 
-                    title="Zoom Parameter"
-                    position="bottom"
-                  >
-                    <p>Zoom level is passed as a parameter to the model for inference. See <code className="font-mono text-blue-300">BaseModel.polygonToImage()</code> method.</p>
-                  </InfoTooltip>
-                </div>
-              <span className="text-sm font-semibold text-gray-800">{zoomLevel}</span>
-            </div>
-          </div>
+        <div className="absolute top-6 right-6 z-10">
+          <ZoomControl
+            zoomLevel={zoomLevel}
+            onZoomChange={handleZoomChange}
+            minZoom={15}
+            maxZoom={22}
+          />
         </div>
         
         {/* Action Buttons - Top middle of map */}
         <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-10 flex items-center space-x-2">
-          {/* Start Drawing / Reset Button */}
-          {!isInitialized ? (
-            // Loading state when model is initializing
-            <div className="px-4 py-2 rounded-md shadow-xl backdrop-blur-sm font-medium text-sm flex items-center space-x-2 border bg-blue-600 text-white border-blue-500">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Loading Model...</span>
-            </div>
-          ) : (
-            <button
-              onClick={isDrawingMode ? handleStartDrawing : (polygon ? handleReset : handleStartDrawing)}
-              disabled={isResetting || isExtractingFeatures}
-              className={`px-4 py-2 rounded-md shadow-xl backdrop-blur-sm font-medium text-sm transition-all duration-200 flex items-center space-x-2 border ${
-                isResetting ? 'bg-gray-400 text-white border-gray-300' : // Resetting state
-                isExtractingFeatures ? 'bg-gray-400 text-white border-gray-300' : // Extracting features
-                isDrawingMode ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-500' : // Drawing active
-                polygon ? 'bg-rose-600 text-white hover:bg-rose-700 border-rose-500' : // Polygon drawn (Reset)
-                'bg-blue-600 text-white hover:bg-blue-700 border-blue-500' // Initial (Start Drawing)
-              }`}
-            >
-              {isResetting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Resetting...</span>
-                </>
-              ) : isExtractingFeatures ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Extracting Features...</span>
-                </>
-              ) : isDrawingMode ? (
-                <>
-                  <Target className="w-4 h-4" />
-                  <span>Drawing Active</span>
-                </>
-              ) : polygon ? (
-                <>
-                  <Trash2 className="w-4 h-4" />
-                  <span>Reset</span>
-                </>
-              ) : (
-                <>
-                  <Pencil className="w-4 h-4" />
-                  <span>Draw & Extract</span>
-                </>
-              )}
-            </button>
-          )}
-
-          {/* Export Button */}
-          {lastResult?.features && (
-            <ExportButton
-              detections={lastResult.features}
-              geoRawImage={lastResult?.geoRawImage}
-              task="image-feature-extraction"
-              provider={mapProvider}
-              embeddings={lastResult?.features && lastResult?.similarityMatrix && lastResult?.patchSize && allPatches.length > 0 ? {
-                features: lastResult.features,
-                similarityMatrix: lastResult.similarityMatrix,
-                patchSize: lastResult.patchSize,
-                allPatches: allPatches
-              } : undefined}
-            />
-          )}
+          <ActionButtons
+            isInitialized={isInitialized}
+            isDrawingMode={isDrawingMode}
+            polygon={polygon}
+            isButtonDisabled={isButtonDisabled}
+            isButtonLoading={isButtonLoading}
+            isExtractingFeatures={isExtractingFeatures}
+            isLoadingPrecomputedEmbeddings={isLoadingPrecomputedEmbeddings}
+            showPrecomputedEmbeddings={showPrecomputedEmbeddings}
+            isResetting={isResetting}
+            lastResult={lastResult}
+            mapProvider={mapProvider}
+            allPatches={allPatches}
+            onStartDrawing={handleStartDrawing}
+            onReset={handleReset}
+            onResetToDemo={handleResetToDemo}
+          />
         </div>
         
         {/* Corner decorations */}
-        <div className="absolute top-4 right-4 w-20 h-20 border-t-2 border-r-2 border-green-400/40 rounded-tr-lg"></div>
-        <div className="absolute bottom-4 left-4 w-20 h-20 border-b-2 border-l-2 border-emerald-400/40 rounded-bl-lg"></div>
+        <CornerDecorations />
       </div>
     </main>
   );
