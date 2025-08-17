@@ -6,12 +6,13 @@ import MaplibreDraw from "maplibre-gl-draw";
 import type { StyleSpecification } from "maplibre-gl";
 import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { useDebounce } from "../../../hooks/useDebounce";
-import { Pencil, Target, Trash2, Loader2, X } from "lucide-react";
+import { Pencil, Target, Trash2, Loader2, X, Info } from "lucide-react";
 import { 
   BackgroundEffects,
   ExportButton,
   FeatureVisualization,
-  MapProviderSelector
+  MapProviderSelector,
+  InfoTooltip
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
@@ -699,7 +700,15 @@ export default function ImageFeatureExtraction() {
               </button>
             </div>
             <div className="flex flex-col items-center">
-              <span className="text-xs text-gray-500 font-medium">ZOOM</span>
+                              <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-500 font-medium">ZOOM</span>
+                  <InfoTooltip 
+                    title="Zoom Parameter"
+                    position="bottom"
+                  >
+                    <p>Zoom level is passed as a parameter to the model for inference. See <code className="font-mono text-blue-300">BaseModel.polygonToImage()</code> method.</p>
+                  </InfoTooltip>
+                </div>
               <span className="text-sm font-semibold text-gray-800">{zoomLevel}</span>
             </div>
           </div>

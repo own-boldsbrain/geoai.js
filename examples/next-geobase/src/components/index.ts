@@ -4,6 +4,7 @@ export { GradientButton } from './ui/GradientButton';
 export { ZoomSlider } from './ui/ZoomSlider';
 export { StatusMessage } from './ui/StatusMessage';
 export { ExportButton } from './ui/ExportButton';
+export { InfoTooltip } from './ui/InfoTooltip';
 
 // Feature Components
 export { MapProviderSelector } from './MapProviderSelector';
