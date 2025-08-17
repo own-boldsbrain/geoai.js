@@ -126,17 +126,18 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
           const patchNorth = geoBounds.north - i * patchHeight;
           const patchSouth = geoBounds.north - (i + 1) * patchHeight;
 
-          // Create patch polygon with ALL pre-computed similarity data
+          // Create patch polygon with pre-computed similarity data
           const patchPolygon: GeoJSON.Feature<GeoJSON.Polygon> = {
             type: "Feature",
             properties: {
               patchIndex,
               i,
               j,
-              featureVector: features[patchIndex],
-              // Pre-compute ALL similarities for this patch to avoid runtime calculation
-              similarities: similarityMatrix[patchIndex],
-              // Pre-compute similarity values for all other patches
+              // TODO: These properties might be needed for export functionality
+              // Consider adding them back with a flag to avoid visualization performance hit
+              // featureVector: features[patchIndex], // Raw feature vector for export
+              // similarities: similarityMatrix[patchIndex], // Full similarity array for export
+              // Pre-compute similarity values for all other patches (used for visualization)
               ...Object.fromEntries(
                 similarityMatrix[patchIndex].map((similarity, targetIndex) => [
                   `sim_${targetIndex}`, similarity
