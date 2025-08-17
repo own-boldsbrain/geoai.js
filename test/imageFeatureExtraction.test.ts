@@ -49,6 +49,12 @@ describe("ImageFeatureExtraction", () => {
         east: -122.4,
         north: 37.6,
       },
+      getBounds: vi.fn().mockReturnValue({
+        west: -122.5,
+        south: 37.5,
+        east: -122.4,
+        north: 37.6,
+      }),
     };
 
     // Mock matmul result
@@ -252,10 +258,13 @@ describe("ImageFeatureExtraction", () => {
     });
 
     it("should handle extraction errors gracefully", async () => {
+      // Clear the singleton instance to force re-initialization
+      (ImageFeatureExtraction as any).instance = null;
+
       // Create a new instance with error-throwing mock
-      const errorMockExtractor = vi
-        .fn()
-        .mockRejectedValue(new Error("Model loading failed"));
+      const errorMockExtractor = vi.fn().mockImplementation(() => {
+        throw new Error("Model loading failed");
+      });
       errorMockExtractor.model = {
         config: {
           patch_size: 16,
@@ -294,6 +303,23 @@ describe("ImageFeatureExtraction", () => {
     });
 
     it("should work with different map source parameters", async () => {
+      // Clear the singleton instance to force re-initialization
+      (ImageFeatureExtraction as any).instance = null;
+
+      // Reset the pipeline mock to use the default mock extractor
+      const transformers = await import("@huggingface/transformers");
+      vi.mocked(transformers.pipeline).mockResolvedValue(mockExtractor);
+
+      const { instance: newInstance } =
+        await ImageFeatureExtraction.getInstance(
+          mockModelId,
+          mockProviderParams
+        );
+
+      vi.spyOn(newInstance as any, "polygonToImage").mockResolvedValue(
+        mockGeoRawImage
+      );
+
       const params: InferenceParams = {
         inputs: {
           polygon: polygon,
@@ -306,10 +332,10 @@ describe("ImageFeatureExtraction", () => {
         postProcessingParams: {},
       };
 
-      const result = await instance.inference(params);
+      const result = await newInstance.inference(params);
 
       expect(result).toBeDefined();
-      expect(instance["polygonToImage"]).toHaveBeenCalledWith(
+      expect(newInstance["polygonToImage"]).toHaveBeenCalledWith(
         polygon,
         18,
         [1, 2, 3],
@@ -321,6 +347,9 @@ describe("ImageFeatureExtraction", () => {
   describe("model initialization", () => {
     it("should initialize with correct model parameters", async () => {
       const transformers = await import("@huggingface/transformers");
+
+      // Clear the singleton instance to force re-initialization
+      (ImageFeatureExtraction as any).instance = null;
 
       await ImageFeatureExtraction.getInstance(mockModelId, mockProviderParams);
 
@@ -353,11 +382,16 @@ describe("ImageFeatureExtraction", () => {
 
   describe("edge cases", () => {
     it("should handle empty feature vectors", async () => {
+      // Clear the singleton instance to force re-initialization
+      (ImageFeatureExtraction as any).instance = null;
+
       // Create a new mock extractor for empty features
       const emptyMockExtractor = vi.fn().mockResolvedValue({
         slice: vi.fn().mockReturnValue({
           normalize: vi.fn().mockReturnValue({
-            permute: vi.fn().mockReturnValue({}),
+            permute: vi.fn().mockReturnValue({
+              tolist: vi.fn().mockResolvedValue([[]]),
+            }),
           }),
           tolist: vi.fn().mockResolvedValue([[]]),
         }),
@@ -378,6 +412,9 @@ describe("ImageFeatureExtraction", () => {
 
       const transformers = await import("@huggingface/transformers");
       vi.mocked(transformers.pipeline).mockResolvedValue(emptyMockExtractor);
+      vi.mocked(transformers.matmul).mockResolvedValue({
+        tolist: vi.fn().mockResolvedValue([[]]),
+      });
 
       const { instance } = await ImageFeatureExtraction.getInstance(
         mockModelId,
@@ -404,11 +441,16 @@ describe("ImageFeatureExtraction", () => {
     });
 
     it("should handle single feature vector", async () => {
+      // Clear the singleton instance to force re-initialization
+      (ImageFeatureExtraction as any).instance = null;
+
       // Create a new mock extractor for single feature
       const singleMockExtractor = vi.fn().mockResolvedValue({
         slice: vi.fn().mockReturnValue({
           normalize: vi.fn().mockReturnValue({
-            permute: vi.fn().mockReturnValue({}),
+            permute: vi.fn().mockReturnValue({
+              tolist: vi.fn().mockResolvedValue([[[1.0]]]),
+            }),
           }),
           tolist: vi.fn().mockResolvedValue([[[0.1, 0.2, 0.3]]]),
         }),
@@ -429,6 +471,9 @@ describe("ImageFeatureExtraction", () => {
 
       const transformers = await import("@huggingface/transformers");
       vi.mocked(transformers.pipeline).mockResolvedValue(singleMockExtractor);
+      vi.mocked(transformers.matmul).mockResolvedValue({
+        tolist: vi.fn().mockResolvedValue([[[0.5]]]), // Lower similarity to avoid filtering
+      });
 
       const { instance } = await ImageFeatureExtraction.getInstance(
         mockModelId,
@@ -443,7 +488,9 @@ describe("ImageFeatureExtraction", () => {
         inputs: {
           polygon: polygon,
         },
-        postProcessingParams: {},
+        postProcessingParams: {
+          similarityThreshold: 0, // Disable filtering for single feature test
+        },
       };
 
       const result = await instance.inference(params);
