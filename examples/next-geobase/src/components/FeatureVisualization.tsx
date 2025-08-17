@@ -20,7 +20,6 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
   similarityThreshold,
   onPatchesReady,
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const sourceRef = useRef<string | null>(null);
   const layerRef = useRef<string | null>(null);
   const hoveredPatchRef = useRef<number | null>(null);
@@ -96,23 +95,10 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
       return;
     }
 
+    const startTime = Date.now();
+    console.log("FeatureVisualization - Update hook started");
     // Cleanup existing layers
     cleanupLayers();
-
-    // Create canvas for visualization
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      return;
-    }
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      return;
-    }
-
-    // Set canvas size based on image dimensions
-    canvas.width = geoRawImage.width;
-    canvas.height = geoRawImage.height;
 
     // Calculate patches per row and column
     const patchesPerRow = Math.floor(geoRawImage.width / patchSize);
@@ -187,8 +173,8 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
     }
 
     // Create single source and layer for all patches
-    const sourceId = `feature-patches-${Date.now()}`;
-    const layerId = `feature-layer-${Date.now()}`;
+    const sourceId = `feature-patches-source`;
+    const layerId = `feature-patches-layer`;
     
     sourceRef.current = sourceId;
     layerRef.current = layerId;
@@ -230,25 +216,13 @@ export const FeatureVisualization: React.FC<FeatureVisualizationProps> = ({
       }
     });
 
+    const endTime = Date.now();
+    console.log(`FeatureVisualization - Update hook completed in ${endTime - startTime}ms`);
+
     return () => {
       cleanupLayers();
     };
-  }, [map, features, similarityMatrix, patchSize, geoRawImage, similarityThreshold]);
+  }, [features, similarityMatrix, patchSize, geoRawImage, similarityThreshold]);
 
-  return (
-    <div className="relative">
-      
-      <canvas
-        ref={canvasRef}
-        style={{
-          width: geoRawImage?.width || 0,
-          height: geoRawImage?.height || 0,
-          pointerEvents: 'none',
-          position: 'absolute',
-          top: '-9999px', // Hide canvas off-screen since we're using it as data source
-          left: '-9999px',
-        }}
-      />
-    </div>
-  );
+  return null;
 };
