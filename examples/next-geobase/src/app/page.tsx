@@ -106,7 +106,7 @@ export default function Home() {
                   className="h-6 w-auto mr-2"
                 />
                 <pre className="text-xl font-bold text-white font-mono">
-                  @geobase-js/geoai
+                  @geobase.js/geoai
                 </pre>
               </div>
             </a>
@@ -126,7 +126,7 @@ export default function Home() {
                 </a>
                 <a
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium text-sm cursor-pointer min-h-[38px] bg-gray-700 shadow-lg hover:bg-gray-600 transition"
-                href="https://github.com/decision-labs/geobase-ai.js"
+                href="https://github.com/decision-labs/geobase.js"
                 target="_blank"
                 rel="noopener noreferrer"
                 >
@@ -280,11 +280,11 @@ export default function Home() {
                 outline: 'none',   // remove outline highlight
               }}
             >
-              pnpm add @geobase-js/geoai
+              pnpm add @geobase.js/geoai
             </SyntaxHighlighter>
           </div>
           <SyntaxHighlighter language="javascript" style={oneDark} customStyle={{ borderRadius: 12, fontSize: 16, backgroundColor: '#1f2937' }}>
-            {`import { geoai } from "@geobase-js/geoai";
+            {`import { geoai } from "@geobase.js/geoai";
 
 // mapProviderConfig can also accept Mapbox or other image tile endpoints
 const mapProviderConfig = {
@@ -311,6 +311,28 @@ const result = await pipeline.inference(polygon);`}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 
+              <a
+                href="/geoai-live/tasks/image-feature-extraction"
+              className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
+            >
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-48 object-cover rounded-lg mb-6"
+              >
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/image-feature-extraction.mp4" type="video/mp4" />
+              </video>
+              <h3 className="text-xl font-bold text-white mb-3">
+                Image Feature Extraction
+              </h3>
+              <p className="text-gray-300 text-base">
+                Extract and analyze visual features from satellite imagery using AI embeddings.
+              </p>
+            </a>
+
+            
               <a
                 href="/geoai-live/tasks/oil-storage-tank-detection"
               className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
@@ -632,7 +654,7 @@ const result = await pipeline.inference(polygon);`}
                 <ul className="space-y-2">
                   <li><a href="https://docs.geobase.app/geoai/" className="text-gray-300 hover:text-white transition">Documentation</a></li>
                   <li><a href="https://docs.geobase.app/geoai-live" className="text-gray-300 hover:text-white transition">Examples</a></li>
-                  <li><a href="https://github.com/decision-labs/geobase-ai.js" className="text-gray-300 hover:text-white transition">GitHub</a></li>
+                  <li><a href="https://github.com/decision-labs/geobase.js" className="text-gray-300 hover:text-white transition">GitHub</a></li>
                 </ul>
               </div>
               <div>
