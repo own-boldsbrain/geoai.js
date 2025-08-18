@@ -8,15 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2024-01-XX
 
 ### Changed
-- **BREAKING**: Renamed package from `geoai` to `geoai`
+- **BREAKING**: Renamed package from `geoai-js` to `geoai`
 - Updated all import statements and package references
-- Updated build output structure from `geoai.js` to `geoai.js`
+- Updated build output structure from `geoai-js.js` to `geoai.js`
 - Updated documentation and examples
 - Updated repository URLs and homepage
 
 ### Migration Guide
 To migrate from the old package:
-1. Update your package.json: `"geoai": "^0.0.7"` → `"geoai": "^1.0.0"`
+1. Update your package.json: `"geoai-js": "^0.0.7"` → `"geoai": "^1.0.0"`
 2. Update all import statements: `import { geoai } from "geoai"` → `import { geoai } from "geoai"`
 3. Update any build configurations that reference the old package name
 4. Update any documentation or scripts that reference the old package
