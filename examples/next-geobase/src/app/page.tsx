@@ -6,6 +6,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import GitHubButton from 'react-github-btn'
 import { Grid3X3 } from 'lucide-react';
+import { GITHUB_REPO_URI, NPM_PACKAGE_NAME } from '../config';
 
 const GEOBASE_CONFIG = {
   projectRef: process.env.NEXT_PUBLIC_GEOBASE_PROJECT_REF,
@@ -106,7 +107,7 @@ export default function Home() {
                   className="h-6 w-auto mr-2"
                 />
                 <pre className="text-xl font-bold text-white font-mono">
-                  @geobase.js/geoai
+                  {NPM_PACKAGE_NAME}
                 </pre>
               </div>
             </a>
@@ -126,7 +127,7 @@ export default function Home() {
                 </a>
                 <a
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium text-sm cursor-pointer min-h-[38px] bg-gray-700 shadow-lg hover:bg-gray-600 transition"
-                href="https://github.com/decision-labs/geobase.js"
+                href={GITHUB_REPO_URI}
                 target="_blank"
                 rel="noopener noreferrer"
                 >
@@ -280,11 +281,11 @@ export default function Home() {
                 outline: 'none',   // remove outline highlight
               }}
             >
-              pnpm add @geobase.js/geoai
+              {`pnpm add ${NPM_PACKAGE_NAME}`}
             </SyntaxHighlighter>
           </div>
           <SyntaxHighlighter language="javascript" style={oneDark} customStyle={{ borderRadius: 12, fontSize: 16, backgroundColor: '#1f2937' }}>
-            {`import { geoai } from "@geobase.js/geoai";
+            {`import { geoai } from "${NPM_PACKAGE_NAME}";
 
 // mapProviderConfig can also accept Mapbox or other image tile endpoints
 const mapProviderConfig = {
@@ -654,7 +655,7 @@ const result = await pipeline.inference(polygon);`}
                 <ul className="space-y-2">
                   <li><a href="https://docs.geobase.app/geoai/" className="text-gray-300 hover:text-white transition">Documentation</a></li>
                   <li><a href="https://docs.geobase.app/geoai-live" className="text-gray-300 hover:text-white transition">Examples</a></li>
-                  <li><a href="https://github.com/decision-labs/geobase.js" className="text-gray-300 hover:text-white transition">GitHub</a></li>
+                  <li><a href={GITHUB_REPO_URI} className="text-gray-300 hover:text-white transition">GitHub</a></li>
                 </ul>
               </div>
               <div>

@@ -20,3 +20,9 @@ export const MAPBOX_CONFIG = {
   apiKey: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "test",
   style: "mapbox://styles/mapbox/satellite-v9",
 };
+
+
+export const GITHUB_REPO_URI = "https://github.com/decision-labs/geobase.js";
+export const GITHUB_REPO_NAME = "decision-labs/geobase.js";
+export const NPM_PACKAGE_NAME = "@geobase.js/geoai";
+export const NPM_PACKAGE_URI = "https://www.npmjs.com/package/@geobase.js/geoai";
