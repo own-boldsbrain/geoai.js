@@ -32,10 +32,10 @@ export function getOptimalColorScheme(gpuInfo: GPUInfo) {
   } else {
     // Low-performance GPU: Use simple black/white
     return {
-      hovered: '#ffffff', // White
-      low: '#000000',     // Black
-      medium: '#ffffff',  // White (not used in 2-stop interpolation)
-      high: '#ffffff'     // White
+      hovered: '#fcfdbf', // Bright yellow-white
+      low: '#000004',     // Black
+      medium: '#8c2981',  // Purple
+      high: '#fcfdbf'     // Bright yellow-white
     };
   }
 }
@@ -81,11 +81,12 @@ export function createColorExpression(
     // Low-performance: 2-color gradient for maximum performance
     return [
       'case',
-      ['==', ['get', 'patchIndex'], hoveredPatchIndex], '#ffffff', // White
+      ['==', ['get', 'patchIndex'], hoveredPatchIndex], '#fcfdbf', // White
       ['interpolate', ['linear'], 
         ['at', hoveredPatchIndex, ['get', 'similarities']], // Array indexing
-        0, '#000000',   // Black
-        1, '#ffffff'    // White
+        0, '#000004',   // Black
+        0.5, '#8c2981', // Purple
+        1, '#fcfdbf'    // Bright yellow-white
       ]
     ];
   }

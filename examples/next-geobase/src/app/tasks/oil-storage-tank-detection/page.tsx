@@ -114,7 +114,7 @@ export default function OilStorageTankDetection() {
         "geobase-tiles": {
           type: "raster",
           tiles: [
-            `https://${GEOBASE_CONFIG.projectRef}.geobase.app/titiler/v1/cog/tiles/WebMercatorQuad/{z}/{x}/{y}?url=${GEOBASE_CONFIG.cogImagery}&apikey=${GEOBASE_CONFIG.apikey}`,
+            `${process.env.NEXT_PUBLIC_GEOBASE_TITILER}/cog/tiles/WebMercatorQuad/{z}/{x}/{y}?url=${GEOBASE_CONFIG.cogImagery}&apikey=${GEOBASE_CONFIG.apikey}`,
           ],
           tileSize: 256,
         },
