@@ -90,11 +90,11 @@
 - [ ] **Unpkg CDN**
 
   - [ ] Verify package works on unpkg.com
-  - [ ] Test direct import: `https://unpkg.com/geoai@0.0.1/build/dist/geoai.js`
+  - [ ] Test direct import: `https://unpkg.com/geoai@0.0.1/build/dist/geoai`
 
 - [ ] **jsDelivr CDN**
   - [ ] Verify package works on cdn.jsdelivr.net
-  - [ ] Test direct import: `https://cdn.jsdelivr.net/npm/geoai@0.0.1/build/dist/geoai.js`
+  - [ ] Test direct import: `https://cdn.jsdelivr.net/npm/geoai@0.0.1/build/dist/geoai`
 
 ## 📝 **Documentation & Marketing**
 
