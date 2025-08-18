@@ -8,16 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2024-01-XX
 
 ### Changed
-- **BREAKING**: Renamed package from `@geobase.js/geoai` to `geoai`
+- **BREAKING**: Renamed package from `geoai` to `geoai`
 - Updated all import statements and package references
-- Updated build output structure from `@geobase.js/geoai.js` to `geoai.js`
+- Updated build output structure from `geoai.js` to `geoai.js`
 - Updated documentation and examples
 - Updated repository URLs and homepage
 
 ### Migration Guide
 To migrate from the old package:
-1. Update your package.json: `"@geobase.js/geoai": "^0.0.7"` → `"geoai": "^1.0.0"`
-2. Update all import statements: `import { geoai } from "@geobase.js/geoai"` → `import { geoai } from "geoai"`
+1. Update your package.json: `"geoai": "^0.0.7"` → `"geoai": "^1.0.0"`
+2. Update all import statements: `import { geoai } from "geoai"` → `import { geoai } from "geoai"`
 3. Update any build configurations that reference the old package name
 4. Update any documentation or scripts that reference the old package
 
@@ -43,7 +43,7 @@ To migrate from the old package:
 
 ### Added
 
-- Initial public release of @geobase.js/geoai
+- Initial public release of geoai
 - Support for multiple Geo AI models:
   - Object Detection
   - Building Footprint Segmentation

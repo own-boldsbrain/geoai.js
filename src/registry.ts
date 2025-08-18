@@ -121,7 +121,6 @@ export const modelRegistry: ModelConfig[] = [
   },
   {
     task: "land-cover-classification",
-    library: "@geobase.js/geoai",
     library: "geoai",
     description:
       "Classifies land cover types in a given region. Useful for mapping vegetation, urban areas, water, and other land use categories.",
@@ -152,7 +151,6 @@ export const modelRegistry: ModelConfig[] = [
   },
   {
     task: "solar-panel-detection",
-    library: "@geobase.js/geoai",
     library: "geoai",
     description:
       "Detects and locates solar panels in satellite or aerial imagery. Useful for identifying solar farms, rooftop solar installations, or tracking renewable energy infrastructure.",
@@ -176,7 +174,6 @@ export const modelRegistry: ModelConfig[] = [
   },
   {
     task: "ship-detection",
-    library: "@geobase.js/geoai",
     library: "geoai",
     description:
       "Detects ships and large boats in maritime or coastal satellite imagery. Useful for monitoring shipping lanes, ports, or maritime activity.",
@@ -200,7 +197,6 @@ export const modelRegistry: ModelConfig[] = [
   },
   {
     task: "car-detection",
-    library: "@geobase.js/geoai",
     library: "geoai",
     description:
       "Detects cars and other small vehicles in urban, suburban, or rural imagery. Useful for traffic analysis, parking lot monitoring, or urban planning.",
