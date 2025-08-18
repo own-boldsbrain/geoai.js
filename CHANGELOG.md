@@ -5,6 +5,11 @@ All notable changes to the geoai project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-rc.1] - 2024-01-XX
+
+### Release Candidate
+This is the first release candidate for version 1.0.0. This RC includes all the features and improvements planned for the final 1.0.0 release.
+
 ## [1.0.0] - 2024-01-XX
 
 ### Changed
