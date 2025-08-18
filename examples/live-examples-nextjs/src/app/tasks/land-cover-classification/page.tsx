@@ -226,6 +226,39 @@ export default function LandCoverClassification() {
         map.current.remove();
       }
     };
+  }, []); // Removed mapProvider dependency
+
+  // Handle map provider changes by updating the style without recreating the map
+  useEffect(() => {
+    if (!map.current) return;
+
+    // Store current camera state
+    const currentCenter = map.current.getCenter();
+    const currentZoom = map.current.getZoom();
+    const currentBearing = map.current.getBearing();
+    const currentPitch = map.current.getPitch();
+
+    // Create new style for the selected provider
+    const newMapStyle = createBaseMapStyle({
+      mapProvider,
+      geobaseConfig: GEOBASE_CONFIG,
+      mapboxConfig: MAPBOX_CONFIG,
+    }, {
+      includeMapboxBase: true,
+      mapboxTileStyle: 'satellite-v9',
+      maxZoom: 23
+    });
+
+    // Update the map style while preserving camera state
+    map.current.setStyle(newMapStyle, { diff: false });
+
+    // Restore camera state after style loads
+    map.current.once('styledata', () => {
+      map.current?.setCenter(currentCenter);
+      map.current?.setZoom(currentZoom);
+      map.current?.setBearing(currentBearing);
+      map.current?.setPitch(currentPitch);
+    });
   }, [mapProvider]);
 
   // Initialize the model when the map provider changes
