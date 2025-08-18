@@ -1,0 +1,135 @@
+import { Callout } from "nextra/components";
+import { 
+  PackageInfo, 
+  NpmInstall, 
+  ImportStatement, 
+  PackageName, 
+  NpmLink, 
+  PackageJson, 
+  WorkspaceName 
+} from "../components";
+
+# Package Information Components
+
+This page demonstrates how to use the reusable package information components throughout the documentation.
+
+## Basic Usage
+
+### Package Name
+Use `<PackageName />` to display the npm package name:
+
+The package <PackageName /> provides geospatial AI capabilities.
+
+### NPM Install Command
+Use `<NpmInstall />` to display the npm install command:
+
+```bash
+<NpmInstall />
+```
+
+### Import Statement
+Use `<ImportStatement />` to display the basic import:
+
+```typescript
+<ImportStatement />
+```
+
+## Advanced Usage
+
+### Custom PackageInfo Component
+Use the main `<PackageInfo />` component with different types:
+
+```typescript
+// NPM install
+<PackageInfo type="npm-install" />
+
+// Import statement
+<PackageInfo type="import" />
+
+// Package name only
+<PackageInfo type="package-name" />
+
+// NPM link command
+<PackageInfo type="npm-link" />
+
+// Package.json entry
+<PackageInfo type="package-json" />
+
+// Workspace name
+<PackageInfo type="workspace" />
+```
+
+## Convenience Components
+
+### All Available Components
+
+- `<PackageName />` - Just the package name
+- `<NpmInstall />` - `npm install @geobase.js/geoai`
+- `<ImportStatement />` - `import { geoai } from "@geobase.js/geoai";`
+- `<NpmLink />` - `npm link @geobase.js/geoai`
+- `<PackageJson />` - `"@geobase.js/geoai": "workspace:*"`
+- `<WorkspaceName />` - `"name": "@geobase.js/geoai-workspace"`
+
+## Examples in Context
+
+### Installation Instructions
+
+To install the package, run:
+
+```bash
+<NpmInstall />
+```
+
+Or with additional dependencies:
+
+```bash
+npm install maplibre-gl <PackageName /> maplibre-gl-draw
+```
+
+### Import Examples
+
+Basic import:
+```typescript
+<ImportStatement />
+```
+
+With types:
+```typescript
+import { geoai, ProviderParams } from '<PackageName />';
+```
+
+### Package.json Examples
+
+For dependencies:
+```json
+{
+  "dependencies": {
+    <PackageJson />
+  }
+}
+```
+
+For workspace:
+```json
+{
+  "name": <WorkspaceName />,
+  "dependencies": {
+    <PackageJson />
+  }
+}
+```
+
+## Benefits
+
+Using these components provides:
+
+- **Consistency** - All package references use the same source
+- **Maintainability** - Update package name in one place
+- **Type Safety** - TypeScript support for all components
+- **Flexibility** - Different contexts for different use cases
+- **Reusability** - Use across all documentation pages
+
+<Callout type="info" emoji="💡">
+  These components automatically use the constants from `docs/config/constants.ts`. 
+  If you need to update the package name or version, just update the constants file!
+</Callout>
