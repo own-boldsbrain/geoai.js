@@ -125,12 +125,10 @@
 
 # Misc
 
-- [ ] Examples doen't have a back to home button
 - [ ] No versioning in the docs
 - [ ] No versioning in the examples
 - [ ] Metadata on version, repo, package name, etc. should come from the package.json for docs and examples
-- [ ] No live docs
+- [ ] No live docs that has the library version
 - [ ] No way add announcement to the docs and examples
 - [ ] in examples, check the styling of each example
-- [ ] in examples, switching between basemaps resets the view
 - [ ] open source the docs repo make sure the edit links are working
