@@ -225,9 +225,10 @@ export default function OilStorageTankDetection() {
     }
     if (lastResult?.geoRawImage?.bounds && map.current) {
       MapUtils.displayInferenceBounds(map.current, lastResult.geoRawImage.bounds, {
-        "fill-color": "#0000FF", // Blue - highly visible and color-blind friendly
-        "fill-opacity": 0.6,
-        "fill-outline-color": "#CC5500", // Darker orange for better contrast
+        "line-color": "#FF1493", // Bright magenta - highly visible and color-blind friendly
+        "line-width": 4,
+        "line-dasharray": [8, 4], // Dashed line for better visibility
+        "line-opacity": 1.0,
       });
     }
   }, [lastResult]);
