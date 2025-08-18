@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "build:geoai": "cd ../../ && pnpm run build && cd examples/next-geobase && pnpm install",
+    "build:geoai": "cd ../../ && pnpm run build && cd examples/live-examples-nextjs && pnpm install",
     "build_dev": "pnpm build:geoai && pnpm dev"
   },
   "dependencies": {

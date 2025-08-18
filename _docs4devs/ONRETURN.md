@@ -8,7 +8,7 @@
 ## Current Status
 - [x] TMS provider implementation completed in `src/data_providers/tms.ts`
 - [x] TMS provider integrated into base model and type system
-- [x] TMS configuration added to examples (`examples/next-geobase/src/config.ts`)
+- [x] TMS configuration added to examples (`examples/live-examples-nextjs/src/config.ts`)
 - [x] TMS tiles integrated into map components
 - [x] Created comprehensive Makefile for development workflows
 - [ ] **FAILING TEST**: TMS coordinate flipping issue in test `test/tms-provider-only.test.ts`

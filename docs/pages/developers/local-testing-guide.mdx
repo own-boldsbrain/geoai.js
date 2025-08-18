@@ -10,7 +10,7 @@ The Next.js example already has convenient scripts set up:
 
 ```bash
 # From the root directory
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 
 # Build the main package and install it locally
 pnpm run build:geoai
@@ -40,7 +40,7 @@ pnpm build
 ### Step 2: Install in Example
 
 ```bash
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 
 # Option A: File reference (automatically updates)
 pnpm install file:../../build
@@ -51,7 +51,7 @@ pnpm link ../../
 # Option C: Pack and install (most realistic)
 cd ../../
 pnpm pack
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 pnpm install ../../geobase-js-geoai-0.0.1.tgz
 ```
 
@@ -96,7 +96,7 @@ cd build
 npm link
 
 # In your example
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 npm link geoai
 
 # To unlink later
@@ -108,7 +108,7 @@ npm unlink geoai
 ### 1. Check Installation
 
 ```bash
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 
 # Check if package is installed
 pnpm list geoai
@@ -161,7 +161,7 @@ cd /path/to/geoai
 pnpm build --watch
 
 # Terminal 2: Next.js dev server
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 pnpm dev
 ```
 
@@ -171,7 +171,7 @@ pnpm dev
 # Make changes to src/
 # Then rebuild and test
 pnpm build
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 pnpm install file:../../build
 pnpm dev
 ```
@@ -182,7 +182,7 @@ pnpm dev
 
 ```bash
 # Clear node_modules and reinstall
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 rm -rf node_modules pnpm-lock.yaml
 pnpm install file:../../build
 ```
@@ -214,7 +214,7 @@ import { geoai } from "geoai/dist";
 
 ```bash
 # Clear Next.js cache
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 rm -rf .next
 pnpm dev
 ```
@@ -246,14 +246,14 @@ const params: ProviderParams = {
 
 ```bash
 # Build and test in one go
-pnpm build && cd examples/next-geobase && pnpm install file:../../build && pnpm dev
+pnpm build && cd examples/live-examples-nextjs && pnpm install file:../../build && pnpm dev
 
 # Reset and reinstall
-rm -rf examples/next-geobase/node_modules && cd examples/next-geobase && pnpm install
+rm -rf examples/live-examples-nextjs/node_modules && cd examples/live-examples-nextjs && pnpm install
 
 # Check what's installed
-cd examples/next-geobase && pnpm list geoai
+cd examples/live-examples-nextjs && pnpm list geoai
 
 # Test imports from command line
-cd examples/next-geobase && node -e "import('geoai').then(m => console.log(m.geoai.tasks()))"
+cd examples/live-examples-nextjs && node -e "import('geoai').then(m => console.log(m.geoai.tasks()))"
 ```

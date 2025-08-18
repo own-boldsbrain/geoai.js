@@ -23,8 +23,8 @@ check-videos:
 	@echo "=========================================="
 	@for model in $$(grep -E 'task: "' ../src/registry.ts | sed 's/.*task: "\([^"]*\)".*/\1/' | sort); do \
 		case "$$model" in \
-			"car-detection") video_file="../examples/next-geobase/public/video/car-detection-model.mp4" ;; \
-			*) video_file="../examples/next-geobase/public/video/$${model}.mp4" ;; \
+			"car-detection") video_file="../examples/live-examples-nextjs/public/video/car-detection-model.mp4" ;; \
+			*) video_file="../examples/live-examples-nextjs/public/video/$${model}.mp4" ;; \
 		esac; \
 		if [ -f "$$video_file" ]; then \
 			echo "✅ $$model.mp4 - Found"; \
