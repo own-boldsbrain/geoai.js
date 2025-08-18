@@ -11,6 +11,7 @@ import {
   ExportButton
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
+import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 import { MapProvider } from "../../../types"
 
@@ -98,82 +99,15 @@ export default function ShipDetection() {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    const mapStyle: StyleSpecification = {
-      version: 8 as const,
-      sources: {
-        "mapbox-base": {
-          type: "raster",
-          tiles: [
-            `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${MAPBOX_CONFIG.apiKey}`,
-          ],
-          tileSize: 512,
-        },
-        "geobase-tiles": {
-          type: "raster",
-          tiles: [
-            `${process.env.NEXT_PUBLIC_GEOBASE_TITILER}/cog/tiles/WebMercatorQuad/{z}/{x}/{y}?url=${GEOBASE_CONFIG.cogImagery}&apikey=${GEOBASE_CONFIG.apikey}`,
-          ],
-          tileSize: 256,
-        },
-        "mapbox-tiles": {
-          type: "raster",
-          tiles: [
-            `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=${MAPBOX_CONFIG.apiKey}`,
-          ],
-          tileSize: 512,
-        },
-        "esri-tiles": {
-          type: "raster",
-          tiles: [
-            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-          ],
-          tileSize: 256,
-          attribution: "ESRI World Imagery",
-        },
-      },
-      layers: [
-        {
-          id: "mapbox-base-layer",
-          type: "raster",
-          source: "mapbox-base",
-          minzoom: 0,
-          maxzoom: 23,
-          layout: {
-            visibility: mapProvider === "geobase" ? "visible" : "none",
-          },
-        },
-        {
-          id: "geobase-layer",
-          type: "raster",
-          source: "geobase-tiles",
-          minzoom: 0,
-          maxzoom: 23,
-          layout: {
-            visibility: mapProvider === "geobase" ? "visible" : "none",
-          },
-        },
-        {
-          id: "mapbox-layer",
-          type: "raster",
-          source: "mapbox-tiles",
-          minzoom: 0,
-          maxzoom: 23,
-          layout: {
-            visibility: mapProvider === "mapbox" ? "visible" : "none",
-          },
-        },
-        {
-          id: "esri-layer",
-          type: "raster",
-          source: "esri-tiles",
-          minzoom: 0,
-          maxzoom: 23,
-          layout: {
-            visibility: mapProvider === "esri" ? "visible" : "none",
-          },
-        },
-      ],
-    };
+    const mapStyle = createBaseMapStyle({
+      mapProvider,
+      geobaseConfig: GEOBASE_CONFIG,
+      mapboxConfig: MAPBOX_CONFIG,
+    }, {
+      includeMapboxBase: true,
+      mapboxTileStyle: 'satellite-v9',
+      maxZoom: 23
+    });
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
