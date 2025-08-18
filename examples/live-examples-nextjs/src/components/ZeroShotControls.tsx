@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { GlassmorphismCard } from './ui/GlassmorphismCard';
 import { GradientButton } from './ui/GradientButton';

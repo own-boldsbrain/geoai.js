@@ -131,3 +131,6 @@
 - [ ] Metadata on version, repo, package name, etc. should come from the package.json for docs and examples
 - [ ] No live docs
 - [ ] No way add announcement to the docs and examples
+- [ ] in examples, check the styling of each example
+- [ ] in examples, switching between basemaps resets the view
+- [ ] open source the docs repo make sure the edit links are working

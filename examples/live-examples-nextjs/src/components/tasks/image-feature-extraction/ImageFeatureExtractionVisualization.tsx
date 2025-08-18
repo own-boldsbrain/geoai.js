@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import { detectGPU, type GPUInfo } from '../../../utils/gpuUtils';

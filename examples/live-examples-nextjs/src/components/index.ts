@@ -5,6 +5,7 @@ export { ZoomSlider } from './ui/ZoomSlider';
 export { StatusMessage } from './ui/StatusMessage';
 export { ExportButton } from './ui/ExportButton';
 export { InfoTooltip } from './ui/InfoTooltip';
+export { default as BackToHomeButton } from './ui/BackToHomeButton';
 
 // Feature Components
 export { MapProviderSelector } from './MapProviderSelector';
