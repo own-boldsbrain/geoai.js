@@ -113,9 +113,17 @@ export default function Home() {
             </a>
             <nav className="hidden lg:flex grow items-center justify-center">
               <ul className="flex gap-1 text-sm font-semibold">
+                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#dinov3">What's New</a></li>
                 <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#features">AI Models</a></li>
                 <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="https://docs.geobase.app/geoai">Docs</a></li>
                 <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#footer">About</a></li>
+                <li className="relative group">
+                  <a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition text-gray-400 hover:text-white" href="https://mailchi.mp/ece911e44b4e/new-geoaijs-models" target="_blank" rel="noopener noreferrer">Newsletter</a>
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    We are always adding new models! Stay posted 🚀
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                  </div>
+                </li>
               </ul>
             </nav>
             <div className="hidden lg:flex items-center gap-2 lg:absolute lg:-right-1 lg:top-1/2 lg:-translate-y-1/2">
@@ -144,7 +152,7 @@ export default function Home() {
       {/* Main Content */}
       <main className="min-h-screen">
         {/* Hero Section */}
-        <section className="flex flex-col items-center justify-center relative pt-20 pb-12 sm:pt-24 sm:pb-10 md:pt-32 xl:pt-48 overflow-hidden">
+        <section id="dinov3" className="flex flex-col items-center justify-center relative pt-12 pb-12 sm:pt-16 sm:pb-10 md:pt-20 xl:pt-24 overflow-hidden scroll-mt-32">
           {/* Background Animation */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -mt-12 w-96 h-96 md:w-[32rem] md:h-[32rem] md:mt-12 xl:w-[50rem] xl:h-[50rem] xl:mt-24 pointer-events-none opacity-30">
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full">
@@ -161,12 +169,42 @@ export default function Home() {
           </div>
           
           <div className="mt-0 lg:mt-2 flex flex-col gap-6 lg:gap-12 items-center justify-center p-4 z-[1] max-w-5xl mx-auto">
-            {/* Announcement Banner */}
-            <a className="flex gap-2 items-center justify-center rounded-full bg-gray-700/60 hover:bg-gray-600/60 border border-gray-500/50 text-base font-medium px-4 py-2 cursor-pointer transition mt-1" href="https://mailchi.mp/ece911e44b4e/new-geoaijs-models">
-              <span className="block mr-0.5">🚀</span>
-              We're working on more models, stay tuned or join our newsletter
-              <span className="text-green-400">→</span>
-            </a>
+            {/* DINOv3 Launch Banner */}
+            <div className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 border border-purple-500/30 rounded-2xl p-6 md:p-8 max-w-4xl w-full">
+              <div className="grid md:grid-cols-2 gap-6 items-center">
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">🚀</span>
+                    <div>
+                      <h2 className="text-xl md:text-2xl font-bold text-white">Meta's DINOv3 Now Available</h2>
+                      <p className="text-purple-300 text-sm">Latest integration</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-300 text-base mb-4">
+                    We've integrated Meta's groundbreaking DINOv3 model for self-supervised learning at unprecedented scale.
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <a href="/geoai-live/tasks/image-feature-extraction" className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg transition-colors text-sm">
+                      <span>Try DINOv3 Demo</span>
+                      <span className="text-purple-200">→</span>
+                    </a>
+                    <a href="https://ai.meta.com/dinov3/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors text-sm">
+                      <span>Learn About DINOv3</span>
+                      <span className="text-gray-300">↗</span>
+                    </a>
+                  </div>
+                </div>
+                
+                <div className="relative">
+                  <video autoPlay loop muted playsInline className="w-full rounded-lg shadow-xl">
+                    <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/image-feature-extraction.mp4" type="video/mp4" />
+                  </video>
+                  <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 to-transparent rounded-lg"></div>
+                </div>
+              </div>
+            </div>
             
             {/* Main Heading */}
             <div className="relative h-36 lg:h-40 w-full mt-6">
@@ -287,35 +325,60 @@ export default function Home() {
           <SyntaxHighlighter language="javascript" style={oneDark} customStyle={{ borderRadius: 12, fontSize: 16, backgroundColor: '#1f2937' }}>
             {`import { geoai } from "${NPM_PACKAGE_NAME}";
 
-// mapProviderConfig can also accept Mapbox or other image tile endpoints
+// Now with Meta's DINOv3 for image feature extraction
 const mapProviderConfig = {
   provider: "geobase", projectRef, apikey, cogImagery
 };
 
-const pipeline = await geoai.pipeline(
-  [{ task : "object-detection"}], mapProviderConfig
-);
+const pipeline = await geoai.pipeline([
+  { task: "image-feature-extraction" }
+], mapProviderConfig);
 
 const result = await pipeline.inference(polygon);`}
           </SyntaxHighlighter>
+        </section>
+
+
+
+        {/* Integration Highlight */}
+        <section className="max-w-4xl mx-auto mb-16 px-4">
+          <div className="text-center">
+            <p className="text-gray-300 text-sm mb-4 font-medium">POWERED BY</p>
+            <div className="flex items-center justify-center gap-6">
+              <div className="flex items-center gap-2">
+                <span className="text-3xl">🤗</span>
+                <span className="text-white font-semibold text-lg">HuggingFace</span>
+              </div>
+              <span className="text-gray-300 text-xl">×</span>
+              <img src="/geoai-live/geobase-logo-darkmode.svg" alt="Geobase" className="h-8" />
+            </div>
+            <p className="text-gray-300 text-sm mt-4">
+              Seamless integration of state-of-the-art AI models with Geobase's geospatial platform
+            </p>
+          </div>
         </section>
 
         {/* Features Grid */}
         <section id="features" className="mx-auto max-w-7xl pb-16 px-4 scroll-mt-32">
           <div className="flex flex-col gap-5 mb-12 mx-auto text-center">
             <h2 className="font-semibold text-3xl md:text-4xl lg:text-5xl text-white leading-tight">
-              Build geospatial AI apps in minutes, deploy in days.
+              Explore cutting-edge AI models for geospatial analysis
             </h2>
             <p className="text-lg md:text-xl text-gray-300 max-w-4xl mx-auto">
-              Designed for developers, data analysts, GIS experts and anyone in between. Explore our features and guides to get started now.
+              From object detection to feature extraction, discover how AI can transform your geospatial workflows. Try our interactive demos below.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 
               <a
                 href="/geoai-live/tasks/image-feature-extraction"
-              className="bg-gray-800 p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
+              className="bg-gradient-to-br from-purple-900/50 to-blue-900/50 p-6 rounded-xl shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 transform hover:-translate-y-2 border-2 border-purple-500/50 hover:border-purple-400 relative overflow-hidden"
             >
+              {/* DINOv3 Badge */}
+              <div className="absolute top-4 right-4 bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                DINOv3
+              </div>
+              
               <video
                 autoPlay
                 loop
@@ -325,12 +388,22 @@ const result = await pipeline.inference(polygon);`}
               >
                 <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/image-feature-extraction.mp4" type="video/mp4" />
               </video>
-              <h3 className="text-xl font-bold text-white mb-3">
-                Image Feature Extraction
+              
+              <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                <span className="text-purple-400">⚡</span>
+                Image Feature Extraction with DINOv3
               </h3>
               <p className="text-gray-300 text-base">
-                Extract and analyze visual features from satellite imagery using AI embeddings.
+                Powered by Meta's latest DINOv3 model - extract and analyze visual features from satellite imagery using state-of-the-art AI embeddings.
               </p>
+              
+              {/* CTA Button */}
+              <div className="mt-4">
+                <span className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-colors">
+                  Build with DINOv3
+                  <span className="text-purple-200">→</span>
+                </span>
+              </div>
             </a>
 
             
@@ -667,7 +740,7 @@ const result = await pipeline.inference(polygon);`}
             </div>
             <div className="border-t border-gray-700 mt-8 pt-8 text-center">
               <p className="text-gray-400 text-sm">
-              Geobase.app © 2025
+              geobase.app © 2025
               </p>
               <p className="text-gray-400 text-sm mt-2">
                 Made with ❤️ in Berlin

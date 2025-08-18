@@ -16,9 +16,9 @@ export const metadata: Metadata = {
   title: "GeoAI.js - Interactive Examples",
   description: "Explore GeoAI.js capabilities with interactive examples. Run AI models for building detection, object detection, land cover classification, and more directly in your browser.",
   keywords: ["GeoAI", "Geospatial AI", "JavaScript", "Machine Learning", "Computer Vision", "Satellite Imagery", "Building Detection", "Object Detection"],
-  authors: [{ name: "Geobase.app" }],
-  creator: "Geobase.app",
-  publisher: "Geobase.app",
+  authors: [{ name: "geobase.app" }],
+  creator: "geobase.app",
+  publisher: "geobase.app",
   formatDetection: {
     email: false,
     address: false,
@@ -107,12 +107,12 @@ export default function RootLayout({
               "operatingSystem": "Web Browser",
               "author": {
                 "@type": "Organization",
-                "name": "Geobase.app",
+                "name": "geobase.app",
                 "url": "https://geobase.app"
               },
               "creator": {
                 "@type": "Organization",
-                "name": "Geobase.app",
+                "name": "geobase.app",
                 "url": "https://geobase.app"
               },
               "offers": {

@@ -38,7 +38,7 @@ This example app includes comprehensive meta card implementation for better link
 ### JSON-LD Structured Data
 - **Type**: WebApplication schema
 - **Features**: Lists all available AI models and capabilities
-- **Author**: Geobase.app organization
+- **Author**: geobase.app organization
 - **Screenshot**: Links to the meta image
 
 ### SEO Features

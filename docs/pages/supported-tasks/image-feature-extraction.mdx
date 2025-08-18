@@ -5,6 +5,11 @@ import VideoEmbed from "../../components/video-embed";
 
 > Extract and analyze visual features from satellite imagery using AI embeddings
 
+<Callout type="default" emoji="🚀">
+  **Powered by Meta's DINOv3!** This task uses Meta's latest DINOv3 model for self-supervised learning at unprecedented scale, 
+  providing state-of-the-art image representations for geospatial analysis.
+</Callout>
+
 <VideoEmbed
   src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/image-feature-extraction.mp4"
   title="Image Feature Extraction Demo"
@@ -15,7 +20,7 @@ import VideoEmbed from "../../components/video-embed";
 ```typescript
 import { geoai } from "@geobase.js/geoai";
 
-// Initialize pipeline
+// Initialize pipeline with DINOv3 model
 const pipeline = await geoai.pipeline(
   [{ task: "image-feature-extraction" }],
   providerParams
@@ -30,7 +35,8 @@ console.log(`Extracted features for ${result.embeddings.length} patches`);
 ```
 
 <Callout type="info" emoji="🎯">
-  Uses DINOv3 model to extract high-dimensional feature vectors from satellite imagery patches
+  Uses Meta's DINOv3 model to extract high-dimensional feature vectors from satellite imagery patches. 
+  DINOv3 provides state-of-the-art self-supervised learning for vision at unprecedented scale.
 </Callout>
 
 ## Parameters
