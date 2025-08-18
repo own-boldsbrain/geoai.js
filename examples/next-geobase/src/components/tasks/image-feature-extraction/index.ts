@@ -1,7 +1,7 @@
 // Image Feature Extraction Task Components
 export { ImageFeatureExtractionControls } from './ImageFeatureExtractionControls';
 export { ImageFeatureExtractionVisualization } from './ImageFeatureExtractionVisualization';
-export { ImageFeatureExtractionSimilarityLayer } from './ImageFeatureExtractionSimilarityLayer';
+export { ImageFeatureExtractionPrecomputedSimilarityLayer } from './ImageFeatureExtractionPrecomputedSimilarityLayer';
 export { ImageFeatureExtractionDemoHint } from './ImageFeatureExtractionDemoHint';
 export { ImageFeatureExtractionContextualMenu } from './ContextualMenu';
 export { ModelStatusMessage } from './ModelStatusMessage';

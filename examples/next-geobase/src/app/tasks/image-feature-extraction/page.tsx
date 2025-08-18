@@ -11,7 +11,7 @@ import {
   BackgroundEffects,
   ExportButton,
   ImageFeatureExtractionVisualization,
-  ImageFeatureExtractionSimilarityLayer,
+  ImageFeatureExtractionPrecomputedSimilarityLayer,
   MapProviderSelector,
   InfoTooltip,
   ImageFeatureExtractionContextualMenu,
@@ -552,9 +552,9 @@ export default function ImageFeatureExtraction() {
         {/* Precomputed Embeddings Layer - Show when no features are extracted and embeddings should be shown */}
         {!lastResult?.features && showPrecomputedEmbeddings && (
           <>
-            <ImageFeatureExtractionSimilarityLayer 
+            <ImageFeatureExtractionPrecomputedSimilarityLayer 
               map={map.current} 
-              onLoadingChange={(isLoading) => {
+              onLoadingChange={(isLoading: boolean) => {
                 setIsLoadingPrecomputedEmbeddings(isLoading);
                 setShowPrecomputedEmbeddingsMessage(true);
                 

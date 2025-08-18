@@ -3,7 +3,7 @@ import maplibregl from 'maplibre-gl';
 import { detectGPU, type GPUInfo } from '../../../utils/gpuUtils';
 import { getOptimalColorScheme } from '../../../utils/maplibreUtils';
 
-interface ImageFeatureExtractionSimilarityLayerProps {
+interface ImageFeatureExtractionPrecomputedSimilarityLayerProps {
   map: maplibregl.Map | null;
   onLoadingChange?: (isLoading: boolean) => void;
   onCleanupReady?: (cleanup: () => void) => void;
@@ -27,7 +27,7 @@ const parsePgNumArray = (s?: string | null): number[] | null => {
   return out;
 };
 
-export const ImageFeatureExtractionSimilarityLayer: React.FC<ImageFeatureExtractionSimilarityLayerProps> = ({
+export const ImageFeatureExtractionPrecomputedSimilarityLayer: React.FC<ImageFeatureExtractionPrecomputedSimilarityLayerProps> = ({
   map,
   onLoadingChange,
   onCleanupReady,
@@ -143,7 +143,7 @@ export const ImageFeatureExtractionSimilarityLayer: React.FC<ImageFeatureExtract
       });
       
       if (features.length > 0) {
-        console.log(`ImageFeatureExtractionSimilarityLayer - Tiles fully loaded`);
+        console.log(`ImageFeatureExtractionPrecomputedSimilarityLayer - Tiles fully loaded`);
         
         // Notify parent that loading has completed (only once)
         hasNotifiedCompletion.current = true;
@@ -197,8 +197,6 @@ export const ImageFeatureExtractionSimilarityLayer: React.FC<ImageFeatureExtract
     }
   }, [map]);
 
-
-
   // Expose cleanup function to parent component
   useEffect(() => {
     if (onCleanupReady) {
@@ -212,7 +210,7 @@ export const ImageFeatureExtractionSimilarityLayer: React.FC<ImageFeatureExtract
     }
 
     const startTime = Date.now();
-    console.log("ImageFeatureExtractionSimilarityLayer - Loading cached similarity layer");
+    console.log("ImageFeatureExtractionPrecomputedSimilarityLayer - Loading cached similarity layer");
     
     // Reset completion state
     hasNotifiedCompletion.current = false;
@@ -259,7 +257,7 @@ export const ImageFeatureExtractionSimilarityLayer: React.FC<ImageFeatureExtract
     map.on('mousemove', layerId, mousemoveHandler);
 
     const endTime = Date.now();
-          console.log(`ImageFeatureExtractionSimilarityLayer - Layer added to map in ${endTime - startTime}ms`);
+          console.log(`ImageFeatureExtractionPrecomputedSimilarityLayer - Layer added to map in ${endTime - startTime}ms`);
 
     return () => {
       cleanupLayers();
