@@ -209,7 +209,7 @@ Create an integration test to verify the provider works with the pipeline:
 ```typescript
 // test/your-provider-integration.test.ts
 import { describe, expect, it, beforeAll } from "vitest";
-import { geoai } from "../src/geobase-ai";
+import { geoai } from "geoai";
 
 describe("YourProvider Integration", () => {
   beforeAll(() => {
@@ -273,7 +273,7 @@ Create provider documentation in `docs/pages/map-providers/`:
 </Callout>
 
 ```typescript
-import { geoai } from "@geobase.js/geoai";
+import { geoai } from "geoai";
 
 // Configuration
 const yourProviderParams = {

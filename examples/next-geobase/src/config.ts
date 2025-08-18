@@ -1,4 +1,4 @@
-import { GeobaseParams, ProviderParams } from "@geobase.js/geoai";
+import { GeobaseParams, ProviderParams } from "geoai";
 
 export const ESRI_CONFIG = {
   provider: "esri" as const,
@@ -24,5 +24,5 @@ export const MAPBOX_CONFIG = {
 
 export const GITHUB_REPO_URI = "https://github.com/decision-labs/geoai.js";
 export const GITHUB_REPO_NAME = "decision-labs/geoai.js";
-export const NPM_PACKAGE_NAME = "@geobase.js/geoai";
-export const NPM_PACKAGE_URI = "https://www.npmjs.com/package/@geobase.js/geoai";
+export const NPM_PACKAGE_NAME = "geoai";
+export const NPM_PACKAGE_URI = "https://www.npmjs.com/package/geoai";

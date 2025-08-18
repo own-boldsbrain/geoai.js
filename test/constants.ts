@@ -1,4 +1,4 @@
-import { ProviderParams } from "@/geobase-ai";
+import { ProviderParams } from "@/geoai";
 
 export const mapboxParams: ProviderParams = {
   provider: "mapbox",

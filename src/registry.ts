@@ -121,7 +121,7 @@ export const modelRegistry: ModelConfig[] = [
   },
   {
     task: "land-cover-classification",
-    library: "@geobase.js/geoai",
+    library: "geoai",
     description:
       "Classifies land cover types in a given region. Useful for mapping vegetation, urban areas, water, and other land use categories.",
     examples: [
@@ -151,7 +151,7 @@ export const modelRegistry: ModelConfig[] = [
   },
   {
     task: "solar-panel-detection",
-    library: "@geobase.js/geoai",
+    library: "geoai",
     description:
       "Detects and locates solar panels in satellite or aerial imagery. Useful for identifying solar farms, rooftop solar installations, or tracking renewable energy infrastructure.",
     examples: [
@@ -174,7 +174,7 @@ export const modelRegistry: ModelConfig[] = [
   },
   {
     task: "ship-detection",
-    library: "@geobase.js/geoai",
+    library: "geoai",
     description:
       "Detects ships and large boats in maritime or coastal satellite imagery. Useful for monitoring shipping lanes, ports, or maritime activity.",
     examples: [
@@ -197,7 +197,7 @@ export const modelRegistry: ModelConfig[] = [
   },
   {
     task: "car-detection",
-    library: "@geobase.js/geoai",
+    library: "geoai",
     description:
       "Detects cars and other small vehicles in urban, suburban, or rural imagery. Useful for traffic analysis, parking lot monitoring, or urban planning.",
     examples: [
@@ -220,7 +220,7 @@ export const modelRegistry: ModelConfig[] = [
   },
   {
     task: "wetland-segmentation",
-    library: "@geobase.js/geoai",
+    library: "geoai",
     description:
       "Segments and identifies wetland areas in satellite imagery. Useful for environmental monitoring, conservation, and land use planning.",
     examples: [
@@ -244,7 +244,7 @@ export const modelRegistry: ModelConfig[] = [
   },
   {
     task: "building-detection",
-    library: "@geobase.js/geoai",
+    library: "geoai",
     description:
       "Detects buildings and built structures in satellite or aerial imagery. Useful for urban development, disaster response, or infrastructure mapping.",
     examples: [
@@ -267,7 +267,7 @@ export const modelRegistry: ModelConfig[] = [
   },
   {
     task: "oil-storage-tank-detection",
-    library: "@geobase.js/geoai",
+    library: "geoai",
     description:
       "Detects oil storage tanks in industrial or port areas. Useful for monitoring energy infrastructure, compliance, or risk assessment.",
     examples: [
@@ -297,7 +297,7 @@ export const modelRegistry: ModelConfig[] = [
   },
   {
     task: "building-footprint-segmentation",
-    library: "@geobase.js/geoai",
+    library: "geoai",
     description:
       "Segments the precise outlines (footprints) of buildings in imagery. Useful for mapping, urban planning, or disaster assessment.",
     examples: [

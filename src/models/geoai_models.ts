@@ -1,5 +1,5 @@
 import { getPolygonFromMask, parametersChanged } from "@/utils/utils";
-import { ProviderParams } from "@/geobase-ai";
+import { ProviderParams } from "@/geoai";
 import { GeoRawImage } from "@/types/images/GeoRawImage";
 import {
   PreTrainedModel,

@@ -1,4 +1,4 @@
 import * as utils from "./utils/utils";
 
 export { utils };
-export { geoai } from "./geobase-ai";
+export { geoai } from "./geoai";

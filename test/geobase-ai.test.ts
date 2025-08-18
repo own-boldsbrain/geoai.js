@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { geoai, ProviderParams } from "@/geobase-ai";
+import { geoai, ProviderParams } from "@/geoai";
 import { ZeroShotObjectDetection } from "../src/models/zero_shot_object_detection";
 import { geobaseParamsBuilding, polygonBuilding } from "./constants";
 import { geoJsonToGist } from "./utils/saveToGist";
 import { InferenceParams } from "../src/core/types";
 
-describe("@geobase.js/geoai", () => {
+describe("geoai", () => {
   it("should be an object", () => {
     expect(geoai).toBeInstanceOf(Object);
   });

@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeAll } from "vitest";
 
-import { geoai } from "@/geobase-ai";
+import { geoai } from "@/geoai";
 import { geobaseParamsCar, mapboxParams, polygonCar } from "./constants";
 import { GeoRawImage } from "../src/types/images/GeoRawImage";
 import { CarDetection } from "../src/models/geoai_models";

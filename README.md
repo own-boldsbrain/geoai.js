@@ -1,13 +1,13 @@
 [![Main](https://github.com/decision-labs/geoai.js/actions/workflows/main.yml/badge.svg)](https://github.com/decision-labs/geoai.js/actions/workflows/main.yml)
 
-# `@geobase.js/geoai`
+# GeoAI
 
-A Javascript library for running Geo AI models in frontend applications.
+A JavaScript library for running Geo AI models in frontend applications.
 
 ## Installation
 
 ```bash
-npm install @geobase.js/geoai
+npm install geoai
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ npm install @geobase.js/geoai
 ### Core Library (Node.js and Browser)
 
 ```javascript
-import { geoai } from "@geobase.js/geoai";
+import { geoai } from "geoai";
 
 // Initialize the pipeline
 const pipeline = await geoai.pipeline([{ task: "object-detection" }], {
@@ -34,34 +34,71 @@ const result = await pipeline.inference({
 });
 ```
 
-## Architecture
+### React Hooks
 
-- **Core Module** (`@geobase.js/geoai`): Pure Javascript/TypeScript library that works in both Node.js and browser environments
+```javascript
+import { useGeoAIWorker } from "geoai/react";
 
-## API Reference
+function MyComponent() {
+  const { inference, isLoading, error } = useGeoAIWorker({
+    tasks: ["object-detection"],
+    provider: "geobase",
+    apikey: "your-api-key",
+  });
 
-### Core API
+  const handleInference = async () => {
+    const result = await inference({
+      inputs: { polygon: geoJsonFeature },
+      mapSourceParams: { zoomLevel: 18 },
+    });
+  };
 
-- `geoai.pipeline(tasks, config)` - Initialize a pipeline with tasks
-- `pipeline.inference(params)` - Run inference with the pipeline
+  return (
+    <div>
+      <button onClick={handleInference} disabled={isLoading}>
+        {isLoading ? "Processing..." : "Run Detection"}
+      </button>
+      {error && <div>Error: {error.message}</div>}
+    </div>
+  );
+}
+```
 
+## Features
+
+- **Multiple AI Tasks**: Object detection, segmentation, classification, and more
+- **Map Provider Support**: Geobase, Mapbox, ESRI, and Google Maps
+- **React Integration**: Hooks for easy React integration
+- **TypeScript Support**: Full TypeScript definitions
+- **Web Worker Support**: Run AI models in background threads
+- **Optimized Performance**: Efficient model loading and inference
 
 ## Supported Tasks
 
 - Object Detection
-- Building Footprint Segmentation
-- Land Cover Classification
-- Zero-shot Object Detection
-- Oriented Object Detection
-- Oil Storage Tank Detection
+- Building Detection
+- Car Detection
 - Ship Detection
 - Solar Panel Detection
+- Oil Storage Tank Detection
+- Land Cover Classification
 - Wetland Segmentation
+- Building Footprint Segmentation
 - Mask Generation
-- Car-Detection
+- Zero-shot Object Detection
+- Zero-shot Segmentation
+- Image Feature Extraction
+
+For more see the [supported tasks](https://docs.geobase.app/geoai/supported-tasks)
+
+## Documentation
+
+Visit [docs.geobase.app/geoai](https://docs.geobase.app/geoai) for comprehensive documentation, examples, and API reference.
+
+## Contributing
+
+We welcome contributions! Please see our [contributing guide](CONTRIBUTING.md) for details.
 
 ## License
 
-MIT
-
-~~togglebuild~~
+MIT License - see [LICENSE.md](LICENSE.md) for details.

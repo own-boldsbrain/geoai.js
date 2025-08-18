@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import { ImageFeatureExtraction } from "../src/models/image_feature_extraction";
-import { ProviderParams } from "../src/geobase-ai";
+import { ProviderParams } from "../src/geoai";
 import { InferenceParams } from "../src/core/types";
 import { polygon } from "./constants";
 

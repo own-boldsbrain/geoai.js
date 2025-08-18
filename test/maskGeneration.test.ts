@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeAll, afterAll } from "vitest";
-import { geoai } from "@/geobase-ai";
+import { geoai } from "@/geoai";
 import {
   MaskGeneration,
   SegmentationInput,

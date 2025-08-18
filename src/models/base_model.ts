@@ -1,7 +1,7 @@
 import { Mapbox } from "@/data_providers/mapbox";
 import { Geobase } from "@/data_providers/geobase";
 import { Esri } from "@/data_providers/esri";
-import { ProviderParams } from "@/geobase-ai";
+import { ProviderParams } from "@/geoai";
 import { PretrainedModelOptions } from "@huggingface/transformers";
 import { GeoRawImage } from "@/types/images/GeoRawImage";
 import { InferenceParams } from "@/core/types";

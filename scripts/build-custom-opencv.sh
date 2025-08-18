@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Custom OpenCV.js Build Script
-# This script builds a minimal OpenCV.js with only the functions needed for geobase-ai.js
+# This script builds a minimal OpenCV.js with only the functions needed for geoai
 
 set -e
 

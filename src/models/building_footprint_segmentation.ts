@@ -5,7 +5,7 @@ import {
   PretrainedModelOptions,
 } from "@huggingface/transformers";
 import { parametersChanged, getPolygonFromMask } from "@/utils/utils";
-import { ProviderParams } from "@/geobase-ai";
+import { ProviderParams } from "@/geoai";
 import { GeoRawImage } from "@/types/images/GeoRawImage";
 import * as ort from "onnxruntime-web";
 import { InferenceParams, ObjectDetectionResults } from "@/core/types";
