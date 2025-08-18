@@ -1,6 +1,6 @@
 import { pipeline, RawImage, matmul } from "@huggingface/transformers";
 import { parametersChanged } from "@/utils/utils";
-import { ProviderParams } from "@/geobase-ai";
+import { ProviderParams } from "@/geoai";
 import { PretrainedModelOptions } from "@huggingface/transformers";
 import { BaseModel } from "./base_model";
 import { InferenceParams, ImageFeatureExtractionResults } from "@/core/types";

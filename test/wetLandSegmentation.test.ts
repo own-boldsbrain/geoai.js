@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeAll } from "vitest";
 
-import { geoai } from "@/geobase-ai";
+import { geoai } from "@/geoai";
 import {
   geobaseParamsWetLand,
   mapboxParams,

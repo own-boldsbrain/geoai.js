@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeAll } from "vitest";
-import { geoai } from "@/geobase-ai";
+import { geoai } from "@/geoai";
 import { mapboxParams, polygon, quadrants } from "./constants";
 import { GeoRawImage } from "@/types/images/GeoRawImage";
 import { ZeroShotObjectDetection } from "@/models/zero_shot_object_detection";

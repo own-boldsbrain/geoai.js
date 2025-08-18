@@ -122,3 +122,12 @@
 - [ ] **Verify peer dependencies**
   - [ ] Test with different versions of peer dependencies
   - [ ] Document minimum compatible versions
+
+# Misc
+
+- [ ] Examples doen't have a back to home button
+- [ ] No versioning in the docs
+- [ ] No versioning in the examples
+- [ ] Metadata on version, repo, package name, etc. should come from the package.json for docs andddd examples
+- [ ] No live docs
+- [ ] No way add announcement to the docs and examples

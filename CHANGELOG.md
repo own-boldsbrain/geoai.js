@@ -1,9 +1,25 @@
 # Changelog
 
-All notable changes to the @geobase.js/geoai project will be documented in this file.
+All notable changes to the geoai project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.0] - 2024-01-XX
+
+### Changed
+- **BREAKING**: Renamed package from `@geobase.js/geoai` to `geoai`
+- Updated all import statements and package references
+- Updated build output structure from `@geobase.js/geoai.js` to `geoai.js`
+- Updated documentation and examples
+- Updated repository URLs and homepage
+
+### Migration Guide
+To migrate from the old package:
+1. Update your package.json: `"@geobase.js/geoai": "^0.0.7"` → `"geoai": "^1.0.0"`
+2. Update all import statements: `import { geoai } from "@geobase.js/geoai"` → `import { geoai } from "geoai"`
+3. Update any build configurations that reference the old package name
+4. Update any documentation or scripts that reference the old package
 
 ## [0.0.7] - 2024-12-19
 

@@ -1,5 +1,5 @@
 import { geoai } from "./index";
-import { ProviderParams } from "./geobase-ai";
+import { ProviderParams } from "./geoai";
 import {
   AutoTokenizer,
   AutoModelForSequenceClassification,

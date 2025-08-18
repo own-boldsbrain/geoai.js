@@ -1,4 +1,4 @@
-import { geoai } from "@geobase.js/geoai";
+import { geoai } from "geoai";
 
 let modelInstance: any = null;
 
