@@ -596,10 +596,6 @@ export default function ImageFeatureExtraction() {
               }}
               onCleanupReady={handleCleanupReady}
             />
-            
-
-            
-
           </>
         )}
         
