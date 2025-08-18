@@ -146,7 +146,7 @@ export default function Home() {
       {/* Main Content */}
       <main className="min-h-screen">
         {/* Hero Section */}
-        <section className="flex flex-col items-center justify-center relative pt-20 pb-12 sm:pt-24 sm:pb-10 md:pt-32 xl:pt-48 overflow-hidden">
+        <section id="dinov3" className="flex flex-col items-center justify-center relative pt-20 pb-12 sm:pt-24 sm:pb-10 md:pt-32 xl:pt-48 overflow-hidden scroll-mt-32">
           {/* Background Animation */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -mt-12 w-96 h-96 md:w-[32rem] md:h-[32rem] md:mt-12 xl:w-[50rem] xl:h-[50rem] xl:mt-24 pointer-events-none opacity-30">
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full">
@@ -163,15 +163,42 @@ export default function Home() {
           </div>
           
           <div className="mt-0 lg:mt-2 flex flex-col gap-6 lg:gap-12 items-center justify-center p-4 z-[1] max-w-5xl mx-auto">
-            {/* DINOv3 Announcement Banner */}
-            <a className="flex gap-3 items-center justify-center rounded-xl bg-gradient-to-r from-purple-600/80 to-blue-600/80 hover:from-purple-500/80 hover:to-blue-500/80 border border-purple-400/50 text-lg font-semibold px-6 py-4 cursor-pointer transition-all duration-300 transform hover:scale-105 shadow-lg" href="/geoai-live/tasks/image-feature-extraction">
-              <span className="text-2xl">🚀</span>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                <span className="font-bold">NEW:</span>
-                <span>Meta's DINOv3 now integrated!</span>
-                <span className="text-purple-200">→ Try it now</span>
+            {/* DINOv3 Launch Banner */}
+            <div className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 border border-purple-500/30 rounded-2xl p-6 md:p-8 max-w-4xl w-full">
+              <div className="grid md:grid-cols-2 gap-6 items-center">
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">🚀</span>
+                    <div>
+                      <h2 className="text-xl md:text-2xl font-bold text-white">Meta's DINOv3 Now Available</h2>
+                      <p className="text-purple-300 text-sm">Latest integration</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-300 text-base mb-4">
+                    We've integrated Meta's groundbreaking DINOv3 model for self-supervised learning at unprecedented scale.
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <a href="/geoai-live/tasks/image-feature-extraction" className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg transition-colors text-sm">
+                      <span>Try DINOv3 Demo</span>
+                      <span className="text-purple-200">→</span>
+                    </a>
+                    <a href="https://ai.meta.com/dinov3/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors text-sm">
+                      <span>Learn About DINOv3</span>
+                      <span className="text-gray-300">↗</span>
+                    </a>
+                  </div>
+                </div>
+                
+                <div className="relative">
+                  <video autoPlay loop muted playsInline className="w-full rounded-lg shadow-xl">
+                    <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/image-feature-extraction.mp4" type="video/mp4" />
+                  </video>
+                  <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 to-transparent rounded-lg"></div>
+                </div>
               </div>
-            </a>
+            </div>
             
             {/* Main Heading */}
             <div className="relative h-36 lg:h-40 w-full mt-6">
@@ -305,45 +332,7 @@ const result = await pipeline.inference(polygon);`}
           </SyntaxHighlighter>
         </section>
 
-        {/* DINOv3 Spotlight Section */}
-        <section id="dinov3" className="max-w-6xl mx-auto mb-20 px-4 scroll-mt-32">
-          <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-2xl p-8 md:p-12">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-3xl">🚀</span>
-                  <div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-white">Meta's DINOv3 Now Available</h2>
-                    <p className="text-purple-300 text-sm">Latest integration</p>
-                  </div>
-                </div>
-                
-                <p className="text-gray-300 text-lg mb-6">
-                  We've integrated Meta's groundbreaking DINOv3 model for self-supervised learning at unprecedented scale. 
-                  Build powerful vision applications with state-of-the-art image representations.
-                </p>
-                
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <a href="/geoai-live/tasks/image-feature-extraction" className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg transition-colors">
-                    <span>Try DINOv3 Demo</span>
-                    <span className="text-purple-200">→</span>
-                  </a>
-                  <a href="https://ai.meta.com/dinov3/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors">
-                    <span>Learn About DINOv3</span>
-                    <span className="text-gray-300">↗</span>
-                  </a>
-                </div>
-              </div>
-              
-              <div className="relative">
-                <video autoPlay loop muted playsInline className="w-full rounded-lg shadow-2xl">
-                  <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/image-feature-extraction.mp4" type="video/mp4" />
-                </video>
-                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 to-transparent rounded-lg"></div>
-              </div>
-            </div>
-          </div>
-        </section>
+
 
         {/* Integration Highlight */}
         <section className="max-w-4xl mx-auto mb-16 px-4">
