@@ -216,11 +216,19 @@ export default function OilStorageTankDetection() {
   // Handle results from the worker
   useEffect(() => {
     if (lastResult?.detections && map.current) {
-      MapUtils.displayDetections(map.current, lastResult.detections);
+      MapUtils.displayDetections(map.current, lastResult.detections, {
+        "fill-color": "#FFFF00", // Bright yellow - most universally visible color
+        "fill-opacity": 0.4,
+        "fill-outline-color": "#FF8C00", // Dark orange outline for maximum contrast
+      });
       setDetections(lastResult.detections);
     }
     if (lastResult?.geoRawImage?.bounds && map.current) {
-      MapUtils.displayInferenceBounds(map.current, lastResult.geoRawImage.bounds);
+      MapUtils.displayInferenceBounds(map.current, lastResult.geoRawImage.bounds, {
+        "fill-color": "#0000FF", // Blue - highly visible and color-blind friendly
+        "fill-opacity": 0.6,
+        "fill-outline-color": "#CC5500", // Darker orange for better contrast
+      });
     }
   }, [lastResult]);
 

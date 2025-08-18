@@ -2,9 +2,15 @@ import maplibregl from 'maplibre-gl';
 
 // Utility functions for handling map operations
 export class MapUtils {
+  static defaultDetectionsPaint = {
+    "fill-color": "#FF6B35", // Orange - highly visible and color-blind friendly
+    "fill-opacity": 0.6,
+    "fill-outline-color": "#CC5500", // Darker orange for better contrast
+  }
   static displayDetections(
     map: maplibregl.Map,
-    detections: GeoJSON.FeatureCollection
+    detections: GeoJSON.FeatureCollection,
+    paint = MapUtils.defaultDetectionsPaint,
   ) {
     if (!map) return;
 
@@ -25,11 +31,7 @@ export class MapUtils {
       id: "detections-layer",
       type: "fill",
       source: "detections",
-      paint: {
-        "fill-color": "#FF6B35", // Orange - highly visible and color-blind friendly
-        "fill-opacity": 0.6,
-        "fill-outline-color": "#CC5500", // Darker orange for better contrast
-      },
+      paint: paint,
     });
 
     // Add hover functionality
@@ -65,9 +67,17 @@ export class MapUtils {
     });
   }
 
+  static defaultInferenceBoundsPaint = {
+    "line-color": "#8B5CF6", // Purple - excellent contrast with orange and color-blind accessible
+    "line-width": 3,
+    "line-dasharray": [5, 3], // dashed line
+    "line-opacity": 1.0,
+  }
+
   static displayInferenceBounds(
     map: maplibregl.Map,
-    bounds: { north: number; south: number; east: number; west: number }
+    bounds: { north: number; south: number; east: number; west: number },
+    paint = MapUtils.defaultInferenceBoundsPaint,
   ) {
     if (!map) return;
 
@@ -107,12 +117,7 @@ export class MapUtils {
       id: "inference-bounds-layer",
       type: "line",
       source: "inference-bounds",
-      paint: {
-        "line-color": "#8B5CF6", // Purple - excellent contrast with orange and color-blind accessible
-        "line-width": 3,
-        "line-dasharray": [5, 3], // dashed line
-        "line-opacity": 1.0,
-      },
+      paint: paint,
     });
 
     // Add hover functionality for bounds
