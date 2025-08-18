@@ -146,7 +146,7 @@ export default function Home() {
       {/* Main Content */}
       <main className="min-h-screen">
         {/* Hero Section */}
-        <section id="dinov3" className="flex flex-col items-center justify-center relative pt-20 pb-12 sm:pt-24 sm:pb-10 md:pt-32 xl:pt-48 overflow-hidden scroll-mt-32">
+        <section id="dinov3" className="flex flex-col items-center justify-center relative pt-12 pb-12 sm:pt-16 sm:pb-10 md:pt-20 xl:pt-24 overflow-hidden scroll-mt-32">
           {/* Background Animation */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -mt-12 w-96 h-96 md:w-[32rem] md:h-[32rem] md:mt-12 xl:w-[50rem] xl:h-[50rem] xl:mt-24 pointer-events-none opacity-30">
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full">
