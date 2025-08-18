@@ -117,7 +117,13 @@ export default function Home() {
                 <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#features">AI Models</a></li>
                 <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="https://docs.geobase.app/geoai">Docs</a></li>
                 <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition" href="#footer">About</a></li>
-                <li><a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition text-gray-400 hover:text-white" href="https://mailchi.mp/ece911e44b4e/new-geoaijs-models" target="_blank" rel="noopener noreferrer">Newsletter</a></li>
+                <li className="relative group">
+                  <a className="px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition text-gray-400 hover:text-white" href="https://mailchi.mp/ece911e44b4e/new-geoaijs-models" target="_blank" rel="noopener noreferrer">Newsletter</a>
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    We are always adding new models! Stay posted 🚀
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                  </div>
+                </li>
               </ul>
             </nav>
             <div className="hidden lg:flex items-center gap-2 lg:absolute lg:-right-1 lg:top-1/2 lg:-translate-y-1/2">
