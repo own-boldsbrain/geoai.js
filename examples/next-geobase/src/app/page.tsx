@@ -331,7 +331,7 @@ const mapProviderConfig = {
 };
 
 const pipeline = await geoai.pipeline([
-  { task: "image-feature-extraction", model: "dinov3" }
+  { task: "image-feature-extraction" }
 ], mapProviderConfig);
 
 const result = await pipeline.inference(polygon);`}
@@ -740,7 +740,7 @@ const result = await pipeline.inference(polygon);`}
             </div>
             <div className="border-t border-gray-700 mt-8 pt-8 text-center">
               <p className="text-gray-400 text-sm">
-              Geobase.app © 2025
+              geobase.app © 2025
               </p>
               <p className="text-gray-400 text-sm mt-2">
                 Made with ❤️ in Berlin

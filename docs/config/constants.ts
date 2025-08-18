@@ -1,5 +1,5 @@
-export const GITHUB_REPO_URI = "https://github.com/decision-labs/geobase.js";
-export const GITHUB_REPO_NAME = "decision-labs/geobase.js";
+export const GITHUB_REPO_URI = "https://github.com/decision-labs/geoai.js";
+export const GITHUB_REPO_NAME = "decision-labs/geoai.js";
 export const NPM_PACKAGE_NAME = "@geobase.js/geoai";
 export const NPM_PACKAGE_URI =
   "https://www.npmjs.com/package/@geobase.js/geoai";

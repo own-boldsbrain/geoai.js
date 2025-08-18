@@ -1,4 +1,4 @@
-[![Main](https://github.com/decision-labs/geobase.js/actions/workflows/main.yml/badge.svg)](https://github.com/decision-labs/geobase.js/actions/workflows/main.yml)
+[![Main](https://github.com/decision-labs/geoai.js/actions/workflows/main.yml/badge.svg)](https://github.com/decision-labs/geoai.js/actions/workflows/main.yml)
 
 # `@geobase.js/geoai`
 
