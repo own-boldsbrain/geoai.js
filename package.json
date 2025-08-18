@@ -17,10 +17,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git@github.com:decision-labs/geobase.js-geoai.git"
+    "url": "git@github.com:decision-labs/geoai.js.git"
   },
   "homepage": "https://docs.geobase.app/geoaijs",
-  "bugs": "https://github.com/decision-labs/geobase.js-geoai/issues",
+  "bugs": "https://github.com/decision-labs/geoai.js/issues",
   "files": [
     "@geobase.js",
     "assets",
