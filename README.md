@@ -89,9 +89,11 @@ function MyComponent() {
 - Zero-shot Segmentation
 - Image Feature Extraction
 
+For more see the [supported tasks](https://docs.geobase.app/geoai/supported-tasks)
+
 ## Documentation
 
-Visit [docs.geoai.app](https://docs.geoai.app) for comprehensive documentation, examples, and API reference.
+Visit [docs.geobase.app/geoai](https://docs.geobase.app/geoai) for comprehensive documentation, examples, and API reference.
 
 ## Contributing
 
