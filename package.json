@@ -1,6 +1,6 @@
 {
-  "name": "@geobase-js/geoai",
-  "version": "0.0.6",
+  "name": "geoai",
+  "version": "1.0.0-rc.1",
   "description": "A JavaScript library for running Geo AI models in frontend applications",
   "keywords": [
     "geoai",
@@ -17,35 +17,35 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/decision-labs/geobase-ai.js.git"
+    "url": "git@github.com:decision-labs/geoai.js.git"
   },
   "homepage": "https://docs.geobase.app/geoaijs",
-  "bugs": "https://github.com/decision-labs/geobase-ai.js/issues",
+  "bugs": "https://github.com/decision-labs/geoai/issues",
   "files": [
-    "@geobase-js",
+    "geoai.js",
     "assets",
     "*.d.ts",
     "README.md",
     "LICENSE.md",
     "CHANGELOG.md"
   ],
-  "main": "./@geobase-js/geoai.js",
-  "module": "./@geobase-js/geoai.js",
-  "unpkg": "./@geobase-js/geoai.js",
-  "jsdelivr": "./@geobase-js/geoai.js",
+  "main": "./geoai.js",
+  "module": "./geoai.js",
+  "unpkg": "./geoai.js",
+  "jsdelivr": "./geoai.js",
   "type": "module",
   "exports": {
     ".": {
-      "import": "./@geobase-js/geoai.js",
+      "import": "./geoai.js",
       "types": "./index.d.ts"
     },
     "./dist": {
-      "import": "./@geobase-js/geoai.js"
+      "import": "./geoai.js"
     }
   },
   "types": "./index.d.ts",
   "peerDependencies": {
-    "@huggingface/transformers": "^3.3.3",
+    "@huggingface/transformers": "^3.7.2",
     "@techstark/opencv-js": "^4.10.0-release.1",
     "onnxruntime-web": "^1.21.0"
   },

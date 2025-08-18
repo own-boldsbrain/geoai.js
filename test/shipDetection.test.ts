@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeAll } from "vitest";
 
-import { geoai } from "@/geobase-ai";
+import { geoai } from "@/geoai";
 import { geobaseParamsShip, mapboxParams, polygonShip } from "./constants";
 import { GeoRawImage } from "../src/types/images/GeoRawImage";
 import { ShipDetection } from "../src/models/geoai_models";

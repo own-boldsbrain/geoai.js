@@ -1,5 +1,5 @@
 import React from "react";
-import GeobaseLogo from "./components/geobase-logo";
+import { PROJECT_CONFIG, DOCS_CONFIG, BRAND_CONFIG } from "./config/constants";
 
 const config = {
   head: ({ title }) => {
@@ -7,28 +7,23 @@ const config = {
       <>
         <meta
           name="description"
-          content="Find documentation, guides, examples, and blueprints for GeoAi.app"
+          content={DOCS_CONFIG.description}
         />
-        <title>{title ? `${title} — GeoAi Docs` : "GeoAi Docs"}</title>
+        <title>{title ? `${title} — ${DOCS_CONFIG.title}` : DOCS_CONFIG.title}</title>
         <link
           rel="icon"
           type="image/x-icon"
-          href="https://geobase.app/favicon.ico"
+          href={DOCS_CONFIG.favicon}
         />
       </>
     );
   },
-  color: {
-    hue: {
-      dark: 152,
-      light: 152,
-    },
-  },
+  color: BRAND_CONFIG.color,
   logo: (
     <div style={{ display: "flex", alignItems: "center" }}>
       <img
-        src="/geoai/javascript-logo.svg"
-        alt="JavaScript logo"
+        src={DOCS_CONFIG.logo.javascript}
+        alt={DOCS_CONFIG.logo.alt}
         style={{
           height: "1.5rem",
           width: "auto",
@@ -37,19 +32,19 @@ const config = {
         }}
       />
       <pre style={{ fontSize: "1.2rem", fontWeight: "bold" }}>
-        @geobase-js/geoai
+        {PROJECT_CONFIG.npmPackage}
       </pre>
     </div>
   ),
   project: {
-    link: "https://github.com/decision-labs/geobase-ai.js",
+    link: PROJECT_CONFIG.repository,
   },
   chat: {
-    link: "https://geobase.app/discord",
+    link: DOCS_CONFIG.chatLink,
   },
   navbar: {
   },
-  docsRepositoryBase: "https://github.com/sabman/geobase-docs",
+  docsRepositoryBase: DOCS_CONFIG.docsRepositoryBase,
   defaultShowCopyCode: true,
   footer: {
     content: (
@@ -61,9 +56,9 @@ const config = {
         }}
       >
         <span>
-          © {new Date().getFullYear()} geoai.js. Open source project by the{" "}
+          © {new Date().getFullYear()} {BRAND_CONFIG.name}. Open source project by the{" "}
           <a
-            href="https://geobase.app"
+            href={BRAND_CONFIG.teamUrl}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -71,7 +66,7 @@ const config = {
               textDecoration: "underline",
             }}
           >
-            Geobase team
+            {BRAND_CONFIG.team}
           </a>
         </span>
       </div>

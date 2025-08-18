@@ -1,0 +1,106 @@
+@import 'tailwindcss';
+
+:root {
+  --background: #131313;
+  --foreground: #fff;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #131313;
+    --foreground: #fff;
+  }
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#__next {
+  height: 100%;
+}
+
+/* Custom animations */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin-reverse-slow {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+.animate-spin-reverse-slow {
+  animation: spin-reverse-slow 15s linear infinite;
+}
+
+/* MapLibre Draw Control Styles */
+.maplibregl-draw {
+  z-index: 1000 !important;
+  position: relative !important;
+}
+
+.maplibregl-draw .maplibregl-draw-polygon {
+  background: #fff !important;
+  border: 2px solid #007cbf !important;
+  border-radius: 4px !important;
+  color: #007cbf !important;
+  font-weight: bold !important;
+  padding: 8px 12px !important;
+  margin: 4px !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
+.maplibregl-draw .maplibregl-draw-polygon:hover {
+  background: #007cbf !important;
+  color: #fff !important;
+}
+
+.maplibregl-draw .maplibregl-draw-trash {
+  background: #fff !important;
+  border: 2px solid #dc3545 !important;
+  border-radius: 4px !important;
+  color: #dc3545 !important;
+  font-weight: bold !important;
+  padding: 8px 12px !important;
+  margin: 4px !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+}
+
+.maplibregl-draw .maplibregl-draw-trash:hover {
+  background: #dc3545 !important;
+  color: #fff !important;
+}
+
+/* Style for unfilled polygons */
+.maplibregl-draw .maplibregl-draw-polygon-fill-inactive[data-unfilled="true"],
+.maplibregl-draw .maplibregl-draw-polygon-fill-active[data-unfilled="true"] {
+  fill-opacity: 0 !important;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { geoai } from "../src/geobase-ai";
+import { geoai } from "../src/geoai";
 import { join } from "path";
 
 describe("ESRI Integration", () => {

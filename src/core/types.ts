@@ -18,6 +18,7 @@ import { OilStorageTankDetection } from "@/models/oil_storage_tank_detection";
 import { OrientedObjectDetection } from "@/models/oriented_object_detection";
 import { ZeroShotObjectDetection } from "@/models/zero_shot_object_detection";
 import { BuildingFootPrintSegmentation } from "@/models/building_footprint_segmentation";
+import { ImageFeatureExtraction } from "@/models/image_feature_extraction";
 // NOTE: Add new models here
 // ==============================
 
@@ -87,7 +88,8 @@ export type HuggingFaceModelTask =
   | "zero-shot-object-detection"
   | "zero-shot-image-classification"
   | "object-detection"
-  | "oriented-object-detection";
+  | "oriented-object-detection"
+  | "image-feature-extraction";
 
 export type GeobaseAiModelTask =
   | "damage-assessment"
@@ -116,7 +118,8 @@ export type ModelInstance =
   | WetLandSegmentation
   | BuildingDetection
   | OilStorageTankDetection
-  | BuildingFootPrintSegmentation;
+  | BuildingFootPrintSegmentation
+  | ImageFeatureExtraction;
 
 export type ModelConfig = {
   task: HuggingFaceModelTask | GeobaseAiModelTask;
@@ -176,3 +179,24 @@ export interface ObjectDetectionResults {
   detections: GeoJSON.FeatureCollection;
   geoRawImage: GeoRawImage;
 }
+
+export interface ImageFeatureExtractionResults {
+  features: number[][]; // Patch-level feature vectors
+  similarityMatrix: number[][]; // Patch-to-patch similarities
+  patchSize: number; // Size of each patch (e.g., 16)
+  geoRawImage: GeoRawImage; // Original image data
+  metadata: {
+    numPatches: number;
+    featureDimensions: number;
+    modelId: string;
+  };
+}
+
+export type imageFeatureExtractionIOConfig = {
+  inputs: {
+    polygon: GeoJSON.Feature;
+    similarityThreshold?: number;
+    maxFeatures?: number;
+  };
+  outputs: ImageFeatureExtractionResults;
+};

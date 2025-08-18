@@ -1,6 +1,6 @@
 # Local Package Testing Guide
 
-This guide shows you how to install and test your local `@geobase-js/geoai` package in the examples and other projects.
+This guide shows you how to install and test your local `geoai` package in the examples and other projects.
 
 ## Method 1: Using the Built-in Scripts (Recommended)
 
@@ -10,10 +10,10 @@ The Next.js example already has convenient scripts set up:
 
 ```bash
 # From the root directory
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 
 # Build the main package and install it locally
-pnpm run build:geobase-ai
+pnpm run build:geoai
 
 # Start development server
 pnpm dev
@@ -40,7 +40,7 @@ pnpm build
 ### Step 2: Install in Example
 
 ```bash
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 
 # Option A: File reference (automatically updates)
 pnpm install file:../../build
@@ -51,7 +51,7 @@ pnpm link ../../
 # Option C: Pack and install (most realistic)
 cd ../../
 pnpm pack
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 pnpm install ../../geobase-js-geoai-0.0.1.tgz
 ```
 
@@ -63,7 +63,7 @@ Add to the root `package.json`:
 
 ```json
 {
-  "name": "@geobase-js/geoai-workspace",
+  "name": "geoai-workspace",
   "workspaces": [".", "examples/*"]
 }
 ```
@@ -73,7 +73,7 @@ Add to the root `package.json`:
 ```json
 {
   "dependencies": {
-    "@geobase-js/geoai": "workspace:*"
+    "geoai": "workspace:*"
   }
 }
 ```
@@ -96,11 +96,11 @@ cd build
 npm link
 
 # In your example
-cd examples/next-geobase
-npm link @geobase-js/geoai
+cd examples/live-examples-nextjs
+npm link geoai
 
 # To unlink later
-npm unlink @geobase-js/geoai
+npm unlink geoai
 ```
 
 ## Testing Your Installation
@@ -108,13 +108,13 @@ npm unlink @geobase-js/geoai
 ### 1. Check Installation
 
 ```bash
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 
 # Check if package is installed
-pnpm list @geobase-js/geoai
+pnpm list geoai
 
 # Check node_modules
-ls -la node_modules/@geobase-js/
+ls -la node_modules/geoai/
 ```
 
 ### 2. Test Imports in Code
@@ -123,7 +123,7 @@ Create `test-imports.ts` in the example:
 
 ```typescript
 // Test core import
-import { geoai } from "@geobase-js/geoai";
+import { geoai } from "geoai";
 console.log("Core API:", geoai.tasks());
 
 export const testImports = () => {
@@ -138,7 +138,7 @@ Update a component to test the imports:
 
 ```typescript
 // In src/app/test-page/page.tsx
-import { geoai } from "@geobase-js/geoai";
+import { geoai } from "geoai";
 
 export default function TestPage() {
   
@@ -157,11 +157,11 @@ export default function TestPage() {
 
 ```bash
 # Terminal 1: Watch mode for package building
-cd /path/to/geobase-ai.js
+cd /path/to/geoai
 pnpm build --watch
 
 # Terminal 2: Next.js dev server
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 pnpm dev
 ```
 
@@ -171,7 +171,7 @@ pnpm dev
 # Make changes to src/
 # Then rebuild and test
 pnpm build
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 pnpm install file:../../build
 pnpm dev
 ```
@@ -182,7 +182,7 @@ pnpm dev
 
 ```bash
 # Clear node_modules and reinstall
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 rm -rf node_modules pnpm-lock.yaml
 pnpm install file:../../build
 ```
@@ -191,10 +191,10 @@ pnpm install file:../../build
 
 ```bash
 # Check if types are installed
-ls -la node_modules/@geobase-js/geoai/
+ls -la node_modules/geoai/
 
 # Should see:
-# - @geobase-js/geoai.js
+# - geoai.js
 # - index.d.ts
 ```
 
@@ -204,17 +204,17 @@ Make sure you're using the correct import paths:
 
 ```typescript
 // ✅ Correct
-import { geoai } from "@geobase-js/geoai";
+import { geoai } from "geoai";
 
 // ❌ Wrong
-import { geoai } from "@geobase-js/geoai/dist";
+import { geoai } from "geoai/dist";
 ```
 
 ### Cache issues
 
 ```bash
 # Clear Next.js cache
-cd examples/next-geobase
+cd examples/live-examples-nextjs
 rm -rf .next
 pnpm dev
 ```
@@ -225,7 +225,7 @@ Create a Node.js script:
 
 ```javascript
 // test-core.mjs
-import { geoai } from "@geobase-js/geoai";
+import { geoai } from "geoai";
 
 console.log("Tasks:", geoai.tasks());
 console.log("Models:", geoai.models().length);
@@ -235,7 +235,7 @@ console.log("Models:", geoai.models().length);
 
 ```typescript
 // Check autocomplete and type checking work
-import { geoai, ProviderParams } from "@geobase-js/geoai";
+import { geoai, ProviderParams } from "geoai";
 
 const params: ProviderParams = {
   /* should autocomplete */
@@ -246,14 +246,14 @@ const params: ProviderParams = {
 
 ```bash
 # Build and test in one go
-pnpm build && cd examples/next-geobase && pnpm install file:../../build && pnpm dev
+pnpm build && cd examples/live-examples-nextjs && pnpm install file:../../build && pnpm dev
 
 # Reset and reinstall
-rm -rf examples/next-geobase/node_modules && cd examples/next-geobase && pnpm install
+rm -rf examples/live-examples-nextjs/node_modules && cd examples/live-examples-nextjs && pnpm install
 
 # Check what's installed
-cd examples/next-geobase && pnpm list @geobase-js/geoai
+cd examples/live-examples-nextjs && pnpm list geoai
 
 # Test imports from command line
-cd examples/next-geobase && node -e "import('@geobase-js/geoai').then(m => console.log(m.geoai.tasks()))"
+cd examples/live-examples-nextjs && node -e "import('geoai').then(m => console.log(m.geoai.tasks()))"
 ```
