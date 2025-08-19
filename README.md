@@ -1,6 +1,6 @@
-<p align="center">
-  <img src="geoai-logo.svg" alt="JavaScript logo" width="150" height="100" style="vertical-align:middle" />
-</p>
+<h1 align="center">
+  <img src="https://cdn-icons-png.flaticon.com/256/5968/5968292.png" alt="JavaScript logo" height="25" style="vertical-align:middle" /> GeoAI
+</h1>
 
 <p align="center" style="margin-top:8px;">A lightweight JavaScript library for running Geo AI models in frontend applications.</p>
 
