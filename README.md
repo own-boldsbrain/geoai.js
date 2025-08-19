@@ -1,18 +1,20 @@
-[![Main](https://github.com/decision-labs/geoai.js/actions/workflows/main.yml/badge.svg)](https://github.com/decision-labs/geoai.js/actions/workflows/main.yml)
+<p align="center">
+  <img src="geoai-logo.svg" alt="JavaScript logo" width="150" height="100" style="vertical-align:middle" />
+</p>
 
-# GeoAI
+<p align="center" style="margin-top:8px;">A lightweight JavaScript library for running Geo AI models in frontend applications.</p>
 
-A JavaScript library for running Geo AI models in frontend applications.
+<p align="center" style="margin:12px 0;">
+  <a href="https://www.npmjs.com/package/geoai"><img alt="npm version" src="https://img.shields.io/npm/v/geoai.svg"></a>
+  <a href="https://github.com/decision-labs/geoai.js/actions/workflows/main.yml" style="margin-left:6px"><img alt="main" src="https://github.com/decision-labs/geoai.js/actions/workflows/main.yml/badge.svg"></a>
+  <a href="https://www.npmjs.com/package/geoai" style="margin-left:6px"><img alt="npm downloads" src="https://img.shields.io/npm/dm/geoai.svg"></a>
+  <a href="https://docs.geobase.app/geoai" style="margin-left:6px"><img alt="docs" src="https://img.shields.io/badge/docs-online-blue"></a>
+</p>
 
-## Installation
-
-### NPM Package
-
-[![npm version](https://img.shields.io/npm/v/geoai.svg)](https://www.npmjs.com/package/geoai)
-[![npm downloads](https://img.shields.io/npm/dm/geoai.svg)](https://www.npmjs.com/package/geoai)
+### Quick install
 
 ```bash
-npm install geoai
+npm i geoai
 ```
 
 📦 **Package Links:**
