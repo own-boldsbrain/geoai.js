@@ -14,12 +14,13 @@ import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 import { MapProvider } from "../../../types"
+import { getOptimumZoom } from "@/utils/model_utils";
 
 GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/ships_dubai.tif"
 
 const mapInitConfig = {
   center: [55.13477831801109, 25.111226405681208] as [number, number],
-  zoom: 20,
+  zoom: getOptimumZoom("ship-detection") || 20,
 }
 
 // Add validation for required environment variables
@@ -240,6 +241,7 @@ export default function ShipDetection() {
           onReset={handleReset}
           onZoomChange={handleZoomChange}
           onMapProviderChange={setMapProvider}
+          optimumZoom={mapInitConfig.zoom}
         />
         <div className="flex-1 relative">
           <div ref={mapContainer} className="w-full h-full" />

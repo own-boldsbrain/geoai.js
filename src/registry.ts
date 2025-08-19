@@ -28,6 +28,9 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "zero-shot-object-detection",
     library: "@huggingface/transformers",
+    zoomCompatibility: {
+      "onnx-community/grounding-dino-tiny-ONNX": 20,
+    },
     description:
       "This model can detect objects given a label. If a label falls outside of the categories that a more specialised model can handle, this model should be used. Prefer not to use this model if the label is a specific object that is one of the ones from this list: LightVehicle, Person, Building, Utility Pole, Boat, Bike, Container, Truck, Gastank, Digger, SolarPanels, Bus.",
     examples: [
@@ -52,6 +55,9 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "mask-generation",
     library: "@huggingface/transformers",
+    zoomCompatibility: {
+      "Xenova/slimsam-77-uniform": 18,
+    },
     description:
       "Useful when user wants to find things that are best represented as contiguous areas like roads, farms, car-parks, lakes, arrays of solar panels or even mountain ranges. Not useful for finding individual items.",
     examples: [
@@ -74,6 +80,9 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "object-detection",
     library: "@huggingface/transformers",
+    zoomCompatibility: {
+      "geobase/WALDO30-yolov8m-640x640": 20,
+    },
     description:
       "This model is trained to detect objects belonging to these classes: LightVehicle, Person, Building, Utility Pole, Boat, Bike, Container, Truck, Gastank, Digger, SolarPanels, Bus. It should be used for finding individual items in a drone or satellite image that fall into these categories. It should not be used for detecting areas or regions for example: a field, a forest or a body of water.",
     examples: [
@@ -98,6 +107,9 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "oriented-object-detection",
     library: "@huggingface/transformers",
+    zoomCompatibility: {
+      "geobase/gghl-oriented-object-detection": 21,
+    },
     description:
       "Detects objects with orientation (rotated bounding boxes) in satellite or aerial imagery. Useful for scenarios where objects are not axis-aligned, such as ships, airplanes, or vehicles in arbitrary directions.",
     examples: [
@@ -122,6 +134,9 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "land-cover-classification",
     library: "geoai",
+    zoomCompatibility: {
+      "geobase/sparsemask": 19,
+    },
     description:
       "Classifies land cover types in a given region. Useful for mapping vegetation, urban areas, water, and other land use categories.",
     examples: [
@@ -152,6 +167,9 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "solar-panel-detection",
     library: "geoai",
+    zoomCompatibility: {
+      "geobase/solar-panel-detection": 21,
+    },
     description:
       "Detects and locates solar panels in satellite or aerial imagery. Useful for identifying solar farms, rooftop solar installations, or tracking renewable energy infrastructure.",
     examples: [
@@ -175,6 +193,9 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "ship-detection",
     library: "geoai",
+    zoomCompatibility: {
+      "geobase/ship-detection": 20,
+    },
     description:
       "Detects ships and large boats in maritime or coastal satellite imagery. Useful for monitoring shipping lanes, ports, or maritime activity.",
     examples: [
@@ -198,6 +219,9 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "car-detection",
     library: "geoai",
+    zoomCompatibility: {
+      "geobase/car-detection": 21,
+    },
     description:
       "Detects cars and other small vehicles in urban, suburban, or rural imagery. Useful for traffic analysis, parking lot monitoring, or urban planning.",
     examples: [
@@ -221,6 +245,9 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "wetland-segmentation",
     library: "geoai",
+    zoomCompatibility: {
+      "geobase/wetland-segmentation": 17,
+    },
     description:
       "Segments and identifies wetland areas in satellite imagery. Useful for environmental monitoring, conservation, and land use planning.",
     examples: [
@@ -245,6 +272,9 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "building-detection",
     library: "geoai",
+    zoomCompatibility: {
+      "geobase/building-detection": 18,
+    },
     description:
       "Detects buildings and built structures in satellite or aerial imagery. Useful for urban development, disaster response, or infrastructure mapping.",
     examples: [
@@ -268,6 +298,9 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "oil-storage-tank-detection",
     library: "geoai",
+    zoomCompatibility: {
+      "geobase/oil-storage-tank-detection": 15,
+    },
     description:
       "Detects oil storage tanks in industrial or port areas. Useful for monitoring energy infrastructure, compliance, or risk assessment.",
     examples: [
@@ -298,6 +331,9 @@ export const modelRegistry: ModelConfig[] = [
   {
     task: "building-footprint-segmentation",
     library: "geoai",
+    zoomCompatibility: {
+      "geobase/building-footprint-segmentation": 15,
+    },
     description:
       "Segments the precise outlines (footprints) of buildings in imagery. Useful for mapping, urban planning, or disaster assessment.",
     examples: [

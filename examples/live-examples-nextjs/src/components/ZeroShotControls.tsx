@@ -33,6 +33,7 @@ interface ZeroShotControlsProps {
 
   taskName?: string;
   className?: string;
+  optimumZoom?: number; // Optimum zoom level for the model
 }
 
 export const ZeroShotControls: React.FC<ZeroShotControlsProps> = ({
@@ -55,6 +56,7 @@ export const ZeroShotControls: React.FC<ZeroShotControlsProps> = ({
   onConfidenceScoreChange,
   onClearError,
   className = '',
+  optimumZoom= 18
 }) => {
   // Add state for custom class label
   const [isCustomClass, setIsCustomClass] = useState(false);
@@ -167,6 +169,15 @@ export const ZeroShotControls: React.FC<ZeroShotControlsProps> = ({
           </div>
         </GlassmorphismCard>
       )}
+
+      <GlassmorphismCard glowColor="teal" className="group-hover:opacity-20 transition duration-1000" padding='sm'>
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-green-700 text-sm font-medium">
+            Optimum zoom level: {optimumZoom}
+          </span>
+        </div>
+      </GlassmorphismCard>
 
       <div className="space-y-6">
         {/* Map Provider Selection */}

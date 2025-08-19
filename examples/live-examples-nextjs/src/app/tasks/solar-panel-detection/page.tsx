@@ -14,12 +14,13 @@ import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 import { MapProvider } from "../../../types"
+import { getOptimumZoom } from "@/utils/model_utils";
 
 GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/solar_panels_davis_ca.tif"
 
 const mapInitConfig = {
   center: [-121.7743491, 38.5533061] as [number, number],
-  zoom: 21,
+  zoom: getOptimumZoom("solar-panel-detection") || 21,
 }
 
 // Add validation for required environment variables
@@ -244,6 +245,7 @@ export default function SolarPanelDetection() {
             onReset={handleReset}
             onZoomChange={handleZoomChange}
             onMapProviderChange={setMapProvider}
+            optimumZoom={mapInitConfig.zoom}
           />
         </div>
       </aside>

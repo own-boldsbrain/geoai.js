@@ -15,12 +15,13 @@ import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 
 import { MapProvider } from "../../../types"
+import { getOptimumZoom } from "@/utils/model_utils";
 
 GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/cars_7cm.tif"
 
 const mapInitConfig = {
   center: [ -95.42142391922613, 29.67899312759792] as [number, number],
-  zoom: 21,
+  zoom: getOptimumZoom("car-detection") || 21,
 }
 
 // Add validation for required environment variables
@@ -252,6 +253,7 @@ export default function CarDetection() {
             onReset={handleReset}
             onZoomChange={handleZoomChange}
             onMapProviderChange={setMapProvider}
+            optimumZoom={mapInitConfig.zoom}
           />
         </div>
       </aside>

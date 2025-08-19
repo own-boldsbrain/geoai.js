@@ -14,12 +14,13 @@ import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 import { MapProvider } from "@/types"
+import { getOptimumZoom } from "@/utils/model_utils";
 
 GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/cars_7cm.tif"
 
 const mapInitConfig = {
   center: [54.690310447932006, 24.75763471820723] as [number, number],
-  zoom: 15,
+  zoom: getOptimumZoom("oil-storage-tank-detection") || 15,
 }
 
 // Add validation for required environment variables
@@ -256,6 +257,7 @@ export default function OilStorageTankDetection() {
             onReset={handleReset}
             onZoomChange={handleZoomChange}
             onMapProviderChange={setMapProvider}
+            optimumZoom={mapInitConfig.zoom}
           />
         </div>
       </aside>

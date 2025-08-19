@@ -5,6 +5,7 @@ import { ZoomSlider } from './ui/ZoomSlider';
 import { MapProviderSelector } from './MapProviderSelector';
 import { StatusMessage } from './ui/StatusMessage';
 import { MapProvider } from "../types"
+import InfoTab from './InfoTab';
 
 interface DetectionControlsProps {
   // State props
@@ -28,6 +29,7 @@ interface DetectionControlsProps {
   onMapProviderChange: (provider: MapProvider) => void;
 
   className?: string;
+  optimumZoom?: number;
 }
 export const PlusIcon = (
   <svg
@@ -105,6 +107,7 @@ export const DetectionControls: React.FC<DetectionControlsProps> = ({
   onZoomChange,
   onMapProviderChange,
   className = '',
+  optimumZoom = 18
 }) => {
   // Icons
   
@@ -135,6 +138,15 @@ export const DetectionControls: React.FC<DetectionControlsProps> = ({
           </div>
         </GlassmorphismCard>
       )}
+
+      <GlassmorphismCard glowColor="teal" className="group-hover:opacity-20 transition duration-1000" padding='sm'>
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-green-700 text-sm font-medium">
+            Optimum zoom level: {optimumZoom}
+          </span>
+        </div>
+      </GlassmorphismCard>
 
       <div className="space-y-6">
         {/* Map Provider Selection */}
