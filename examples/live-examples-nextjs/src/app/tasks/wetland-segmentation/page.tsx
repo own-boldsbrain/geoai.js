@@ -14,12 +14,13 @@ import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 import { MapProvider } from "@/types";
+import { getOptimumZoom } from "@/utils/optimalParamsUtil";
 
 GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/naip/m_4609932_nw_14_1_20100629.tif"
 
 const mapInitConfig = {
   center: [-99.0983079371952, 46.60892272965549] as [number, number],
-  zoom: 18,
+  zoom: getOptimumZoom("wetland-segmentation","geobase") || 18,
 }
 
 // Add validation for required environment variables
@@ -245,6 +246,7 @@ export default function WetLandSegmentation() {
             onReset={handleReset}
             onZoomChange={handleZoomChange}
             onMapProviderChange={setMapProvider}
+            optimumZoom={mapInitConfig.zoom}
           />
         </div>
       </aside>

@@ -14,12 +14,13 @@ import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 import { MapProvider } from "../../../types"
+import { getOptimumZoom } from "../../../utils/optimalParamsUtil";
 
 GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/naip_train.tif"
 
 const mapInitConfig = {
   center: [-117.41857614409385, 47.656774236160146] as [number, number],
-  zoom: 15,
+  zoom: getOptimumZoom("building-footprint-segmentation","geobase") || 15
 }
 
 // Add validation for required environment variables
@@ -248,6 +249,7 @@ export default function BuildingFootPrintSegmentation() {
             onReset={handleReset}
             onZoomChange={handleZoomChange}
             onMapProviderChange={setMapProvider}
+            optimumZoom={mapInitConfig.zoom}
           />
         </div>
       </aside>

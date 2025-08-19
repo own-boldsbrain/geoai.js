@@ -11,13 +11,14 @@ import { BackgroundEffects, ExportButton, GlassmorphismCard, GradientButton, Map
 import { ClearPoint, PlayIcon, PlusIcon, ResetIcon } from "@/components/DetectionControls";
 import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
+import { getOptimumZoom } from "@/utils/optimalParamsUtil";
 
 
 GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/686e390615a6768f282b22b3/0/686e390615a6768f282b22b4.tif"
 
 const mapInitConfig = {
   center: [-13.274357, 8.486711] as [number, number],
-  zoom: 18,
+  zoom: getOptimumZoom("mask-generation","geobase") || 18,
 }
 
 

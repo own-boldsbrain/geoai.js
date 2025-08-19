@@ -14,12 +14,13 @@ import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
 import { MapProvider } from "../../../types"
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
+import { getOptimumZoom } from "@/utils/optimalParamsUtil";
 
 GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/68917a624c782f9c3fbde513/0/68917a624c782f9c3fbde514.tif"
 
 const mapInitConfig = {
   center: [-99.98154044151306,50.642806912434835] as [number, number],
-  zoom: 19,
+  zoom: getOptimumZoom("land-cover-classification","geobase") || 20,
 }
 
 // Add validation for required environment variables
@@ -430,6 +431,7 @@ export default function LandCoverClassification() {
             onReset={handleReset}
             onZoomChange={handleZoomChange}
             onMapProviderChange={setMapProvider}
+            optimumZoom={mapInitConfig.zoom}
           />
         </div>
       </aside>

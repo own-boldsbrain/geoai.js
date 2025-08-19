@@ -14,13 +14,14 @@ import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 import { MapProvider } from "../../../types"
+import { getOptimumZoom } from "@/utils/optimalParamsUtil";
 
 
 GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/giswqs/geospatial/resolve/main/cars_7cm.tif"
 
 const mapInitConfig = {
   center: [-95.42019681827594, 29.679416036729847] as [number, number],
-  zoom: 20,
+  zoom: getOptimumZoom("zero-shot-object-detection","geobase") || 20,
 }
 
 // Add validation for required environment variables
@@ -53,6 +54,7 @@ export default function ZeroShotSegmentation() {
   const [confidenceScore, setConfidenceScore] = useState<number>(0.3);
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
   const [classLabel, setClassLabel] = useState<string>("cars.");
+  const [optimumZoom, setOptimumZoom] = useState<number>(mapInitConfig.zoom);
 
   const handleReset = () => {
     // Clear all drawn features
@@ -272,6 +274,7 @@ export default function ZeroShotSegmentation() {
             onClassLabelChange={handleClassLabelChange}
             onConfidenceScoreChange={setConfidenceScore}
             onClearError={clearError}
+            optimumZoom={mapInitConfig.zoom}
           />
         </div>
       </aside>
