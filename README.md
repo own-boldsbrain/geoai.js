@@ -13,6 +13,11 @@
 
 ### Quick install
 
+### NPM Package
+
+[![npm version](https://img.shields.io/npm/v/geoai.svg)](https://www.npmjs.com/package/geoai)
+[![npm downloads](https://img.shields.io/npm/dm/geoai.svg)](https://www.npmjs.com/package/geoai)
+
 ```bash
 npm i geoai
 ```
