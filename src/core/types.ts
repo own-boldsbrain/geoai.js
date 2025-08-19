@@ -125,9 +125,6 @@ export type ModelConfig = {
   task: HuggingFaceModelTask | GeobaseAiModelTask;
   library: string;
   description: string;
-  zoomCompatibility?: {
-    [key: string]: unknown;
-  };
   examples?: string[];
   geobase_ai_pipeline: (
     params: ProviderParams,

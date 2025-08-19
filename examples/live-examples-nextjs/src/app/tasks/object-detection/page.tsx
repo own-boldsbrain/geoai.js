@@ -14,13 +14,13 @@ import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 import { MapProvider } from "../../../types"
-import { getOptimumZoom } from "@/utils/model_utils";
+import { getOptimumZoom } from "@/utils/optimalParamsUtil";
 
 GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/67ba1d2bec9237a9ebd358a3/0/67ba1d2bec9237a9ebd358a4.tif"
 
 const mapInitConfig = {
   center: [114.84857638295142, -3.449805712621256] as [number, number],
-  zoom: getOptimumZoom("object-detection") || 20,
+  zoom: getOptimumZoom("object-detection","geobase") || 20,
 }
 
 // Add validation for required environment variables
