@@ -139,7 +139,7 @@ export const DetectionControls: React.FC<DetectionControlsProps> = ({
         </GlassmorphismCard>
       )}
 
-      <GlassmorphismCard glowColor="teal" className="group-hover:opacity-20 transition duration-1000" padding='sm'>
+      <GlassmorphismCard glowColor="teal" className="group-hover:opacity-20 transition duration-1000 cursor-pointer" padding='sm' onClick={() => onZoomChange(optimumZoom)}>
         <div className="flex items-center space-x-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           <span className="text-green-700 text-sm font-medium">

@@ -5,6 +5,7 @@ interface GlassmorphismCardProps {
   className?: string;
   glowColor?: 'green' | 'emerald' | 'teal' | 'red' | 'purple';
   padding?: 'sm' | 'md' | 'lg';
+  onClick?: (e?: React.MouseEvent) => void;
 }
 
 const glowColors = {
@@ -26,9 +27,26 @@ export const GlassmorphismCard: React.FC<GlassmorphismCardProps> = ({
   className = '',
   glowColor = 'emerald',
   padding = 'lg',
+  onClick,
 }) => {
+  const clickableClass = onClick ? 'cursor-pointer' : '';
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (!onClick) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      // Prevent default to avoid scrolling on space
+      e.preventDefault();
+      onClick();
+    }
+  };
   return (
-    <div className={`relative group ${className}`}>
+    <div
+      className={`relative group ${className} ${clickableClass}`}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyPress={handleKeyPress}
+    >
       <div className={`absolute -inset-0.5 bg-gradient-to-r ${glowColors[glowColor]} rounded-lg blur opacity-10 group-hover:opacity-15 transition duration-500`}></div>
       <div className={`relative backdrop-blur-sm bg-white/90 ${paddingClasses[padding]} rounded-lg border border-gray-200/50 shadow-sm`}>
         {children}
