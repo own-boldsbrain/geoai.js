@@ -46,8 +46,7 @@ export const PROJECT_CONFIG = {
 
 export const DOCS_CONFIG = {
   title: `${NPM_PACKAGE_NAME} Docs`,
-  description:
-    "Find documentation, guides, examples, and blueprints for GeoAi.app",
+  description: "Find documentation, guides, examples, and blueprints for GeoAi",
   chatLink: "https://geobase.app/discord",
   docsRepositoryBase: "https://github.com/decision-labs/geoai.js",
   favicon: "https://geobase.app/favicon.ico",
