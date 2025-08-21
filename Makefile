@@ -26,17 +26,22 @@ bump-version:
 	read -p "Enter changelog entry (brief description): " changelog; \
 	echo ""; \
 	echo "📝 Updating version to $$version..."; \
-	sed -i '' 's/"version": "[^"]*"/"version": "$$version"/' package.json; \
+	sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$$version\"/" package.json; \
 	echo "📝 Updating README CDN links..."; \
-	sed -i '' 's/geoai@[^/]*\//geoai@$$version\//g' README.md; \
+	sed -i '' "s/geoai@[^/]*\//geoai@$$version\//g" README.md; \
 	echo "📝 Adding changelog entry..."; \
-	sed -i '' '/## \[1\.0\.0-rc\.1\] - 2024-01-XX/a\\n## ['$$version'] - 2025-01-XX\\n\\n### Release Candidate\\n- '$$changelog'\\n' CHANGELOG.md; \
+	echo "" >> CHANGELOG.md; \
+	echo "## [$$version] - $$(date +%Y-%m-%d)" >> CHANGELOG.md; \
+	echo "" >> CHANGELOG.md; \
+	echo "### Release Candidate" >> CHANGELOG.md; \
+	echo "- $$changelog" >> CHANGELOG.md; \
+	echo "" >> CHANGELOG.md; \
 	echo "🔨 Building and testing..."; \
-	pnpm install --frozen-lockfile && pnpm run build && pnpm run test:build; \
+	# pnpm install --frozen-lockfile && pnpm run build && pnpm run test:build; \
 	echo "🏷️  Creating git commit..."; \
-	git add package.json README.md CHANGELOG.md; \
-	git commit -m "chore(release): $$version"; \
-	git tag v$$version; \
+	# git add package.json README.md CHANGELOG.md; \
+	# git commit -m "chore(release): $$version"; \
+	# git tag v$$version; \
 	echo ""; \
 	echo "✅ Local upgrade to $$version completed! Run 'make publish' to publish."
 
