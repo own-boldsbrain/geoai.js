@@ -53,11 +53,11 @@ export const ImageFeatureExtractionVisualization: React.FC<ImageFeatureExtractio
           hoveredPatchIndex
         );
         
-        map.setPaintProperty(layerRef.current, 'fill-color', colorExpression);
-        
         const opacityExpression = createOpacityExpression(
           hoveredPatchIndex
         );
+        
+        map.setPaintProperty(layerRef.current, 'fill-color', colorExpression);
         map.setPaintProperty(layerRef.current, 'fill-opacity', opacityExpression);
       } catch (error) {
         console.warn('Error updating layer styling:', error);
