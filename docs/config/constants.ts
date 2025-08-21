@@ -34,7 +34,7 @@ export const PROJECT_CONFIG = {
   name: NPM_PACKAGE_NAME,
   version: "0.0.7",
   repository: GITHUB_REPO_URI,
-  homepage: "https://docs.geobase.app/geoaijs",
+  homepage: "https://docs.geobase.app/geoai",
   npmPackage: NPM_PACKAGE_NAME,
   npmUri: NPM_PACKAGE_URI,
   author: "Decision Labs",

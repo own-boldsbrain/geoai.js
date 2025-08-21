@@ -24,8 +24,8 @@ importers:
         specifier: ^1.5.0
         version: 1.5.0(next@15.3.2(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)
       geoai:
-        specifier: 1.0.0-rc.1
-        version: 1.0.0-rc.1(@huggingface/transformers@3.7.2)(@techstark/opencv-js@4.10.0-release.1)(onnxruntime-web@1.22.0)
+        specifier: 1.0.0-rc.2
+        version: 1.0.0-rc.2(@huggingface/transformers@3.7.2)(@techstark/opencv-js@4.10.0-release.1)(onnxruntime-web@1.22.0)
       lucide-react:
         specifier: ^0.536.0
         version: 0.536.0(react@19.1.1)
@@ -1728,6 +1728,9 @@ packages:
   caniuse-lite@1.0.30001735:
     resolution: {integrity: sha512-EV/laoX7Wq2J9TQlyIXRxTJqIw4sxfXS4OYgudGxBYRuTv0q7AM6yMEpU/Vo1I94thg9U6EZ2NfZx9GJq83u7w==}
 
+  caniuse-lite@1.0.30001736:
+    resolution: {integrity: sha512-ImpN5gLEY8gWeqfLUyEF4b7mYWcYoR2Si1VhnrbM4JizRFmfGaAQ12PhNykq6nvI4XvKLrsp8Xde74D5phJOSw==}
+
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
@@ -2152,8 +2155,8 @@ packages:
   functions-have-names@1.2.3:
     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}
 
-  geoai@1.0.0-rc.1:
-    resolution: {integrity: sha512-dN0MsP/x4SIgF70bmb0TkZcm1VUsEwg1ZSBHtinwTUS30o8KojQceChHbcUdLM106ZJivaPFm4Ejjh0IuJ0EUw==}
+  geoai@1.0.0-rc.2:
+    resolution: {integrity: sha512-jScVgSpZcYyvWOZjFVPC4zpKyMc48ckMgWFXixX9kVyxpAxkUsYTkxzywBJ5C0nYHOW7UsZhaqcfEE1SOY5FfA==}
     peerDependencies:
       '@huggingface/transformers': ^3.7.2
       '@techstark/opencv-js': ^4.10.0-release.1
@@ -6266,7 +6269,7 @@ snapshots:
 
   browserslist@4.25.3:
     dependencies:
-      caniuse-lite: 1.0.30001735
+      caniuse-lite: 1.0.30001736
       electron-to-chromium: 1.5.207
       node-releases: 2.0.19
       update-browserslist-db: 1.1.3(browserslist@4.25.3)
@@ -6297,6 +6300,8 @@ snapshots:
   callsites@3.1.0: {}
 
   caniuse-lite@1.0.30001735: {}
+
+  caniuse-lite@1.0.30001736: {}
 
   chalk@4.1.2:
     dependencies:
@@ -6858,7 +6863,7 @@ snapshots:
 
   functions-have-names@1.2.3: {}
 
-  geoai@1.0.0-rc.1(@huggingface/transformers@3.7.2)(@techstark/opencv-js@4.10.0-release.1)(onnxruntime-web@1.22.0):
+  geoai@1.0.0-rc.2(@huggingface/transformers@3.7.2)(@techstark/opencv-js@4.10.0-release.1)(onnxruntime-web@1.22.0):
     dependencies:
       '@huggingface/transformers': 3.7.2
       '@techstark/opencv-js': 4.10.0-release.1
