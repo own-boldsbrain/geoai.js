@@ -5,25 +5,25 @@ import type { GPUInfo } from './gpuUtils';
  */
 
 /**
- * Gets the color scheme for visualization (same regardless of GPU)
+ * Gets the color scheme for visualization using Inferno colormap
  * @param gpuInfo - GPU information from detectGPU() (unused for now)
  * @returns Color scheme configuration for visualization
  */
 export function getOptimalColorScheme(gpuInfo: GPUInfo) {
-  // Use consistent color scheme regardless of GPU capabilities
+  // Use Inferno colormap
   return {
-    hovered: '#fcfdbf', // Bright yellow-white
-    low: '#000004',     // Black
-    lowMedium: '#3b0f70', // Dark purple
-    medium: '#8c2981',  // Purple
-    mediumHigh: '#de4968', // Pink-red
-    high: '#fe9f6d',    // Orange
-    highest: '#fcfdbf'  // Bright yellow-white
+    hovered: '#fcffa0', // Bright yellow (1.0)
+    low: '#000004',     // Black (0.0)
+    lowMedium: '#270c45', // Dark purple (0.1)
+    medium: '#541068',  // Purple (0.2)
+    mediumHigh: '#801f67', // Pink-purple (0.3)
+    high: '#aa3058',    // Pink-red (0.4)
+    highest: '#d14644'  // Red-orange (0.5)
   };
 }
 
 /**
- * Creates MapLibre color expression (same regardless of GPU)
+ * Creates MapLibre color expression using Inferno colormap
  * @param gpuInfo - GPU information from detectGPU() (unused for now)
  * @param hoveredPatchIndex - Index of currently hovered patch
  * @returns MapLibre color expression array
@@ -32,18 +32,23 @@ export function createColorExpression(
   gpuInfo: GPUInfo,
   hoveredPatchIndex: number
 ) {
-  // Use consistent 6-color gradient regardless of GPU capabilities
+  // Use Inferno colormap with 11 color stops
   return [
     'case',
-    ['==', ['get', 'patchIndex'], hoveredPatchIndex], '#fcfdbf', // Bright yellow-white
+    ['==', ['get', 'patchIndex'], hoveredPatchIndex], '#fcffa0', // Bright yellow (hovered)
     ['interpolate', ['linear'], 
       ['at', hoveredPatchIndex, ['get', 'similarities']], // Array indexing
       0, '#000004',   // Black
-      0.2, '#3b0f70', // Dark purple
-      0.4, '#8c2981', // Purple
-      0.6, '#de4968', // Pink-red
-      0.8, '#fe9f6d', // Orange
-      1, '#fcfdbf'    // Bright yellow-white
+      0.1, '#270c45', // Dark purple
+      0.2, '#541068', // Purple
+      0.3, '#801f67', // Pink-purple
+      0.4, '#aa3058', // Pink-red
+      0.5, '#d14644', // Red-orange
+      0.6, '#f0612f', // Orange
+      0.7, '#fd8a1c', // Light orange
+      0.8, '#fcb91a', // Yellow-orange
+      0.9, '#f0e738', // Yellow
+      1, '#fcffa0'    // Bright yellow
     ]
   ];
 }
