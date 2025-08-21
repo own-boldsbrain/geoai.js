@@ -11,8 +11,8 @@
   <a href="https://docs.geobase.app/geoai" style="margin-left:6px"><img alt="docs" src="https://img.shields.io/badge/docs-online-blue"></a>
 </p>
 
-<div align="center" style="">
-  <img src="_docs4devs/geoai.gif" alt="GeoAI Demo" style="max-width: 80%; border-radius: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);">
+<div align="center">
+  <img src="_docs4devs/geoai.gif" alt="GeoAI Demo" width="80%" style="border-radius: 16px;">
 </div>
 
 <p align="center" style="font-style:italic; margin:2px;">
