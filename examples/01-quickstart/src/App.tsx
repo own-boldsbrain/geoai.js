@@ -5,157 +5,135 @@ import { geoai, ProviderParams } from 'geoai';
 import MaplibreDraw from 'maplibre-gl-draw';
 import 'maplibre-gl-draw/dist/mapbox-gl-draw.css';
 
-// Your config from Step 2
-const config = {
-  provider: "mapbox",
-  apiKey: process.env.REACT_APP_MAPBOX_API_KEY,
-  style: "mapbox://styles/mapbox/satellite-v9",
+const mapProviderConfig = {
+  provider: "esri",
+  serviceUrl: "https://server.arcgisonline.com/ArcGIS/rest/services",
+  serviceName: "World_Imagery",
+  tileSize: 256,
+  attribution: "ESRI World Imagery",
 };
-
-// Colorblind-friendly fill color (blue, e.g. #377eb8)
-const DETECTION_FILL_COLOR = '#377eb8';
+const inferenceZoomLevel = 15; // The zoom level at which the inference will be run
 
 function App() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
-  const [detections, setDetections] = useState<any[]>([]);
-  const [modelStatus, setModelStatus] = useState<'idle' | 'initializing' | 'pipeline-ready' | 'inferencing'>('idle');
-  const [error, setError] = useState<string | null>(null);
-  const pipelineRef = useRef<any>(null);
-
-  // Initialize the pipeline on page load
-  useEffect(() => {
-    let isMounted = true;
-    setModelStatus('initializing');
-    setError(null);
-
-    (async () => {
-      try {
-        const pipeline = await geoai.pipeline([{ task: "building-detection" }], config as ProviderParams);
-        console.log('pipeline', pipeline);
-        if (isMounted && pipeline) {
-          pipelineRef.current = pipeline;
-          setModelStatus('pipeline-ready');
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError('Failed to initialize model');
-          setModelStatus('idle');
-        }
-      }
-    })();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const drawRef = useRef<MaplibreDraw | null>(null);
+  const [pipeline, setPipeline] = useState<any>(null);
+  const [status, setStatus] = useState({ color: '#9e9e9e', text: 'Waiting...' });
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
+    // Initialize map
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: {
         version: 8,
         sources: {
-          'satellite': {
-            type: 'raster',
-            tiles: [`https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg90?access_token=${config.apiKey}`],
+          satellite: {
+            type: "raster",
+            tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
             tileSize: 256,
-          }
+            attribution: "ESRI World Imagery",
+          },
         },
-        layers: [{ id: 'satellite', type: 'raster', source: 'satellite' }]
+        layers: [{ id: "satellite", type: "raster", source: "satellite" }],
       },
-      center: [-117.59, 47.653],
-      zoom: 18
+      center: [54.690310447932006, 24.75763471820723],
+      zoom: 15,
     });
 
-    const draw = new MaplibreDraw({
-      displayControlsDefault: false,
-      controls: { polygon: true, trash: true }
-    });
+    const draw = new MaplibreDraw({ displayControlsDefault: false, controls: { polygon: true, trash: true } });
     // @ts-ignore
     map.current.addControl(draw);
+    drawRef.current = draw;
 
-    map.current.on('draw.create', async (e) => {
-      setError(null);
-      setModelStatus('inferencing');
-      setDetections([]);
-      const polygon = e.features[0];
+    // Make controls bigger
+    const style = document.createElement('style');
+    style.textContent = '.maplibregl-ctrl-group button { width: 50px !important; height: 50px !important; font-size: 20px !important; } .maplibregl-ctrl-group { border-radius: 8px !important; }';
+    document.head.appendChild(style);
 
+    // Initialize pipeline
+    (async () => {
+      setStatus({ color: '#ffa500', text: 'Initializing AI Model...' });
       try {
-        // Wait for pipeline to be ready
-        const pipeline = pipelineRef.current;
-        if (!pipeline) {
-          setError('Model not ready yet');
-          setModelStatus('pipeline-ready');
-          return;
-        }
-        const result = await pipeline.inference({
-          inputs: { polygon },
-          mapSourceParams: { zoomLevel: map.current?.getZoom() || 18 }
+        // Initialize pipeline
+        const newPipeline = await geoai.pipeline(
+          [{ task: "oil-storage-tank-detection" }],
+          mapProviderConfig as ProviderParams
+        );
+        setPipeline(newPipeline);
+        setStatus({ color: '#4caf50', text: 'AI Model Ready! Draw a polygon to detect oil storage tanks using the controls on the right.' });
+        
+        // Set up draw event listener after pipeline is ready
+        map.current?.on('draw.create', async (e) => {
+          console.log('Draw event triggered', e.features[0]);
+          setStatus({ color: '#2196f3', text: 'Processing detection...' });
+          try {
+            // Run inference
+            const result = await newPipeline.inference({
+              inputs: { polygon: e.features[0] },
+              mapSourceParams: { zoomLevel: inferenceZoomLevel }
+            });
+
+            if (map.current?.getSource('detections')) {
+              map.current.removeLayer('detections');
+              map.current.removeSource('detections');
+            }
+
+            map.current?.addSource("detections", {
+              type: "geojson",
+              data: result.detections,
+            });
+            map.current?.addLayer({
+              id: 'detections',
+              type: 'fill',
+              source: 'detections',
+              paint: { 'fill-color': '#ff0000', 'fill-opacity': 0.5 }
+            });
+
+            setStatus({
+              color: '#4caf50',
+              text: `Found ${result.detections.features?.length || 0} oil storage tank${(result.detections.features?.length || 0) !== 1 ? 's' : ''}!`,
+            });
+          } catch (error) {
+            console.error('Detection error:', error);
+            setStatus({ color: '#f44336', text: 'Error during detection' });
+          }
         });
-
-        setDetections(result.detections.features || []);
-
-        if (map.current?.getSource('detections')) {
-          map.current.removeLayer('detections');
-          map.current.removeSource('detections');
-        }
-
-        map.current?.addSource('detections', { type: 'geojson', data: result.detections });
-        map.current?.addLayer({
-          id: 'detections',
-          type: 'fill',
-          source: 'detections',
-          paint: { 'fill-color': DETECTION_FILL_COLOR, 'fill-opacity': 0.8 }
-        });
-        setModelStatus('pipeline-ready');
-      } catch (err) {
-        setError('Error during inference');
-        setModelStatus('pipeline-ready');
+      } catch (error) {
+        console.error('Pipeline initialization error:', error);
+        setStatus({ color: '#f44336', text: 'Failed to Initialize Model' });
       }
-    });
+    })();
 
     return () => map.current?.remove();
   }, []);
 
-  let statusMessage = '';
-  if (modelStatus === 'inferencing') statusMessage = 'Detecting buildings...';
-  else if (modelStatus === 'initializing') statusMessage = 'Model loading...';
-  else if (modelStatus === 'pipeline-ready') statusMessage = 'Pipeline ready. Draw a polygon to detect buildings.';
-  else statusMessage = '';
+  const resetMap = () => {
+    // Clear drawn features using the draw reference
+    drawRef.current?.deleteAll();
+    
+    // Clear detections
+    if (map.current?.getSource('detections')) {
+      map.current.removeLayer('detections');
+      map.current.removeSource('detections');
+    }
+    
+    setStatus({ color: '#4caf50', text: 'AI Model Ready! Draw a polygon to detect oil storage tanks using the controls on the right.' });
+  };
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <div ref={mapContainer} style={{ height: '70%', width: '100%' }} />
-      <div style={{ padding: '20px', height: '30%', backgroundColor: '#f5f5f5' }}>
-        <h2>Building Detection</h2>
-        <p>
-          <span
-            style={{
-              color:
-                modelStatus === 'initializing'
-                  ? '#ffb000' // orange for initializing
-                  : modelStatus === 'inferencing'
-                  ? '#984ea3' // purple for inferencing
-                  : modelStatus === 'pipeline-ready'
-                  ? '#228833' // green for ready
-                  : '#333'
-            }}
-          >
-            {statusMessage}
-          </span>
-        </p>
-        {error && <p style={{ color: '#e41a1c' }}>{error}</p>}
-        {detections.length > 0 && (
-          <p>
-            <span style={{ color: '#377eb8', fontWeight: 600 }}>
-              Found {detections.length} buildings!
-            </span>
-          </p>
+      <div style={{ padding: '16px', backgroundColor: status.color, color: 'white', fontSize: '20px', textAlign: 'center', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ flex: 1 }}>{status.text}</div>
+        {status.text.includes('Found') && (
+          <button onClick={resetMap} style={{ padding: '8px 16px', backgroundColor: 'rgba(255,255,255,1)', color: 'black', border: '1px solid white', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', marginLeft: '16px' }}>
+            Reset
+          </button>
         )}
       </div>
+      <div ref={mapContainer} style={{ height: '100%', width: '100%' }} />
     </div>
   );
 }
