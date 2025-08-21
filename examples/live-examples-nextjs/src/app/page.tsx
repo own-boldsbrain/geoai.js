@@ -40,7 +40,7 @@ export default function Home() {
           "raster-tiles": {
             type: "raster",
             tiles: [
-              `/geoai-live/api/tiles/WebMercatorQuad/{z}/{x}/{y}?url=${GEOBASE_CONFIG.cogImagery}&apikey=${GEOBASE_CONFIG.apikey}`,
+              `${process.env.NEXT_PUBLIC_BASE_PATH}/api/tiles/WebMercatorQuad/{z}/{x}/{y}?url=${GEOBASE_CONFIG.cogImagery}&apikey=${GEOBASE_CONFIG.apikey}`,
             ],
             tileSize: 256,
             attribution:

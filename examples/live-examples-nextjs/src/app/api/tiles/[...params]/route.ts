@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { params: string[] } }
+  { params }: { params: Promise<{ params: string[] }> }
 ) {
   try {
     const { searchParams } = new URL(request.url);
-    const path = params.params.join('/');
+    const resolvedParams = await params;
+    const path = resolvedParams.params.join('/');
     
     // Check if the environment variable is set
     if (!process.env.GEOBASE_TITILER) {
@@ -22,18 +23,12 @@ export async function GET(
     
     // Construct the actual titiler URL using the server-side environment variable
     const titilerUrl = `${process.env.GEOBASE_TITILER}/cog/tiles/${path}`;
-    console.log(`Titiler URL: ${titilerUrl}`);
     const url = new URL(titilerUrl);
     
     // Forward all query parameters from the original request
     searchParams.forEach((value, key) => {
       url.searchParams.set(key, value);
     });
-    
-    console.log(`Proxying tile request to: ${url.toString()}`);
-    console.log(`Environment GEOBASE_TITILER: ${process.env.GEOBASE_TITILER}`);
-    console.log(`Path: ${path}`);
-    console.log(`Query params:`, Object.fromEntries(searchParams.entries()));
     
     // Make the request to the actual titiler service
     const response = await fetch(url.toString(), {
@@ -45,18 +40,14 @@ export async function GET(
     
     if (!response.ok) {
       console.error(`Tile request failed: ${response.status} ${response.statusText}`);
-      console.error(`Requested URL: ${url.toString()}`);
-      console.error(`Environment GEOBASE_TITILER: ${process.env.GEOBASE_TITILER}`);
       
       // Try to get error details from the response
       let errorDetails = '';
       try {
         const errorText = await response.text();
         errorDetails = errorText.substring(0, 200); // Limit error message length
-        console.error(`Error response: ${errorText}`);
       } catch (e) {
         errorDetails = 'Could not read error response';
-        console.error(`Error reading response: ${e}`);
       }
       
       return NextResponse.json(
