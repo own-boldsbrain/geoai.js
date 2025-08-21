@@ -14,11 +14,11 @@ import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
 import { getOptimumZoom } from "@/utils/optimalParamsUtil";
 
 
-GEOBASE_CONFIG.cogImagery = "https://oin-hotosm-temp.s3.us-east-1.amazonaws.com/686e390615a6768f282b22b3/0/686e390615a6768f282b22b4.tif"
+GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/geobase/geoai-cogs/resolve/main/mask-generation.tif"
 
 const mapInitConfig = {
-  center: [-13.274357, 8.486711] as [number, number],
-  zoom: getOptimumZoom("mask-generation","geobase") || 18,
+  center: [-38.511321931983844, -13.008383365638252] as [number, number],
+  zoom: getOptimumZoom("mask-generation","geobase") || 19,
 }
 
 
