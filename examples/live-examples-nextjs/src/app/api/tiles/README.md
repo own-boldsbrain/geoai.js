@@ -1,10 +1,10 @@
 # Tiles API Route
 
-This API route (`/api/tiles/[...params]`) acts as a proxy for the Geobase titiler service, hiding the actual backend URL from the client.
+This API route (`/geoai-live/api/tiles/[...params]`) acts as a proxy for the Geobase titiler service, hiding the actual backend URL from the client.
 
 ## How it works
 
-1. **Request**: Client makes a request to `/api/tiles/WebMercatorQuad/{z}/{x}/{y}?url=...&apikey=...`
+1. **Request**: Client makes a request to `/geoai-live/api/tiles/WebMercatorQuad/{z}/{x}/{y}?url=...&apikey=...`
 2. **Proxy**: The API route forwards the request to the actual titiler service using the server-side `GEOBASE_TITILER` environment variable
 3. **Response**: The tile data is returned to the client with appropriate caching headers
 
@@ -23,7 +23,7 @@ This API route (`/api/tiles/[...params]`) acts as a proxy for the Geobase titile
 
 ```typescript
 // Client-side tile URL (what the map uses)
-const tileUrl = `/api/tiles/WebMercatorQuad/{z}/{x}/{y}?url=${cogImagery}&apikey=${apikey}`;
+const tileUrl = `/geoai-live/api/tiles/WebMercatorQuad/{z}/{x}/{y}?url=${cogImagery}&apikey=${apikey}`;
 
 // This gets proxied to:
 // ${GEOBASE_TITILER}/cog/tiles/WebMercatorQuad/{z}/{x}/{y}?url=${cogImagery}&apikey=${apikey}

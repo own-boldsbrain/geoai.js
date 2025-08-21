@@ -21,8 +21,8 @@ export async function GET(
     }
     
     // Construct the actual titiler URL using the server-side environment variable
-    // The titiler service expects the path to include /titiler/v1
-    const titilerUrl = `${process.env.GEOBASE_TITILER}/titiler/v1/cog/tiles/${path}`;
+    const titilerUrl = `${process.env.GEOBASE_TITILER}/cog/tiles/${path}`;
+    console.log(`Titiler URL: ${titilerUrl}`);
     const url = new URL(titilerUrl);
     
     // Forward all query parameters from the original request
@@ -46,14 +46,17 @@ export async function GET(
     if (!response.ok) {
       console.error(`Tile request failed: ${response.status} ${response.statusText}`);
       console.error(`Requested URL: ${url.toString()}`);
+      console.error(`Environment GEOBASE_TITILER: ${process.env.GEOBASE_TITILER}`);
       
       // Try to get error details from the response
       let errorDetails = '';
       try {
         const errorText = await response.text();
         errorDetails = errorText.substring(0, 200); // Limit error message length
+        console.error(`Error response: ${errorText}`);
       } catch (e) {
         errorDetails = 'Could not read error response';
+        console.error(`Error reading response: ${e}`);
       }
       
       return NextResponse.json(
@@ -61,7 +64,9 @@ export async function GET(
           error: 'Tile not found',
           details: errorDetails,
           status: response.status,
-          statusText: response.statusText
+          statusText: response.statusText,
+          titilerUrl: url.toString(),
+          cogUrl: searchParams.get('url')
         }, 
         { status: response.status }
       );
