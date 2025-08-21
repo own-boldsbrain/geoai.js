@@ -1,0 +1,94 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { params: string[] } }
+) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const path = params.params.join('/');
+    
+    // Check if the environment variable is set
+    if (!process.env.GEOBASE_TITILER) {
+      console.error('GEOBASE_TITILER environment variable is not set');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+    
+    // Validate the path to ensure it's a valid tile request
+    if (!path.match(/^WebMercatorQuad\/\d+\/\d+\/\d+$/)) {
+      console.error(`Invalid tile path: ${path}`);
+      return NextResponse.json({ error: 'Invalid tile path' }, { status: 400 });
+    }
+    
+    // Construct the actual titiler URL using the server-side environment variable
+    // The titiler service expects the path to include /titiler/v1
+    const titilerUrl = `${process.env.GEOBASE_TITILER}/titiler/v1/cog/tiles/${path}`;
+    const url = new URL(titilerUrl);
+    
+    // Forward all query parameters from the original request
+    searchParams.forEach((value, key) => {
+      url.searchParams.set(key, value);
+    });
+    
+    console.log(`Proxying tile request to: ${url.toString()}`);
+    console.log(`Environment GEOBASE_TITILER: ${process.env.GEOBASE_TITILER}`);
+    console.log(`Path: ${path}`);
+    console.log(`Query params:`, Object.fromEntries(searchParams.entries()));
+    
+    // Make the request to the actual titiler service
+    const response = await fetch(url.toString(), {
+      headers: {
+        'User-Agent': request.headers.get('user-agent') || '',
+        // Forward any other necessary headers if needed
+      },
+    });
+    
+    if (!response.ok) {
+      console.error(`Tile request failed: ${response.status} ${response.statusText}`);
+      console.error(`Requested URL: ${url.toString()}`);
+      
+      // Try to get error details from the response
+      let errorDetails = '';
+      try {
+        const errorText = await response.text();
+        errorDetails = errorText.substring(0, 200); // Limit error message length
+      } catch (e) {
+        errorDetails = 'Could not read error response';
+      }
+      
+      return NextResponse.json(
+        { 
+          error: 'Tile not found',
+          details: errorDetails,
+          status: response.status,
+          statusText: response.statusText
+        }, 
+        { status: response.status }
+      );
+    }
+    
+    // Get the content type from the response
+    const contentType = response.headers.get('content-type');
+    const headers = new Headers();
+    
+    if (contentType) {
+      headers.set('content-type', contentType);
+    }
+    
+    // Set appropriate caching headers for tiles
+    headers.set('cache-control', 'public, max-age=3600, s-maxage=86400');
+    headers.set('access-control-allow-origin', '*');
+    
+    // Return the tile data with appropriate headers
+    return new NextResponse(response.body, {
+      status: response.status,
+      headers,
+    });
+  } catch (error) {
+    console.error('Tile proxy error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' }, 
+      { status: 500 }
+    );
+  }
+}

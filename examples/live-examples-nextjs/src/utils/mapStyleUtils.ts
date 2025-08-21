@@ -90,7 +90,7 @@ export function createBaseMapStyle(config: MapStyleConfig, options: BaseMapStyle
       "geobase-tiles": {
         type: "raster",
         tiles: [
-          `https://${geobaseConfig.projectRef}.geobase.app/titiler/v1/cog/tiles/WebMercatorQuad/{z}/{x}/{y}?url=${geobaseConfig.cogImagery}&apikey=${geobaseConfig.apikey}`,
+          `/api/tiles/WebMercatorQuad/{z}/{x}/{y}?url=${geobaseConfig.cogImagery}&apikey=${geobaseConfig.apikey}`,
         ],
         tileSize: 256,
       },

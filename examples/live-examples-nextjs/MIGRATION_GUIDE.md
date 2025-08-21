@@ -32,9 +32,9 @@ const mapStyle: StyleSpecification = {
     },
     "geobase-tiles": {
       type: "raster",
-      tiles: [
-        `${process.env.NEXT_PUBLIC_GEOBASE_TITILER}/cog/tiles/WebMercatorQuad/{z}/{x}/{y}?url=${GEOBASE_CONFIG.cogImagery}&apikey=${GEOBASE_CONFIG.apikey}`,
-      ],
+              tiles: [
+          `/api/tiles/WebMercatorQuad/{z}/{x}/{y}?url=${GEOBASE_CONFIG.cogImagery}&apikey=${GEOBASE_CONFIG.apikey}`,
+        ],
       tileSize: 256,
     },
     // ... more sources and layers

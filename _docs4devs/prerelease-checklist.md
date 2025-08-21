@@ -124,6 +124,7 @@
   - [ ] Document minimum compatible versions
 
 # Misc
+- [ ] open source the docs repo make sure the edit links are working
 
 - [ ] No versioning in the docs
 - [ ] No versioning in the examples
@@ -131,4 +132,3 @@
 - [ ] No live docs that has the library version
 - [ ] No way add announcement to the docs and examples
 - [ ] in examples, check the styling of each example
-- [ ] open source the docs repo make sure the edit links are working
