@@ -95,3 +95,9 @@ To migrate from the old package:
 ### Release Candidate
 - Fix: remove hardcoded modelParams from the image-feature-extraction task
 
+
+## [1.0.0-rc.4] - 2025-08-22
+
+### Release Candidate
+- Update docs. Minor bug fixes.
+
