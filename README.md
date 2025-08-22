@@ -158,9 +158,13 @@ function MyComponent() {
 
 For more see the [supported tasks](https://docs.geobase.app/geoai/supported-tasks)
 
-## Documentation
+## Links
 
-Visit [docs.geobase.app/geoai](https://docs.geobase.app/geoai) for comprehensive documentation, examples, and API reference.
+- **Documentation**: [docs.geobase.app/geoai](https://docs.geobase.app/geoai) - Comprehensive documentation, examples, and API reference
+- **Live Examples**: [docs.geobase.app/geoai-live](https://docs.geobase.app/geoai-live) - Interactive examples and demos
+- **Community**: [GitHub Discussions](https://github.com/decision-labs/geoai.js/discussions) - Ask questions, share ideas, and connect with other developers
+- **Code**: [GitHub Repository](https://github.com/decision-labs/geoai.js) - Source code and contributions
+- **Issues**: [GitHub Issues](https://github.com/decision-labs/geoai.js/issues) - Report bugs and request features
 
 ## Contributing
 
