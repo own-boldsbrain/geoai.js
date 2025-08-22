@@ -191,17 +191,13 @@ export default function Home() {
                   </div>
                   
                   <p className="text-gray-300 text-base mb-4">
-                    We've integrated Meta's groundbreaking DINOv3 model for self-supervised learning at unprecedented scale.
+                    We've just added Meta's groundbreaking DINOv3 model thanks to the awesome integration with Hugging Face's 🤗 <a href="https://github.com/huggingface/transformers.js/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 transition-colors">Transformers.js</a>.
                   </p>
                   
                   <div className="flex flex-col sm:flex-row gap-3">
                     <a href="/geoai-live/tasks/image-feature-extraction" className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg transition-colors text-sm">
                       <span>Try DINOv3 Demo</span>
                       <span className="text-purple-200">→</span>
-                    </a>
-                    <a href="https://ai.meta.com/dinov3/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors text-sm">
-                      <span>Learn About DINOv3</span>
-                      <span className="text-gray-300">↗</span>
                     </a>
                   </div>
                 </div>
