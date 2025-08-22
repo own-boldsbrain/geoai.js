@@ -8,7 +8,8 @@ import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { 
   DetectionControls, 
   BackgroundEffects,
-  ExportButton
+  ExportButton,
+  TaskDownloadProgress
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
@@ -50,6 +51,10 @@ export default function OrientedObjectDetection() {
   const [detections, setDetections] = useState<GeoJSON.FeatureCollection>();
   const [zoomLevel, setZoomLevel] = useState<number>(22);
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
+  const [drawWarning, setDrawWarning] = useState<string | null>(null);
+  
+    // Dynamic optimum zoom computed per provider (used for guiding drawing)
+    const optimumZoom = getOptimumZoom("oriented-object-detection", mapProvider) ?? mapInitConfig.zoom;
 
   const handleReset = () => {
     // Clear all drawn features
@@ -85,7 +90,7 @@ export default function OrientedObjectDetection() {
           polygon
         },
         mapSourceParams : {
-          zoomLevel
+          zoomLevel: zoomLevel < optimumZoom ? optimumZoom : zoomLevel
         },
         postProcessingParams: {
           conf_thres: 0.5, // Default confidence threshold,
@@ -96,6 +101,11 @@ export default function OrientedObjectDetection() {
   };
 
   const handleStartDrawing = () => {
+    if (zoomLevel < optimumZoom - 1) {
+      // Clear the warning after a short delay
+      window.setTimeout(() => setDrawWarning(null), 500);
+      return;
+    }
     if (draw.current) {
       draw.current.changeMode("draw_polygon");
     }
@@ -242,6 +252,7 @@ export default function OrientedObjectDetection() {
             mapProvider={mapProvider}
             lastResult={lastResult}
             error={error}
+            drawWarning={drawWarning}
             title="Oriented Object Detection"
             description="Advanced geospatial AI powered oriented object detection system"
             onStartDrawing={handleStartDrawing}
@@ -249,7 +260,7 @@ export default function OrientedObjectDetection() {
             onReset={handleReset}
             onZoomChange={handleZoomChange}
             onMapProviderChange={setMapProvider}
-            optimumZoom={mapInitConfig.zoom}
+            optimumZoom={optimumZoom}
           />
         </div>
       </aside>
@@ -270,6 +281,15 @@ export default function OrientedObjectDetection() {
             provider={mapProvider}
             disabled={!detections && !lastResult?.geoRawImage}
             className="shadow-2xl backdrop-blur-lg"
+          />
+        </div>
+        
+        {/* Model Loading Progress - Floating in top center */}
+        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50">
+          <TaskDownloadProgress
+            task="oriented-object-detection"
+            className="min-w-80"
+            isInitialized={isInitialized}
           />
         </div>
         

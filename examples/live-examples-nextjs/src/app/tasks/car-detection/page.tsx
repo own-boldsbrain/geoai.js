@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import MaplibreDraw from "maplibre-gl-draw";
-import type { StyleSpecification } from "maplibre-gl";
 import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { 
   DetectionControls, 
   BackgroundEffects,
-  ExportButton
+  ExportButton,
+  TaskDownloadProgress
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
@@ -58,7 +58,10 @@ export default function CarDetection() {
   const [detections, setDetections] = useState<GeoJSON.FeatureCollection>();
   const [zoomLevel, setZoomLevel] = useState<number>(22);
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
+  const [drawWarning, setDrawWarning] = useState<string | null>(null);
 
+  // Dynamic optimum zoom computed per provider (used for guiding drawing)
+  const optimumZoom = getOptimumZoom("car-detection", mapProvider) ?? mapInitConfig.zoom;
   const handleReset = () => {
     // Clear all drawn features
     if (draw.current) {
@@ -93,13 +96,20 @@ export default function CarDetection() {
           polygon,
         },
         mapSourceParams: {
-          zoomLevel,
+          zoomLevel: zoomLevel < optimumZoom ? optimumZoom : zoomLevel
         },
       }
     );
   };
 
   const handleStartDrawing = () => {
+    // Prevent drawing if the current zoom is below the recommended optimum
+    if (zoomLevel < optimumZoom - 1) {
+      // Clear the warning after a short delay
+      window.setTimeout(() => setDrawWarning(null), 500);
+      return;
+    }
+
     if (draw.current) {
       draw.current.changeMode("draw_polygon");
     }
@@ -246,6 +256,7 @@ export default function CarDetection() {
             mapProvider={mapProvider}
             lastResult={lastResult}
             error={error}
+            drawWarning={drawWarning}
             title="Car Detection"
             description="Advanced geospatial AI powered vehicle detection system"
             onStartDrawing={handleStartDrawing}
@@ -253,7 +264,7 @@ export default function CarDetection() {
             onReset={handleReset}
             onZoomChange={handleZoomChange}
             onMapProviderChange={setMapProvider}
-            optimumZoom={mapInitConfig.zoom}
+            optimumZoom={optimumZoom}
           />
         </div>
       </aside>
@@ -274,6 +285,15 @@ export default function CarDetection() {
             provider={mapProvider}
             disabled={!detections && !lastResult?.geoRawImage}
             className="shadow-2xl backdrop-blur-lg"
+          />
+        </div>
+        
+        {/* Model Loading Progress - Floating in top center */}
+        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50">
+          <TaskDownloadProgress
+            task="car-detection"
+            className="min-w-80"
+            isInitialized={isInitialized}
           />
         </div>
         

@@ -8,7 +8,8 @@ import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { 
   DetectionControls, 
   BackgroundEffects,
-  ExportButton
+  ExportButton,
+  TaskDownloadProgress
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
@@ -51,6 +52,10 @@ export default function LandCoverClassification() {
   const [zoomLevel, setZoomLevel] = useState<number>(mapInitConfig.zoom);
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
   const [showDetections, setShowDetections] = useState(false);
+  const [drawWarning, setDrawWarning] = useState<string | null>(null);
+  
+    // Dynamic optimum zoom computed per provider (used for guiding drawing)
+    const optimumZoom = getOptimumZoom("land-cover-classification", mapProvider) ?? mapInitConfig.zoom;
 
 
   const handleReset = () => {
@@ -100,6 +105,11 @@ export default function LandCoverClassification() {
   };
 
   const handleStartDrawing = () => {
+    if (zoomLevel < optimumZoom - 1) {
+      // Clear the warning after a short delay
+      window.setTimeout(() => setDrawWarning(null), 500);
+      return;
+    }
     if (draw.current) {
       draw.current.changeMode("draw_polygon");
     }
@@ -399,7 +409,7 @@ export default function LandCoverClassification() {
           polygon,
         },
         mapSourceParams: {
-          zoomLevel,
+          zoomLevel: zoomLevel < optimumZoom ? optimumZoom : zoomLevel,
         },
         postProcessingParams: {
           minArea: 20
@@ -424,6 +434,7 @@ export default function LandCoverClassification() {
             mapProvider={mapProvider}
             lastResult={lastResult}
             error={error}
+            drawWarning={drawWarning}
             title="Land Cover Classification"
             description="Advanced geospatial AI powered land cover classification system"
             onStartDrawing={handleStartDrawing}
@@ -431,7 +442,7 @@ export default function LandCoverClassification() {
             onReset={handleReset}
             onZoomChange={handleZoomChange}
             onMapProviderChange={setMapProvider}
-            optimumZoom={mapInitConfig.zoom}
+            optimumZoom={optimumZoom}
           />
         </div>
       </aside>
@@ -458,6 +469,15 @@ export default function LandCoverClassification() {
             provider={mapProvider}
             disabled={(!classifications || !Array.isArray(classifications) || classifications.length === 0) && !lastResult?.geoRawImage}
             className="shadow-2xl backdrop-blur-lg"
+          />
+        </div>
+        
+        {/* Model Loading Progress - Floating in top center */}
+        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50">
+          <TaskDownloadProgress
+            task="land-cover-classification"
+            className="min-w-80"
+            isInitialized={isInitialized}
           />
         </div>
         

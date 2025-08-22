@@ -8,7 +8,8 @@ import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { 
   DetectionControls, 
   BackgroundEffects,
-  ExportButton
+  ExportButton,
+  TaskDownloadProgress
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
@@ -53,6 +54,10 @@ export default function BuildingFootPrintSegmentation() {
   const [detections, setDetections] = useState<GeoJSON.FeatureCollection>();
   const [zoomLevel, setZoomLevel] = useState<number>(15);
   const [mapProvider, setMapProvider] = useState<MapProvider>("mapbox");
+  const [drawWarning, setDrawWarning] = useState<string | null>(null);
+  
+    // Dynamic optimum zoom computed per provider (used for guiding drawing)
+    const optimumZoom = getOptimumZoom("building-footprint-segmentation", mapProvider) ?? mapInitConfig.zoom;
 
   const handleReset = () => {
     // Clear all drawn features
@@ -88,7 +93,7 @@ export default function BuildingFootPrintSegmentation() {
           polygon,
         },
         mapSourceParams: {
-          zoomLevel,
+          zoomLevel: zoomLevel < optimumZoom ? optimumZoom : zoomLevel,
         },
         postProcessingParams: { confidenceThreshold: 0.5, minArea: 20 }
       }
@@ -96,6 +101,11 @@ export default function BuildingFootPrintSegmentation() {
   };
 
   const handleStartDrawing = () => {
+    if (zoomLevel < optimumZoom - 1) {
+      // Clear the warning after a short delay
+      window.setTimeout(() => setDrawWarning(null), 500);
+      return;
+    }
     if (draw.current) {
       draw.current.changeMode("draw_polygon");
     }
@@ -242,6 +252,7 @@ export default function BuildingFootPrintSegmentation() {
             mapProvider={mapProvider}
             lastResult={lastResult}
             error={error}
+            drawWarning={drawWarning}
             title="Building Footprint Segmentation"
             description="Advanced geospatial AI powered building footprint detection system"
             onStartDrawing={handleStartDrawing}
@@ -249,7 +260,7 @@ export default function BuildingFootPrintSegmentation() {
             onReset={handleReset}
             onZoomChange={handleZoomChange}
             onMapProviderChange={setMapProvider}
-            optimumZoom={mapInitConfig.zoom}
+            optimumZoom={optimumZoom}
           />
         </div>
       </aside>
@@ -270,6 +281,15 @@ export default function BuildingFootPrintSegmentation() {
             provider={mapProvider}
             disabled={!detections && !lastResult?.geoRawImage}
             className="shadow-2xl backdrop-blur-lg"
+          />
+        </div>
+        
+        {/* Model Loading Progress - Floating in top center */}
+        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50">
+          <TaskDownloadProgress
+            task="building-footprint-segmentation"
+            className="min-w-80"
+            isInitialized={isInitialized}
           />
         </div>
         

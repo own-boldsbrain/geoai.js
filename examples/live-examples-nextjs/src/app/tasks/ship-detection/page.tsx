@@ -8,7 +8,8 @@ import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { 
   DetectionControls, 
   BackgroundEffects,
-  ExportButton
+  ExportButton,
+  TaskDownloadProgress
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
@@ -50,6 +51,10 @@ export default function ShipDetection() {
   const [detections, setDetections] = useState<GeoJSON.FeatureCollection>();
   const [zoomLevel, setZoomLevel] = useState<number>(22);
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
+  const [drawWarning, setDrawWarning] = useState<string | null>(null);
+  
+    // Dynamic optimum zoom computed per provider (used for guiding drawing)
+    const optimumZoom = getOptimumZoom("ship-detection", mapProvider) ?? mapInitConfig.zoom;
 
   const handleReset = () => {
     // Clear all drawn features
@@ -85,13 +90,18 @@ export default function ShipDetection() {
           polygon
         },
         mapSourceParams : {
-          zoomLevel
+          zoomLevel: zoomLevel < optimumZoom ? optimumZoom : zoomLevel
         }
       }
     );
   };
 
   const handleStartDrawing = () => {
+    if (zoomLevel < optimumZoom - 1) {
+      // Clear the warning after a short delay
+      window.setTimeout(() => setDrawWarning(null), 500);
+      return;
+    }
     if (draw.current) {
       draw.current.changeMode("draw_polygon");
     }
@@ -223,32 +233,67 @@ export default function ShipDetection() {
   }, [lastResult]);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <main className="w-full h-screen flex overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100 relative">
       <BackgroundEffects />
-      <div className="flex flex-col lg:flex-row h-screen">
-        <DetectionControls
-          title="Ship Detection"
-          description="Detect ships from satellite imagery using AI models"
-          polygon={polygon}
-          isInitialized={isInitialized}
-          isProcessing={isProcessing}
-          zoomLevel={zoomLevel}
-          mapProvider={mapProvider}
-          lastResult={lastResult}
-          error={error}
-          onStartDrawing={() => draw.current?.changeMode("draw_polygon")}
-          onDetect={handleDetect}
-          onReset={handleReset}
-          onZoomChange={handleZoomChange}
-          onMapProviderChange={setMapProvider}
-          optimumZoom={mapInitConfig.zoom}
-        />
-        <div className="flex-1 relative">
-          <div ref={mapContainer} className="w-full h-full" />
-          <ExportButton detections={detections} />
+
+      {/* Sidebar */}
+      <aside className="w-96 h-full flex flex-col overflow-hidden relative">
+        {/* Glassmorphism sidebar */}
+        <div className="backdrop-blur-xl bg-white/80 border-r border-gray-200/30 h-full shadow-2xl">
+          <DetectionControls
+            polygon={polygon}
+            isInitialized={isInitialized}
+            isProcessing={isProcessing}
+            zoomLevel={zoomLevel}
+            mapProvider={mapProvider}
+            lastResult={lastResult}
+            error={error}
+            drawWarning={drawWarning}
+            title="Ship Detection"
+            description="Detect ships from satellite imagery using AI models"
+            onStartDrawing={handleStartDrawing}
+            onDetect={handleDetect}
+            onReset={handleReset}
+            onZoomChange={handleZoomChange}
+            onMapProviderChange={setMapProvider}
+            optimumZoom={optimumZoom}
+          />
         </div>
+      </aside>
+
+      {/* Map Container */}
+      <div className="flex-1 h-full relative">
+        {/* Map overlay with subtle border */}
+        <div className="absolute inset-2 rounded-lg overflow-hidden border border-gray-200/50 shadow-2xl">
+          <div ref={mapContainer} className="w-full h-full" />
+        </div>
+
+        {/* Export Button - Floating in top right corner */}
+        <div className="absolute top-6 right-6 z-10">
+          <ExportButton
+            detections={detections}
+            geoRawImage={lastResult?.geoRawImage}
+            task="ship-detection"
+            provider={mapProvider}
+            disabled={!detections && !lastResult?.geoRawImage}
+            className="shadow-2xl backdrop-blur-lg"
+          />
+        </div>
+        
+        {/* Model Loading Progress - Floating in top center */}
+        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50">
+          <TaskDownloadProgress
+            task="ship-detection"
+            className="min-w-80"
+            isInitialized={isInitialized}
+          />
+        </div>
+
+        {/* Corner decorations */}
+        <div className="absolute top-4 right-4 w-20 h-20 border-t-2 border-r-2 border-green-400/40 rounded-tr-lg"></div>
+        <div className="absolute bottom-4 left-4 w-20 h-20 border-b-2 border-l-2 border-emerald-400/40 rounded-bl-lg"></div>
       </div>
-    </div>
+    </main>
   );
 }
 

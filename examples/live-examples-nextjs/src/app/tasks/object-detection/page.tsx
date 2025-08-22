@@ -8,18 +8,20 @@ import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { 
   DetectionControls, 
   BackgroundEffects,
-  ExportButton
+  ExportButton,
+  TaskDownloadProgress
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 import { MapProvider } from "../../../types"
 import { getOptimumZoom } from "@/utils/optimalParamsUtil";
+import { useTaskDownloadProgress } from "../../../hooks/useTaskDownloadProgress";
 
 GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/geobase/geoai-cogs/resolve/main/object-detection.tif"
 
 const mapInitConfig = {
-  center: [114.84857638295142, -3.449805712621256] as [number, number],
+  center: [114.847, -3.4498] as [number, number],
   zoom: getOptimumZoom("object-detection","geobase") || 20,
 }
 
@@ -47,10 +49,16 @@ export default function ObjectDetection() {
     clearError,
   } = useGeoAIWorker();
 
+
+
   const [polygon, setPolygon] = useState<GeoJSON.Feature | null>(null);
   const [detections, setDetections] = useState<GeoJSON.FeatureCollection>();
   const [zoomLevel, setZoomLevel] = useState<number>(22);
   const [mapProvider, setMapProvider] = useState<MapProvider>("geobase");
+  const [drawWarning, setDrawWarning] = useState<string | null>(null);
+  
+    // Dynamic optimum zoom computed per provider (used for guiding drawing)
+    const optimumZoom = getOptimumZoom("object-detection", mapProvider) ?? mapInitConfig.zoom;
 
   const handleReset = () => {
     // Clear all drawn features
@@ -67,6 +75,8 @@ export default function ObjectDetection() {
     setPolygon(null);
     setDetections(undefined);
     clearError();
+    
+
   };
 
   const handleZoomChange = (newZoom: number) => {
@@ -85,7 +95,7 @@ export default function ObjectDetection() {
         polygon: polygon
       },
       mapSourceParams: {
-        zoomLevel,
+        zoomLevel: zoomLevel < optimumZoom ? optimumZoom : zoomLevel,
       },
       postProcessingParams : {
         confidence : 0.9,
@@ -94,6 +104,11 @@ export default function ObjectDetection() {
   };
 
   const handleStartDrawing = () => {
+    if (zoomLevel < optimumZoom - 1) {
+      // Clear the warning after a short delay
+      window.setTimeout(() => setDrawWarning(null), 500);
+      return;
+    }
     if (draw.current) {
       draw.current.changeMode("draw_polygon");
     }
@@ -205,6 +220,8 @@ export default function ObjectDetection() {
       providerParams = MAPBOX_CONFIG;
     }
 
+
+
     initializeModel({
       tasks: [{
         task: "object-detection"
@@ -216,7 +233,12 @@ export default function ObjectDetection() {
   // Handle results from the worker
   useEffect(() => {
     if (lastResult?.detections && map.current) {
-      MapUtils.displayDetections(map.current, lastResult.detections);
+       MapUtils.displayDetections(map.current, lastResult.detections, {
+        "line-color": "#FFD400", // Yellow - visible and high contrast
+        "line-width": 3,
+        "line-dasharray": [1, 1], // dotted/dashed appearance
+        "line-opacity": 1.0,
+      },"line");
       setDetections(lastResult.detections);
     }
     if (lastResult?.geoRawImage?.bounds && map.current) {
@@ -240,6 +262,7 @@ export default function ObjectDetection() {
             mapProvider={mapProvider}
             lastResult={lastResult}
             error={error}
+            drawWarning={drawWarning}
             title="Object Detection"
             description="Advanced geospatial AI powered object detection system"
             onStartDrawing={handleStartDrawing}
@@ -247,7 +270,7 @@ export default function ObjectDetection() {
             onReset={handleReset}
             onZoomChange={handleZoomChange}
             onMapProviderChange={setMapProvider}
-            optimumZoom={mapInitConfig.zoom}
+            optimumZoom={optimumZoom}
           />
         </div>
       </aside>
@@ -268,6 +291,15 @@ export default function ObjectDetection() {
             provider={mapProvider}
             disabled={!detections && !lastResult?.geoRawImage}
             className="shadow-2xl backdrop-blur-lg"
+          />
+        </div>
+        
+        {/* Model Loading Progress - Floating in top center */}
+        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50">
+          <TaskDownloadProgress
+            task="object-detection"
+            className="min-w-80"
+            isInitialized={isInitialized}
           />
         </div>
         

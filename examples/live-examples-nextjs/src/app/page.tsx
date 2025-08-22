@@ -352,17 +352,16 @@ const result = await pipeline.inference(polygon);`}
         {/* Integration Highlight */}
         <section className="max-w-4xl mx-auto mb-12 sm:mb-16 px-4">
           <div className="text-center">
-            <p className="text-gray-300 text-xs sm:text-sm mb-4 font-medium">POWERED BY</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
               <div className="flex items-center gap-2">
                 <span className="text-2xl sm:text-3xl">🤗</span>
-                <span className="text-white font-semibold text-base sm:text-lg">Hugging Face</span>
+                <span className="text-white font-semibold text-base sm:text-lg pr-2">Hugging Face</span>
               </div>
               <span className="text-gray-300 text-lg sm:text-xl">×</span>
               <img src="/geoai-live/geobase-logo-darkmode.svg" alt="Geobase" className="h-6 sm:h-8" />
             </div>
             <p className="text-gray-300 text-xs sm:text-sm mt-4">
-              Seamless integration of state-of-the-art AI models with Geobase's geospatial platform
+              Seamless integration of state-of-the-art AI models from TransformersJS with Geobase's geospatial platform
             </p>
           </div>
         </section>
@@ -456,27 +455,6 @@ const result = await pipeline.inference(polygon);`}
               </h3>
               <p className="text-gray-300 text-sm sm:text-base">
                 Detects and highlights objects in the imagery using AI models.
-              </p>
-            </a>
-            
-              <a
-                href="/geoai-live/tasks/mask-generation"
-              className="bg-gray-800 p-4 sm:p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-700 hover:border-green-500/50"
-            >
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-40 sm:h-48 object-cover rounded-lg mb-4 sm:mb-6"
-              >
-                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/mask-generation.mp4" type="video/mp4" />
-              </video>
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">
-                Mask Generation
-              </h3>
-              <p className="text-gray-300 text-sm sm:text-base">
-                Generates segmentation masks for features of interest in the image.
               </p>
             </a>
             
@@ -689,6 +667,29 @@ const result = await pipeline.inference(polygon);`}
                 Segment objects without prior training on specific classes using advanced AI.
               </p>
             </a>
+
+            <div
+              className="bg-gray-800 p-4 sm:p-6 rounded-xl shadow-xl transition-all duration-300 transform border border-gray-700 relative group cursor-not-allowed"
+            >
+              <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                <span className="text-white font-semibold text-base sm:text-lg">Coming Soon</span>
+              </div>
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-40 sm:h-48 object-cover rounded-lg mb-4 sm:mb-6"
+              >
+                <source src="https://geobase-docs.s3.amazonaws.com/geobase-ai-assets/mask-generation.mp4" type="video/mp4" />
+              </video>
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">
+                Interactive Mask Generation
+              </h3>
+              <p className="text-gray-300 text-sm sm:text-base">
+                Generates segmentation masks for features of interest in the image.
+              </p>
+            </div>
             
             <div
               className="bg-gray-800 p-4 sm:p-6 rounded-xl shadow-xl transition-all duration-300 transform border border-gray-700 relative group cursor-not-allowed"

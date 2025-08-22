@@ -2,7 +2,7 @@ import maplibregl from 'maplibre-gl';
 
 // Utility functions for handling map operations
 export class MapUtils {
-  static defaultDetectionsPaint = {
+  static defaultDetectionsPaint: any = {
     "fill-color": "#FF6B35", // Orange - highly visible and color-blind friendly
     "fill-opacity": 0.6,
     "fill-outline-color": "#CC5500", // Darker orange for better contrast
@@ -11,6 +11,7 @@ export class MapUtils {
     map: maplibregl.Map,
     detections: GeoJSON.FeatureCollection,
     paint = MapUtils.defaultDetectionsPaint,
+    type: "symbol" | "fill" | "line" | "raster" | "circle" | "heatmap" | "fill-extrusion" | "hillshade" | "color-relief" | "background" = "fill",
   ) {
     if (!map) return;
 
@@ -29,10 +30,10 @@ export class MapUtils {
     // Add a layer to display the detections
     map.addLayer({
       id: "detections-layer",
-      type: "fill",
+      type: type,
       source: "detections",
       paint: paint,
-    });
+    } as maplibregl.LayerSpecification);
 
     // Add hover functionality
     const popup = new maplibregl.Popup({
