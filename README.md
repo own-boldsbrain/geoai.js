@@ -50,6 +50,16 @@ You can also use GeoAI directly in the browser via CDN:
 
 When using CDN, the library is available globally as `geoai`.
 
+Get Started: Follow the [Quickstart Guide](https://docs.geobase.app/geoai) or clone the quick start example.
+
+```bash
+git init
+touch README.md
+git add .
+git commit -m "Initial commit"
+git subtree add --prefix=examples/01-quickstart https://github.com/decision-labs/geoai.js main --squash
+```
+
 ## Usage
 
 ### Core Library (Node.js and Browser)
