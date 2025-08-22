@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
         permanent: false,
         basePath: false,
       },
+      {
+        source: "/geoai-live/examples",
+        destination: "/geoai-live",
+        permanent: false,
+        basePath: false,
+      },
     ];
   },
   webpack: (config, { isServer }) => {
