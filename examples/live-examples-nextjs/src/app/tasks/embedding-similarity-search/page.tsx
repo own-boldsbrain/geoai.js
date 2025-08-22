@@ -9,6 +9,7 @@ import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG } from "../../../config";
 import { MapProvider } from "../../../types"
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
+import { CollapsibleAttribution } from "../../../components";
 
 
 GEOBASE_CONFIG.cogImagery = "https://huggingface.co/datasets/geobase/geoai-cogs/resolve/main/mask-generation.tif"
@@ -1908,6 +1909,8 @@ export default function EmbeddingSimilaritySearch() {
       {/* Map Container */}
       <div className="flex-1 relative">
         <div ref={mapContainer} className="w-full h-full" />
+
+        <CollapsibleAttribution position="bottom-left" />
       </div>
     </div>
   );

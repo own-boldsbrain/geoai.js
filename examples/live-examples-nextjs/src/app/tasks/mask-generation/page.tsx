@@ -7,7 +7,7 @@ import type { StyleSpecification } from "maplibre-gl";
 import { useGeoAIWorker } from "../../../hooks/useGeoAIWorker";
 import { ESRI_CONFIG, GEOBASE_CONFIG, MAPBOX_CONFIG  } from "../../../config";
 import { MapProvider } from "../../../types"
-import { BackgroundEffects, ExportButton, GlassmorphismCard, GradientButton, MapProviderSelector, StatusMessage, ZoomSlider, TaskDownloadProgress } from "@/components";
+import { BackgroundEffects, ExportButton, GlassmorphismCard, GradientButton, MapProviderSelector, StatusMessage, ZoomSlider, TaskDownloadProgress, CollapsibleAttribution } from "@/components";
 import { ClearPoint, PlayIcon, PlusIcon, ResetIcon } from "@/components/DetectionControls";
 import { MapUtils } from "../../../utils/mapUtils";
 import { createBaseMapStyle } from "../../../utils/mapStyleUtils";
@@ -575,6 +575,7 @@ export default function MaskGeneration() {
         {/* Corner decorations */}
         <div className="absolute top-4 right-4 w-20 h-20 border-t-2 border-r-2 border-green-400/40 rounded-tr-lg"></div>
         <div className="absolute bottom-4 left-4 w-20 h-20 border-b-2 border-l-2 border-emerald-400/40 rounded-bl-lg"></div>
+        <CollapsibleAttribution position="bottom-left" />
       </div>
     </main>
   );

@@ -19,7 +19,8 @@ import {
   LoadingMessage,
   CornerDecorations,
   MapProviderSelectorWrapper,
-  InitialButtons
+  InitialButtons,
+  CollapsibleAttribution
 } from "../../../components";
 import { MapUtils } from "../../../utils/mapUtils";
 import { createImageFeatureExtractionMapStyle } from "../../../utils/mapStyleUtils";
@@ -720,7 +721,10 @@ export default function ImageFeatureExtraction() {
             />
           </div>
         )}
-        
+
+        {/* Collapsible Imagery attribution */}
+        <CollapsibleAttribution position="bottom-center" />
+
         {/* Corner decorations */}
         <CornerDecorations />
       </div>
