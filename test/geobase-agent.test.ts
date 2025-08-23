@@ -1,9 +1,106 @@
 import { describe } from "vitest";
-import { it } from "vitest";
+import { it, vi, beforeEach, afterEach } from "vitest";
 import { queryAgent } from "../src/geobase-agent";
 import { mapboxParams } from "./constants";
 
+// Mock the geoai module
+vi.mock("../src/index", () => ({
+  geoai: {
+    models: () => [
+      {
+        task: "land-cover-classification",
+        description: "Classify land cover types",
+        examples: ["What are the green areas on this map?"],
+        geobase_ai_pipeline: () => ({
+          modelId: "geobase/land-cover-classification",
+        }),
+      },
+      {
+        task: "building-detection",
+        description: "Detect buildings in satellite imagery",
+        examples: ["Can you highlight the buildings in this region?"],
+        geobase_ai_pipeline: () => ({ modelId: "geobase/building-detection" }),
+      },
+      {
+        task: "mask-generation",
+        description: "Generate masks for objects",
+        examples: ["Show me the roads in this area."],
+        geobase_ai_pipeline: () => ({ modelId: "geobase/mask-generation" }),
+      },
+      {
+        task: "wetland-segmentation",
+        description: "Segment wetlands",
+        examples: ["Identify the water bodies in this region."],
+        geobase_ai_pipeline: () => ({
+          modelId: "geobase/wetland-segmentation",
+        }),
+      },
+      {
+        task: "zero-shot-object-detection",
+        description: "Detect objects without training",
+        examples: ["Identify the wind turbines in this region."],
+        geobase_ai_pipeline: () => ({
+          modelId: "geobase/zero-shot-object-detection",
+        }),
+      },
+      {
+        task: "object-detection",
+        description: "Detect objects in imagery",
+        examples: ["Detect all trucks in this urban area."],
+        geobase_ai_pipeline: () => ({ modelId: "geobase/object-detection" }),
+      },
+      {
+        task: "solar-panel-detection",
+        description: "Detect solar panels",
+        examples: ["Find all solar panels in this industrial area."],
+        geobase_ai_pipeline: () => ({
+          modelId: "geobase/solar-panel-detection",
+        }),
+      },
+      {
+        task: "ship-detection",
+        description: "Detect ships",
+        examples: ["Detect all ships in this harbor."],
+        geobase_ai_pipeline: () => ({ modelId: "geobase/ship-detection" }),
+      },
+      {
+        task: "car-detection",
+        description: "Detect cars",
+        examples: ["Find all cars in this parking lot."],
+        geobase_ai_pipeline: () => ({ modelId: "geobase/car-detection" }),
+      },
+      {
+        task: "oil-storage-tank-detection",
+        description: "Detect oil storage tanks",
+        examples: ["Find all oil storage tanks in this refinery."],
+        geobase_ai_pipeline: () => ({
+          modelId: "geobase/oil-storage-tank-detection",
+        }),
+      },
+      {
+        task: "building-footprint-segmentation",
+        description: "Segment building footprints",
+        examples: ["Segment building footprints in this city block."],
+        geobase_ai_pipeline: () => ({
+          modelId: "geobase/building-footprint-segmentation",
+        }),
+      },
+    ],
+    pipeline: vi.fn().mockResolvedValue({
+      inference: vi.fn().mockResolvedValue({ detections: { features: [] } }),
+    }),
+  },
+}));
+
 describe("queryAgent", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("should select the correct task and return formatted response", async () => {
     const testCases = [
       {

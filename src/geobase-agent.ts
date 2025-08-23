@@ -26,6 +26,7 @@ const model_descriptions = models.map(model => {
   }
   return desc;
 });
+
 // Define available cross-encoder models for easy swapping
 const CROSS_ENCODER_MODELS = {
   msMarcoTinyBERT: "Xenova/ms-marco-TinyBERT-L-2-v2",
@@ -38,16 +39,36 @@ const CROSS_ENCODER_MODELS = {
 // Pick the model you want to use here:
 const SELECTED_CROSS_ENCODER = CROSS_ENCODER_MODELS.jinaRerankerTiny;
 
-const model = await AutoModelForSequenceClassification.from_pretrained(
-  SELECTED_CROSS_ENCODER,
-  { model_file_name: "model_quantized" }
-);
-const tokenizer = await AutoTokenizer.from_pretrained(SELECTED_CROSS_ENCODER);
+// Lazy loading variables
+let model: any = null;
+let tokenizer: any = null;
+let isInitialized = false;
+
+/**
+ * Initialize the cross-encoder model and tokenizer lazily
+ */
+async function initializeModel() {
+  if (isInitialized) return;
+
+  try {
+    model = await AutoModelForSequenceClassification.from_pretrained(
+      SELECTED_CROSS_ENCODER,
+      { model_file_name: "model_quantized" }
+    );
+    tokenizer = await AutoTokenizer.from_pretrained(SELECTED_CROSS_ENCODER);
+    isInitialized = true;
+  } catch (error) {
+    console.error("Failed to initialize cross-encoder model:", error);
+    throw error;
+  }
+}
 
 /**
  * Parses user queries and determines which geospatial AI task(s) to run.
  */
 async function parseQuery(userQuery: string) {
+  await initializeModel();
+
   const inputs = tokenizer(new Array(tasks.length).fill(userQuery), {
     text_pair: model_descriptions,
     padding: true,
