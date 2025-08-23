@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import { detectGPU, type GPUInfo } from '../../../utils/gpuUtils';
-import { createColorExpression, createOpacityExpression } from '../../../utils/maplibreUtils';
+import { createColorExpression, createOpacityExpression, createExtrusionExpression } from '../../../utils/maplibreUtils';
 
 interface ImageFeatureExtractionVisualizationProps {
   map: maplibregl.Map | null;
@@ -58,16 +58,26 @@ export const ImageFeatureExtractionVisualization: React.FC<ImageFeatureExtractio
           hoveredPatchIndex
         );
         
-        map.setPaintProperty(layerRef.current, 'fill-color', colorExpression);
-        map.setPaintProperty(layerRef.current, 'fill-opacity', opacityExpression);
+        const extrusionExpression = createExtrusionExpression(
+          hoveredPatchIndex
+        );
+        
+        console.log('Updating layer styling with hoveredPatchIndex:', hoveredPatchIndex);
+        console.log('Color expression:', colorExpression);
+        
+        map.setPaintProperty(layerRef.current, 'fill-extrusion-color', colorExpression);
+        map.setPaintProperty(layerRef.current, 'fill-extrusion-opacity', opacityExpression);
+        map.setPaintProperty(layerRef.current, 'fill-extrusion-height', extrusionExpression);
       } catch (error) {
         console.warn('Error updating layer styling:', error);
       }
     } else {
       try {
+        console.log('Resetting layer styling to default');
         // Reset to default styling - no source data updates needed
-        map.setPaintProperty(layerRef.current, 'fill-color', '#8c2981'); // Magma purple
-        map.setPaintProperty(layerRef.current, 'fill-opacity', 0.4); // Slightly higher opacity
+        map.setPaintProperty(layerRef.current, 'fill-extrusion-color', '#8c2981'); // Magma purple
+        map.setPaintProperty(layerRef.current, 'fill-extrusion-opacity', 0.7); // Higher opacity
+        map.setPaintProperty(layerRef.current, 'fill-extrusion-height', 0); // No extrusion
       } catch (error) {
         console.warn('Error resetting layer styling:', error);
       }
@@ -200,11 +210,13 @@ export const ImageFeatureExtractionVisualization: React.FC<ImageFeatureExtractio
     // Add single layer with dynamic styling
     map.addLayer({
       id: layerId,
-      type: 'fill',
+      type: 'fill-extrusion',
       source: sourceId,
       paint: {
-        'fill-color': '#8c2981', // Magma purple
-        'fill-opacity': 0.4, // Slightly higher opacity
+        'fill-extrusion-color': '#8c2981', // Magma purple
+        'fill-extrusion-opacity': 0.7, // Higher opacity
+        'fill-extrusion-height': 0, // No extrusion by default
+        'fill-extrusion-base': 0, // Base height
       },
     });
 

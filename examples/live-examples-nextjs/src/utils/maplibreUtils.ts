@@ -37,7 +37,7 @@ export function createColorExpression(
     'case',
     ['==', ['get', 'patchIndex'], hoveredPatchIndex], '#fcffa0', // Bright yellow (hovered)
     ['interpolate', ['linear'], 
-      ['at', hoveredPatchIndex, ['get', 'similarities']], // Array indexing
+      ['coalesce', ['at', hoveredPatchIndex, ['get', 'similarities']], 0], // Array indexing with fallback
       0, '#000004',   // Black
       0.1, '#270c45', // Dark purple
       0.2, '#541068', // Purple
@@ -65,9 +65,61 @@ export function createOpacityExpression(
     'case',
     ['==', ['get', 'patchIndex'], hoveredPatchIndex], 1, // Hovered patch = fully opaque
     ['interpolate', ['linear'], 
-      ['at', hoveredPatchIndex, ['get', 'similarities']], // Array indexing
-      0, 0.3,  // Lower opacity for low similarity
-      1, 0.8   // Higher opacity for high similarity
+      ['coalesce', ['at', hoveredPatchIndex, ['get', 'similarities']], 0], // Array indexing with fallback
+      0, 0.6,  // Higher opacity for low similarity
+      1, 0.95  // Higher opacity for high similarity
+    ]
+  ];
+}
+
+/**
+ * Creates MapLibre extrusion expression for 2.5D similarity visualization
+ * @param hoveredPatchIndex - Index of currently hovered patch
+ * @returns MapLibre extrusion expression array
+ */
+// export function createExtrusionExpression(
+//   hoveredPatchIndex: number
+// ) {
+//   return [
+//     'case',
+//     ['==', ['get', 'patchIndex'], hoveredPatchIndex], 50, // Hovered patch = higher extrusion
+//     ['interpolate', ['linear'], 
+//       ['at', hoveredPatchIndex, ['get', 'similarities']], // Array indexing
+//       0, 0,    // No extrusion for low similarity
+//       1, 30    // Higher extrusion for high similarity
+//     ]
+//   ];
+// }
+
+// MapLibre-friendly: handles "no hover", clamps via min/max, and emphasizes high similarity
+export function createExtrusionExpression(hoveredPatchIndex: number) {
+  return [
+    "case",
+
+    // 1) No hover (e.g., -1): flatten
+    ["<", hoveredPatchIndex, 0], 0,
+
+    // 2) Hovered patch itself: strong highlight
+    ["==", ["get", "patchIndex"], hoveredPatchIndex], 50,
+
+    // 3) Others: height by similarity to the hovered index (exaggerate high end)
+    [
+      "interpolate", ["exponential", 4],
+      // clamp( at(hoveredIndex, similarities), 0, 1 ) using max(min(...), 0)
+      ["max",
+        ["min",
+          ["coalesce",
+            ["at", hoveredPatchIndex, ["get", "similarities"]],
+            0
+          ],
+          1
+        ],
+        0
+      ],
+      // stops — tune for your data distribution
+      0.70, 0,
+      0.85, 6,
+      0.95, 30
     ]
   ];
 }
