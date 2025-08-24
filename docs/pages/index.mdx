@@ -58,11 +58,19 @@ npm install maplibre-gl maplibre-gl-draw geoais
 
 #### Option B: Clone an Quickstart example
 ```bash
-git init
-touch README.md
-git add .
-git commit -m "Initial commit"
-git subtree add --prefix=examples/01-quickstart https://github.com/decision-labs/geoai.js main --squash
+curl -L https://github.com/decision-labs/geoai.js/archive/refs/heads/main.zip -o repo.zip
+unzip repo.zip "geoai.js-main/examples/01-quickstart/*"
+mkdir -p examples
+mv geoai.js-main/examples/01-quickstart examples/
+rm -rf geoai.js-main repo.zip
+
+cd examples/01-quickstart
+pnpm i
+# or
+# npm install
+pnpm start
+# or
+# npm start
 ```
 
 ### Step 2: Setup Your Map Provider
