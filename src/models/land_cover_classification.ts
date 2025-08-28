@@ -183,7 +183,7 @@ export class LandCoverClassification extends BaseModel {
       3,
       geoRawImage.getBounds()
     );
-    const maskToFC = maskToGeoJSON({ mask: binaryTensors }, geoRawImage);
+    const maskToFC = maskToGeoJSON({ mask: binaryTensors }, outputRawImage);
     const features: GeoJSON.Feature[] = [];
     maskToFC.forEach((fc, idx) => {
       fc.features.forEach(feature => {
