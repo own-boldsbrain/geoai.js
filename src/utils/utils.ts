@@ -1,6 +1,7 @@
 import { GeoRawImage } from "@/types/images/GeoRawImage";
 import { PretrainedModelOptions, RawImage } from "@huggingface/transformers";
-const cv = require("@techstark/opencv-js");
+import { contours } from "d3-contour";
+import { polygonArea } from "d3-polygon";
 
 type detection = {
   x1: number;
@@ -221,415 +222,64 @@ export const detectionsToGeoJSON = (
   };
 };
 
-const getEdges = (binaryMask: number[][]) => {
-  const rows = binaryMask.length;
-  const cols = binaryMask[0].length;
-  const edges = Array.from({ length: rows }, () => Array(cols).fill(0));
-
-  const isEdge = (i: number, j: number) => {
-    if (binaryMask[i][j] === 0) return false;
-    for (const [dx, dy] of [
-      [-1, 0],
-      [1, 0],
-      [0, -1],
-      [0, 1],
-      [-1, -1],
-      [-1, 1],
-      [1, -1],
-      [1, 1],
-    ]) {
-      const ni = i + dx,
-        nj = j + dy;
-      if (
-        ni < 0 ||
-        ni >= rows ||
-        nj < 0 ||
-        nj >= cols ||
-        binaryMask[ni][nj] === 0
-      ) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  for (let i = 0; i < rows; i++) {
-    for (let j = 0; j < cols; j++) {
-      edges[i][j] = isEdge(i, j) ? 1 : 0;
-    }
-  }
-  return edges;
-};
-
-export const getPolygonFromMask = (
-  mask: number[][],
-  geoRawImage: GeoRawImage
-) => {
-  const edges = getEdges(mask);
-  const height = edges.length;
-  const width = edges[0].length;
-
-  const isValid = (y: number, x: number) =>
-    y >= 0 && y < height && x >= 0 && x < width;
-
-  const directions = [
-    [0, 1],
-    [1, 1],
-    [1, 0],
-    [1, -1],
-    [0, -1],
-    [-1, -1],
-    [-1, 0],
-    [-1, 1],
-  ];
-
-  const polygon: [number, number][] = [];
-  let start: [number, number] | null = null;
-
-  // Find the first edge pixel
-  outerLoop: for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      if (edges[y][x] === 1) {
-        start = [y, x];
-        break outerLoop;
-      }
-    }
-  }
-
-  if (!start) return polygon; // No edges found
-
-  let current = start;
-  let prevDirection = 0;
-
-  do {
-    const [cy, cx] = current;
-    polygon.push(geoRawImage.pixelToWorld(cx, cy));
-
-    let found = false;
-    for (let i = 0; i < directions.length; i++) {
-      const dir = (prevDirection + i) % directions.length;
-      const [dy, dx] = directions[dir];
-      const ny = cy + dy,
-        nx = cx + dx;
-
-      if (isValid(ny, nx) && edges[ny][nx] === 1) {
-        current = [ny, nx];
-        prevDirection = (dir + directions.length - 2) % directions.length;
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) break; // Stuck, break loop
-  } while (current[0] !== start[0] || current[1] !== start[1]);
-
-  if (polygon.length > 0) {
-    polygon.push(polygon[0]); // Close the polygon
-  }
-
-  return polygon;
-};
-
 export const maskToGeoJSON = (
   masks: any,
   geoRawImage: GeoRawImage,
-  topN: number = 1
-): GeoJSON.FeatureCollection => {
-  const { mask, scores } = masks;
-  const numMasks = scores.length;
-  const features: GeoJSON.Feature[] = [];
+  thresholds: number[] = [128]
+): GeoJSON.FeatureCollection[] => {
+  const featureCollections: GeoJSON.FeatureCollection[] = [];
 
-  for (let index = 0; index < numMasks; index++) {
-    const height = mask[0].dims[2];
-    const width = mask[0].dims[3];
-    const binaryMask = Array.from({ length: height }, () =>
-      Array(width).fill(0)
-    );
+  masks.mask.forEach((mask: any, index: number) => {
+    const contoursGen = contours()
+      .size([mask.dims[3], mask.dims[2]])
+      .thresholds(thresholds)
+      .smooth(true);
+    const data: number[] = Array.from(mask.data);
+    const generatedContours = contoursGen(data);
+    const polygons: [number, number][][][] = []; // collection of polygons with rings
+    generatedContours.forEach(contour => {
+      contour.coordinates.forEach(polygon => {
+        const rings: [number, number][][] = [];
+        polygon.forEach(ring => {
+          if (ring.length < 3) return; // skip invalid rings
+          const area = polygonArea(ring as [number, number][]);
+          // map to world coordinates
+          const coordinates = (ring as [number, number][]).map(coord =>
+            geoRawImage.pixelToWorld(coord[0], coord[1])
+          );
+          if (area > 0) {
+            // CCW → outer ring
+            rings.unshift(coordinates);
+          } else {
+            // CW → hole
+            rings.push(coordinates);
+          }
+        });
 
-    for (let y = 0; y < height; ++y) {
-      for (let x = 0; x < width; ++x) {
-        if (mask[0].data[index * height * width + y * width + x] === 1) {
-          binaryMask[y][x] = 1;
+        if (rings.length > 0) {
+          polygons.push(rings);
         }
-      }
-    }
+      });
+    });
 
-    //save binary mask as a png using RawImage
-    // const maskImage = {
-    //   data: new Uint8ClampedArray(width * height * 4),
-    //   width: width,
-    //   height: height,
-    // };
-    // const edgeMask = getEdges(binaryMask);
-    // for (let y = 0; y < height; ++y) {
-    //   for (let x = 0; x < width; ++x) {
-    //     const value = edgeMask[y][x] === 1 ? 255 : 0;
-    //     maskImage.data[4 * (y * width + x) + 0] = value;
-    //     maskImage.data[4 * (y * width + x) + 1] = value;
-    //     maskImage.data[4 * (y * width + x) + 2] = value;
-    //     maskImage.data[4 * (y * width + x) + 3] = 255;
-    //   }
-    // }
-
-    // const rawImage = new RawImage(maskImage.data, width, height, 4);
-    // rawImage.save(`mask_${index}-${scores[index]}.png`);
-
-    features.push({
+    const maskFeature: GeoJSON.Feature = {
       type: "Feature",
       properties: {
-        score: scores[index],
+        score: masks.scores?.[index],
       },
       geometry: {
-        type: "Polygon",
-        coordinates: [getPolygonFromMask(binaryMask, geoRawImage)],
+        type: "MultiPolygon",
+        coordinates: polygons,
       },
-    });
-  }
-
-  // Sort features by score in descending order and take top N
-  const sortedFeatures = features
-    .sort((a, b) => {
-      if (!a.properties?.score || !b.properties?.score) return 0;
-      return b.properties.score - a.properties.score;
-    })
-    .slice(0, topN);
-
-  return {
-    type: "FeatureCollection",
-    features: sortedFeatures,
-  };
-};
-
-/**
- * Refines binary masks into GeoJSON feature collections by applying various image processing operations
- * and converting the resulting contours into geographic polygons.
- *
- * @param binaryMasks - Array of raw image masks to be processed
- * @param geoRawImage - Geographic reference image containing projection information
- * @param classes - Optional array of class labels corresponding to each mask
- * @param minArea - Minimum area threshold for contour filtering (default: 20)
- *
- * @returns Array of GeoJSON FeatureCollections, each containing polygon features derived from the masks
- *
- * @remarks
- * The function performs the following steps:
- * 1. Converts masks to binary images and finds contours
- * 2. Refines contours through approximation and area filtering
- * 3. Applies morphological operations to fill gaps
- * 4. Converts processed contours to GeoJSON polygons
- * 5. Associates class labels with the resulting features
- */
-export const refineMasks = (
-  binaryMasks: RawImage[],
-  geoRawImage: GeoRawImage,
-  classes: string[] = [],
-  minArea: number = 20
-): GeoJSON.FeatureCollection[] => {
-  const maskGeojson: GeoJSON.FeatureCollection[] = [];
-  binaryMasks.forEach((mask, index) => {
-    const maskDataArray = Array.from(mask.data);
-
-    const maskMat = cv.matFromArray(
-      mask.height,
-      mask.width,
-      cv.CV_8UC3,
-      maskDataArray
-    );
-
-    const gray = new cv.Mat();
-    cv.cvtColor(maskMat, gray, cv.COLOR_RGB2GRAY);
-    let thresh = new cv.Mat();
-    cv.threshold(gray, thresh, 128, 255, cv.THRESH_BINARY);
-    const contours = new cv.MatVector();
-    const hierarchy = new cv.Mat();
-    cv.findContours(
-      thresh,
-      contours,
-      hierarchy,
-      cv.RETR_EXTERNAL,
-      cv.CHAIN_APPROX_SIMPLE
-    );
-
-    const refinedMask = cv.Mat.zeros(mask.height, mask.width, cv.CV_8UC1);
-
-    for (let i = 0; i < contours.size(); i++) {
-      const contour = contours.get(i);
-      const epsilon = 0.01 * cv.arcLength(contour, true); // Adjust epsilon to be a smaller fraction of the contour perimeter
-      const approx = new cv.Mat();
-      cv.approxPolyDP(contour, approx, epsilon, true);
-      const approxVector = new cv.MatVector();
-      approxVector.push_back(approx);
-
-      cv.drawContours(
-        refinedMask,
-        approxVector,
-        -1,
-        new cv.Scalar(255),
-        cv.FILLED
-      );
-      approx.delete();
-      approxVector.delete();
-    }
-
-    // Step 2: Find contours and filter based on area
-    const cleanedMaskContours = new cv.MatVector();
-    const cleanedMaskHierarchy = new cv.Mat();
-    cv.findContours(
-      refinedMask,
-      cleanedMaskContours,
-      cleanedMaskHierarchy,
-      cv.RETR_EXTERNAL,
-      cv.CHAIN_APPROX_SIMPLE
-    );
-
-    const finalRefinedMask = cv.Mat.zeros(mask.height, mask.width, cv.CV_8UC1);
-
-    for (let i = 0; i < cleanedMaskContours.size(); i++) {
-      const contour = cleanedMaskContours.get(i);
-      const area = cv.contourArea(contour);
-      if (area > minArea) {
-        const contourVector = new cv.MatVector();
-        contourVector.push_back(contour);
-        cv.drawContours(
-          finalRefinedMask,
-          contourVector,
-          -1,
-          new cv.Scalar(255),
-          cv.FILLED
-        );
-        contourVector.delete();
-      }
-      contour.delete();
-    }
-
-    // Step 3: Apply Morphological Closing (Fill gaps)
-    const kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3, 3));
-    cv.morphologyEx(
-      finalRefinedMask,
-      finalRefinedMask,
-      cv.MORPH_CLOSE,
-      kernel,
-      new cv.Point(-1, -1),
-      2
-    );
-
-    //resize the mask to the original image size
-    const resizedMask = new cv.Mat();
-    cv.resize(
-      finalRefinedMask,
-      resizedMask,
-      new cv.Size(geoRawImage.width, geoRawImage.height),
-      0,
-      0,
-      cv.INTER_NEAREST
-    );
-
-    //add padding to the mask of 1 pixel as black border
-    const paddedMask = new cv.Mat(
-      geoRawImage.height + 2,
-      geoRawImage.width + 2,
-      cv.CV_8UC1,
-      new cv.Scalar(0, 0, 0, 0)
-    );
-    resizedMask.copyTo(
-      paddedMask.roi(new cv.Rect(1, 1, geoRawImage.width, geoRawImage.height))
-    );
-
-    //get all contours for the resized mask
-
-    const _contours = new cv.MatVector();
-    const _hierarchy = new cv.Mat();
-    cv.findContours(
-      paddedMask,
-      _contours,
-      _hierarchy,
-      cv.RETR_EXTERNAL,
-      cv.CHAIN_APPROX_SIMPLE
-    );
-
-    const edges = [];
-    // Create a new mask for each contour
-    for (let i = 0; i < _contours.size(); i++) {
-      const contour = _contours.get(i);
-      const contourMask = cv.Mat.zeros(
-        geoRawImage.height + 2,
-        geoRawImage.width + 2,
-        cv.CV_8UC1
-      );
-      const contourVector = new cv.MatVector();
-      contourVector.push_back(contour);
-      cv.drawContours(
-        contourMask,
-        contourVector,
-        -1,
-        new cv.Scalar(255),
-        cv.FILLED
-      );
-
-      //edge detection
-      const edge = new cv.Mat();
-      cv.Canny(contourMask, edge, 100, 200);
-
-      let kernel = cv.Mat.ones(3, 3, cv.CV_8U); // 3x3 kernel
-      let closed = new cv.Mat();
-
-      cv.morphologyEx(edge, closed, cv.MORPH_CLOSE, kernel);
-
-      edges.push(closed);
-      contourVector.delete();
-    }
-
-    const geojsonPolygons = edges.map(edge => {
-      const edgeData = new Uint8Array(edge.data);
-      const edgeData2D = [];
-      for (let i = 0; i < edge.rows; i++) {
-        const row = [];
-        for (let j = 0; j < edge.cols; j++) {
-          const value = edgeData[i * edge.cols + j] === 255 ? 1 : 0;
-          row.push(value);
-        }
-        edgeData2D.push(row);
-      }
-
-      const ed = getPolygonFromMask(edgeData2D, geoRawImage);
-      return ed;
-    });
-
-    const features: GeoJSON.Feature[] = geojsonPolygons.map(polygon => {
-      polygon.push(polygon[0]);
-      return {
-        type: "Feature",
-        geometry: {
-          type: "Polygon",
-          coordinates: [polygon],
-        },
-        properties: {
-          class: classes[index],
-        },
-      };
-    });
-
-    const featureCollection: GeoJSON.FeatureCollection = {
-      type: "FeatureCollection",
-      features,
     };
 
-    maskGeojson.push(featureCollection);
-
-    // Clean up resources
-    maskMat.delete();
-    gray.delete();
-    thresh.delete();
-    contours.delete();
-    hierarchy.delete();
-    refinedMask.delete();
-    cleanedMaskContours.delete();
-    cleanedMaskHierarchy.delete();
-    finalRefinedMask.delete();
-    kernel.delete();
+    featureCollections.push({
+      type: "FeatureCollection",
+      features: [maskFeature],
+    });
   });
 
-  return maskGeojson;
+  return featureCollections;
 };
 
 /**

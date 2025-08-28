@@ -2,9 +2,9 @@ import { BaseModel } from "@/models/base_model";
 import {
   ImageProcessor,
   PreTrainedModel,
-  RawImage,
+  Tensor,
 } from "@huggingface/transformers";
-import { parametersChanged, refineMasks } from "@/utils/utils";
+import { maskToGeoJSON, parametersChanged } from "@/utils/utils";
 import { ProviderParams } from "@/geoai";
 import { GeoRawImage } from "@/types/images/GeoRawImage";
 import { PretrainedModelOptions } from "@huggingface/transformers";
@@ -71,7 +71,6 @@ export class LandCoverClassification extends BaseModel {
   async inference(params: InferenceParams): Promise<any> {
     const {
       inputs: { polygon },
-      postProcessingParams: { minArea = 20 } = {},
       mapSourceParams,
     } = params;
 
@@ -90,12 +89,12 @@ export class LandCoverClassification extends BaseModel {
       throw new Error("Data provider not initialized");
     }
 
-    const geoRawImage = await this.polygonToImage(
+    const geoRawImage = (await this.polygonToImage(
       polygon,
       mapSourceParams?.zoomLevel,
       mapSourceParams?.bands,
       mapSourceParams?.expression
-    );
+    )) as GeoRawImage;
     const inferenceStartTime = performance.now();
     console.log("[land-cover-classification] starting inference...");
     if (!this.processor) {
@@ -140,32 +139,11 @@ export class LandCoverClassification extends BaseModel {
 
     const outputImage = new Uint8Array(height * width * 3);
 
-    // Create a binary mask for each class
-    const binaryMasks: RawImage[] = [];
-    for (let c = 0; c < channels; c++) {
-      const mask = new Uint8Array(height * width);
-      for (let i = 0; i < height * width; i++) {
-        mask[i] = argmaxOutput[i] === c ? 1 : 0;
-      }
-
-      // Save each binary mask as an image
-      const maskImage = new Uint8Array(height * width * 3);
-      for (let i = 0; i < height * width; i++) {
-        const value = mask[i] * 255;
-        maskImage[i * 3] = value;
-        maskImage[i * 3 + 1] = value;
-        maskImage[i * 3 + 2] = value;
-      }
-      const maskRawImage = new RawImage(maskImage, height, width, 3);
-      binaryMasks.push(maskRawImage);
+    const binaryMasks: Uint8Array[] = [];
+    for (let i = 0; i < (this.classes?.length || 0); i++) {
+      binaryMasks.push(new Uint8Array(height * width));
     }
 
-    const featureCollection: GeoJSON.FeatureCollection[] = refineMasks(
-      binaryMasks,
-      geoRawImage,
-      this.classes,
-      minArea as number
-    );
     // Assign color to each pixel based on class index
     for (let i = 0; i < height * width; i++) {
       const classIndex = argmaxOutput[i];
@@ -175,12 +153,26 @@ export class LandCoverClassification extends BaseModel {
         outputImage[offset] = color[0];
         outputImage[offset + 1] = color[1];
         outputImage[offset + 2] = color[2];
+        binaryMasks[classIndex][i] = 255;
       } else {
         // Fallback to black if color is undefined
         outputImage[offset] = 0;
         outputImage[offset + 1] = 0;
         outputImage[offset + 2] = 0;
       }
+    }
+
+    const masksToKeep: number[] = [];
+    const binaryTensors: Tensor[] = [];
+    for (let i = 0; i < (this.classes?.length || 0); i++) {
+      //skip if all zeros
+      if (binaryMasks[i].every(v => v === 0)) {
+        continue;
+      }
+      masksToKeep.push(i);
+      binaryTensors.push(
+        new Tensor("uint8", binaryMasks[i], [1, 1, height, width])
+      );
     }
 
     // Create a new RawImage object with output data
@@ -191,6 +183,21 @@ export class LandCoverClassification extends BaseModel {
       3,
       geoRawImage.getBounds()
     );
+    const maskToFC = maskToGeoJSON({ mask: binaryTensors }, geoRawImage);
+    const features: GeoJSON.Feature[] = [];
+    maskToFC.forEach((fc, idx) => {
+      fc.features.forEach(feature => {
+        feature.properties = {
+          class: this.classes ? this.classes[masksToKeep[idx]] : "unknown",
+        };
+        features.push(feature);
+      });
+    });
+
+    const featureCollection: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features,
+    };
 
     const inferenceEndTime = performance.now();
     console.log(
@@ -198,8 +205,8 @@ export class LandCoverClassification extends BaseModel {
     );
     return {
       detections: featureCollection,
-      binaryMasks,
       outputImage: outputRawImage,
+      geoRawImage,
     };
   }
 }

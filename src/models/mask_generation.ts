@@ -151,12 +151,12 @@ export class MaskGeneration extends BaseModel {
 
     // Compute new embeddings
     if (!geoRawImage) {
-      geoRawImage = await this.polygonToImage(
+      geoRawImage = (await this.polygonToImage(
         polygon,
         zoomLevel,
         bands,
         expression
-      );
+      )) as GeoRawImage;
     }
     image_inputs = await this.processor(geoRawImage);
     const image_embeddings =
@@ -357,16 +357,51 @@ export class MaskGeneration extends BaseModel {
     );
 
     // Convert masks to GeoJSON
-    const geoJsonMasks = masksArray.map((masks, index) => {
-      const maskGeo = maskToGeoJSON(
+    const geoJsonMasks = masksArray.map((_masks, index) => {
+      const numMasks = _masks[0].dims[1];
+
+      const masks = [];
+
+      for (let i = 0; i < numMasks; i++) {
+        const maskData = _masks[0].data.slice(
+          i * _masks[0].dims[2] * _masks[0].dims[3],
+          (i + 1) * _masks[0].dims[2] * _masks[0].dims[3]
+        );
+        // Binarize the mask at 0.5 threshold
+        for (let j = 0; j < maskData.length; j++) {
+          maskData[j] = maskData[j] >= 0.5 ? 255 : 0;
+        }
+        const tensor = new Tensor("uint8", maskData, [
+          1,
+          1,
+          _masks[0].dims[2],
+          _masks[0].dims[3],
+        ]);
+        masks.push(tensor);
+      }
+
+      const scores = outputsArray[index].iou_scores.data;
+      const sortedMasks = masks
+        .map((mask: any, i: number) => ({ mask, score: scores[i] }))
+        .sort((a: any, b: any) => b.score - a.score)
+        .map((item: any) => item.mask);
+      const maskGeo: GeoJSON.FeatureCollection[] = maskToGeoJSON(
         {
-          mask: masks,
+          mask: sortedMasks.slice(0, (maxMasks as number) || 1),
           scores: outputsArray[index].iou_scores.data,
         },
         geoRawImage,
-        maxMasks as number
+        [128]
       );
-      return maskGeo;
+      const combinedFeatures: GeoJSON.Feature[] = [];
+      maskGeo.forEach(mc => {
+        combinedFeatures.push(...mc.features);
+      });
+      const fc: GeoJSON.FeatureCollection = {
+        type: "FeatureCollection",
+        features: combinedFeatures,
+      };
+      return fc;
     });
     // Combine all masks into a single GeoJSON FeatureCollection
     const combinedMasks: GeoJSON.FeatureCollection = {
@@ -403,12 +438,12 @@ export class MaskGeneration extends BaseModel {
       throw new Error("Data provider not initialized");
     }
 
-    const geoRawImage = await this.polygonToImage(
+    const geoRawImage = (await this.polygonToImage(
       inputs.polygon,
       params.mapSourceParams?.zoomLevel,
       params.mapSourceParams?.bands,
       params.mapSourceParams?.expression
-    );
+    )) as GeoRawImage;
 
     if (!geoRawImage) {
       throw new Error("Failed to convert polygon to image");
