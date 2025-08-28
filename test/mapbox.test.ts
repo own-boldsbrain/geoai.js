@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeAll, beforeEach } from "vitest";
 import { Mapbox } from "../src/data_providers/mapbox";
 import { GeoRawImage } from "../src/types/images/GeoRawImage";
-import { polygonReturningSquareImageVertical } from "./constants";
+import { polygonReturningSquareImageVertical, mapboxParams } from "./constants";
 import { GeobaseError } from "../src/errors";
 
 describe("Mapbox", () => {
@@ -10,10 +10,7 @@ describe("Mapbox", () => {
   let image: GeoRawImage;
 
   beforeAll(() => {
-    mapbox = new Mapbox(
-      "pk.eyJ1Ijoic2FiIiwiYSI6ImNsNDE3bGR3bzB2MmczaXF5dmxpaTloNmcifQ.NQ-B8jBPtOd53tNYt42Gqw",
-      "mapbox://styles/mapbox/satellite-v9"
-    );
+    mapbox = new Mapbox(mapboxParams.apiKey, mapboxParams.style);
   });
 
   beforeEach(() => {
