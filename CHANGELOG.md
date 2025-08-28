@@ -122,3 +122,9 @@ To migrate from the old package:
 ### Release Candidate
 - Update docs. Minor bug fixes.
 
+
+## [1.0.1] - 2025-08-28
+
+### Release Candidate
+- Removed OpenCV.js dependency across all AI models for improved performance and reduced bundle size.
+
