@@ -128,3 +128,9 @@ To migrate from the old package:
 ### Release Candidate
 - Removed OpenCV.js dependency across all AI models for improved performance and reduced bundle size.
 
+
+## [1.0.3] - 2025-08-28
+
+### Release Candidate
+- Landuse classification vectorisation bug fix
+
