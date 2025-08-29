@@ -1,0 +1,319 @@
+# Vue.js Quickstart Guide
+
+Get started with GeoAI in Vue.js for building modern geospatial AI applications.
+
+## Quick Setup
+
+```bash
+# Clone the examples repository
+git clone https://github.com/geobase-app/geobase-ai.js.git
+cd geobase-ai.js/examples/frameworks/vue
+
+# Install dependencies (using pnpm)
+pnpm install
+
+# Start development server
+pnpm start
+```
+
+Open [http://localhost:5173](http://localhost:5173) to view the application.
+
+## Key Features
+
+- ⚡ **Vue 3** with Composition API & TypeScript
+- 🛠️ **Vite** for fast development
+- 🗺️ **MapLibre GL JS** integration
+- 🎯 **AI-powered detection** (Oil storage tanks)
+- ✏️ **Interactive drawing** controls
+- 📱 **Responsive design**
+
+## Project Structure
+
+```
+frameworks/vue/
+├── src/
+│   ├── App.vue          # Main component
+│   ├── main.ts          # Entry point
+│   └── assets/          # Styles and assets
+├── public/              # Static assets
+├── package.json         # Dependencies
+├── vite.config.ts       # Vite configuration
+└── tsconfig.json        # TypeScript config
+```
+
+## Core Implementation
+
+### App Component Structure
+
+```vue
+<template>
+  <div style="height: 100vh; display: flex; flex-direction: column">
+    <div :style="{ backgroundColor: status.color }">
+      {{ status.text }}
+      <button v-if="status.text.includes('Found')" @click="resetMap">
+        Reset
+      </button>
+    </div>
+    <div ref="mapContainer" style="height: 100%; width: 100%" />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import maplibregl from 'maplibre-gl'
+import { geoai, type ProviderParams } from 'geoai'
+import MaplibreDraw from 'maplibre-gl-draw'
+
+const mapContainer = ref<HTMLDivElement | null>(null)
+const pipeline = ref<any>(null)
+const status = ref({ color: '#9e9e9e', text: 'Waiting...' })
+</script>
+```
+
+### Map Initialization
+
+```typescript
+onMounted(async () => {
+  if (!mapContainer.value) return;
+
+  // Initialize map
+  map.value = new maplibregl.Map({
+    container: mapContainer.value,
+    style: {
+      version: 8,
+      sources: {
+        satellite: {
+          type: 'raster',
+          tiles: [
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+          ],
+          tileSize: 256,
+          attribution: 'ESRI World Imagery'
+        }
+      },
+      layers: [{ id: 'satellite', type: 'raster', source: 'satellite' }]
+    },
+    center: [54.690310447932006, 24.75763471820723],
+    zoom: 15
+  });
+
+  // Add drawing controls
+  const draw = new MaplibreDraw({
+    displayControlsDefault: false,
+    controls: { polygon: true, trash: true }
+  });
+  map.value.addControl(draw);
+});
+```
+
+### AI Pipeline Setup
+
+```typescript
+const initializePipeline = async () => {
+  status.value = { color: '#ffa500', text: 'Initializing AI Model...' };
+
+  try {
+    const newPipeline = await geoai.pipeline(
+      [{ task: 'oil-storage-tank-detection' }],
+      {
+        provider: 'esri',
+        serviceUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services',
+        serviceName: 'World_Imagery',
+        tileSize: 256,
+        attribution: 'ESRI World Imagery'
+      } as ProviderParams
+    );
+    
+    pipeline.value = newPipeline;
+    status.value = {
+      color: '#4caf50',
+      text: 'AI Model Ready! Draw a polygon to detect oil storage tanks.'
+    };
+  } catch (error) {
+    status.value = { color: '#f44336', text: 'Failed to Initialize Model' };
+  }
+};
+```
+
+### Event Handling
+
+```typescript
+// Set up draw event listener after pipeline is ready
+map.value?.on('draw.create', async (e) => {
+  status.value = { color: '#2196f3', text: 'Processing detection...' };
+  
+  try {
+    const result = await pipeline.value.inference({
+      inputs: { polygon: e.features[0] },
+      mapSourceParams: { zoomLevel: 15 }
+    });
+
+    // Display results on map
+    if (map.value?.getSource('detections')) {
+      map.value.removeLayer('detections');
+      map.value.removeSource('detections');
+    }
+
+    map.value?.addSource('detections', {
+      type: 'geojson',
+      data: result.detections
+    });
+    
+    map.value?.addLayer({
+      id: 'detections',
+      type: 'fill',
+      source: 'detections',
+      paint: { 'fill-color': '#ff0000', 'fill-opacity': 0.5 }
+    });
+
+    status.value = {
+      color: '#4caf50',
+      text: `Found ${result.detections.features?.length || 0} oil storage tanks!`
+    };
+  } catch (error) {
+    status.value = { color: '#f44336', text: 'Error during detection' };
+  }
+});
+```
+
+### Cleanup
+
+```typescript
+onUnmounted(() => {
+  map.value?.remove();
+});
+```
+
+## Development Scripts
+
+- `pnpm start` / `pnpm dev` - Development server
+- `pnpm build` - Production build
+- `pnpm preview` - Preview production build
+- `pnpm lint` - Run ESLint
+- `pnpm format` - Format code with Prettier
+
+## Vue 3 Advantages
+
+### Composition API
+Better logic reuse and TypeScript integration:
+
+```typescript
+// Composable for map functionality
+const useMap = (container: Ref<HTMLDivElement | null>) => {
+  const map = ref<maplibregl.Map | null>(null);
+  
+  const initializeMap = () => {
+    if (!container.value) return;
+    map.value = new maplibregl.Map({
+      container: container.value,
+      // ... map config
+    });
+  };
+  
+  return { map, initializeMap };
+};
+```
+
+### Reactive System
+Automatic dependency tracking:
+
+```typescript
+const status = ref({ color: '#9e9e9e', text: 'Waiting...' });
+const isProcessing = computed(() => status.value.text.includes('Processing'));
+
+// Template automatically updates when status changes
+```
+
+### Single File Components
+Template, script, and styles in one file:
+
+```vue
+<template>
+  <!-- Vue template -->
+</template>
+
+<script setup lang="ts">
+  // TypeScript logic
+</script>
+
+<style scoped>
+  /* Component-scoped styles */
+</style>
+```
+
+## TypeScript Integration
+
+Vue 3 provides excellent TypeScript support:
+
+```typescript
+import { ref, type Ref } from 'vue';
+import type { ProviderParams } from 'geoai';
+
+interface Status {
+  color: string;
+  text: string;
+}
+
+const status: Ref<Status> = ref({ 
+  color: '#9e9e9e', 
+  text: 'Waiting...' 
+});
+```
+
+## Vite Configuration
+
+The project uses Vite for fast development:
+
+```typescript
+// vite.config.ts
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+
+export default defineConfig({
+  plugins: [vue()],
+  server: {
+    port: 5173
+  }
+})
+```
+
+## Custom Composables
+
+Create reusable logic with composables:
+
+```typescript
+// composables/useGeoAI.ts
+import { ref, type Ref } from 'vue';
+import { geoai } from 'geoai';
+
+export function useGeoAI() {
+  const pipeline = ref(null);
+  const isInitialized = ref(false);
+  
+  const initializePipeline = async (task: string, config: any) => {
+    const newPipeline = await geoai.pipeline([{ task }], config);
+    pipeline.value = newPipeline;
+    isInitialized.value = true;
+  };
+  
+  return {
+    pipeline,
+    isInitialized,
+    initializePipeline
+  };
+}
+```
+
+## Next Steps
+
+- Explore [other AI tasks](/supported-tasks) available in GeoAI.js
+- Learn about [map providers](/map-providers) configuration
+- Check out [advanced concepts](/concepts) for optimization
+- See [live examples](https://docs.geobase.app/geoai-live) in action
+
+## Learn More
+
+- [Vue.js Documentation](https://vuejs.org/)
+- [Vue 3 Composition API](https://vuejs.org/guide/extras/composition-api-faq.html)
+- [GeoAI.js Core Concepts](/concepts)
+- [MapLibre GL JS Guide](https://maplibre.org/maplibre-gl-js/docs/)

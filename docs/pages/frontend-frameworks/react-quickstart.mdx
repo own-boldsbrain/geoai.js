@@ -1,0 +1,256 @@
+# React.js Quickstart Guide
+
+Get started with GeoAI in React.js for building geospatial AI applications.
+
+## Quick Setup
+
+```bash
+# Clone the examples repository
+git clone https://github.com/geobase-app/geobase-ai.js.git
+cd geobase-ai.js/examples/01-quickstart
+
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view the application.
+
+## Key Features
+
+- 🚀 **React 19** with TypeScript
+- 🗺️ **MapLibre GL JS** integration
+- 🎯 **AI-powered detection** (Oil storage tanks)
+- ✏️ **Interactive drawing** controls
+- 📱 **Responsive design**
+
+## Project Structure
+
+```
+01-quickstart/
+├── src/
+│   ├── App.tsx          # Main component
+│   ├── App.css          # Styles
+│   ├── index.tsx        # Entry point
+│   └── index.css        # Global styles
+├── public/              # Static assets
+├── package.json         # Dependencies
+└── tsconfig.json        # TypeScript config
+```
+
+## Core Implementation
+
+### App Component Structure
+
+```tsx
+import React, { useEffect, useRef, useState } from 'react';
+import maplibregl from 'maplibre-gl';
+import { geoai, ProviderParams } from 'geoai';
+import MaplibreDraw from 'maplibre-gl-draw';
+
+function App() {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const [pipeline, setPipeline] = useState<any>(null);
+  const [status, setStatus] = useState({ 
+    color: '#9e9e9e', 
+    text: 'Waiting...' 
+  });
+
+  useEffect(() => {
+    // Initialize map and AI pipeline
+    initializeMap();
+    initializePipeline();
+  }, []);
+
+  return (
+    <div style={{ height: '100vh' }}>
+      <div style={{ backgroundColor: status.color }}>
+        {status.text}
+      </div>
+      <div ref={mapContainer} style={{ height: '100%' }} />
+    </div>
+  );
+}
+```
+
+### Map Initialization
+
+```tsx
+const initializeMap = () => {
+  if (!mapContainer.current) return;
+
+  map.current = new maplibregl.Map({
+    container: mapContainer.current,
+    style: {
+      version: 8,
+      sources: {
+        satellite: {
+          type: "raster",
+          tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+          tileSize: 256,
+          attribution: "ESRI World Imagery",
+        },
+      },
+      layers: [{ id: "satellite", type: "raster", source: "satellite" }],
+    },
+    center: [54.690310447932006, 24.75763471820723],
+    zoom: 15,
+  });
+
+  // Add drawing controls
+  const draw = new MaplibreDraw({ 
+    displayControlsDefault: false, 
+    controls: { polygon: true, trash: true } 
+  });
+  map.current.addControl(draw);
+};
+```
+
+### AI Pipeline Setup
+
+```tsx
+const initializePipeline = async () => {
+  setStatus({ color: '#ffa500', text: 'Initializing AI Model...' });
+  
+  try {
+    const pipeline = await geoai.pipeline(
+      [{ task: "oil-storage-tank-detection" }],
+      {
+        provider: "esri",
+        serviceUrl: "https://server.arcgisonline.com/ArcGIS/rest/services",
+        serviceName: "World_Imagery",
+        tileSize: 256,
+        attribution: "ESRI World Imagery"
+      } as ProviderParams
+    );
+    
+    setPipeline(pipeline);
+    setStatus({ 
+      color: '#4caf50', 
+      text: 'AI Model Ready! Draw a polygon to detect oil storage tanks.' 
+    });
+  } catch (error) {
+    setStatus({ color: '#f44336', text: 'Failed to Initialize Model' });
+  }
+};
+```
+
+### Event Handling
+
+```tsx
+useEffect(() => {
+  if (!pipeline || !map.current) return;
+
+  map.current.on('draw.create', async (e) => {
+    setStatus({ color: '#2196f3', text: 'Processing detection...' });
+    
+    try {
+      const result = await pipeline.inference({
+        inputs: { polygon: e.features[0] },
+        mapSourceParams: { zoomLevel: 15 }
+      });
+
+      // Display results on map
+      if (map.current?.getSource('detections')) {
+        map.current.removeLayer('detections');
+        map.current.removeSource('detections');
+      }
+
+      map.current?.addSource("detections", {
+        type: "geojson",
+        data: result.detections,
+      });
+      
+      map.current?.addLayer({
+        id: 'detections',
+        type: 'fill',
+        source: 'detections',
+        paint: { 'fill-color': '#ff0000', 'fill-opacity': 0.5 }
+      });
+
+      setStatus({
+        color: '#4caf50',
+        text: `Found ${result.detections.features?.length || 0} oil storage tanks!`,
+      });
+    } catch (error) {
+      setStatus({ color: '#f44336', text: 'Error during detection' });
+    }
+  });
+}, [pipeline]);
+```
+
+## Development Scripts
+
+- `npm start` - Development server
+- `npm run build` - Production build  
+- `npm test` - Run tests
+- `npm run eject` - Eject from Create React App
+
+## Key React Patterns
+
+### State Management
+Use React hooks for managing application state:
+
+```tsx
+const [pipeline, setPipeline] = useState<any>(null);
+const [isProcessing, setIsProcessing] = useState(false);
+const [results, setResults] = useState(null);
+```
+
+### Refs for Map Container
+Use `useRef` to reference DOM elements:
+
+```tsx
+const mapContainer = useRef<HTMLDivElement>(null);
+const map = useRef<maplibregl.Map | null>(null);
+```
+
+### Effect Cleanup
+Clean up resources in `useEffect`:
+
+```tsx
+useEffect(() => {
+  // Initialize map
+  initializeMap();
+  
+  return () => {
+    // Cleanup
+    map.current?.remove();
+  };
+}, []);
+```
+
+## TypeScript Integration
+
+GeoAI.js provides full TypeScript support:
+
+```tsx
+import { geoai, ProviderParams, InferenceResult } from 'geoai';
+
+interface AppState {
+  pipeline: any;
+  isInitialized: boolean;
+  isProcessing: boolean;
+}
+
+const [state, setState] = useState<AppState>({
+  pipeline: null,
+  isInitialized: false,
+  isProcessing: false
+});
+```
+
+## Next Steps
+
+- Explore [other AI tasks](/supported-tasks) available in GeoAI.js
+- Learn about [map providers](/map-providers) configuration
+- Check out [advanced concepts](/concepts) for optimization
+- See [live examples](https://docs.geobase.app/geoai-live) in action
+
+## Learn More
+
+- [React Documentation](https://reactjs.org/)
+- [GeoAI.js Core Concepts](/concepts)
+- [MapLibre GL JS Guide](https://maplibre.org/maplibre-gl-js/docs/)
