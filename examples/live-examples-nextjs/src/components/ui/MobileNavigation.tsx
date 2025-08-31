@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import { GITHUB_REPO_URI } from '@/config';
+import { GitHubStarsButton } from '@/components/ui/shadcn-io/github-stars-button';
 
 interface MobileNavigationProps {
   className?: string;
@@ -92,14 +94,13 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ className = 
                 >
                   Get Started
                 </a>
-                <a
-                  href="https://github.com/geobase-app/geoai.js"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg text-center transition-colors"
-                >
-                  Star on GitHub
-                </a>
+                <div className="flex justify-center">
+                  <GitHubStarsButton 
+                    username="decision-labs" 
+                    repo="geoai.js" 
+                    formatted 
+                  />
+                </div>
               </div>
             </div>
           </div>
